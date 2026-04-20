@@ -436,13 +436,6 @@ export default function ProfileScreen() {
             onPress={() => router.push("/profile/settings")}
           />
           <MenuItem
-            icon="warehouse"
-            iconBg="#E6F8FC"
-            iconColor={Colors.secondary}
-            label="İlanlarım"
-            onPress={() => router.push("/profile/my-warehouses")}
-          />
-          <MenuItem
             icon="security"
             iconBg="#ECFDF3"
             iconColor="#059669"

@@ -23,37 +23,12 @@ import {
   VerifySmsOtpRequest,
   VerifySmsOtpResponse,
 } from "@/types/user";
-import {
-  WarehousePostRequest,
-  WarehouseRequestConfirmUploadPostRequest,
-  WarehouseRequestConfirmUploadPostResponse,
-  WarehouseRequestsUploadUrlPostResponse,
-  WarehouseResponse,
-} from "@/types/warehouse-requests";
 import { instance } from "./config";
 
 export async function postRefreshToken(
   d: RefreshRequest,
 ): Promise<UserResponseData> {
   return instance.post("v1/auth/refresh", d).then((r) => r.data);
-}
-
-export async function postWarehouseRequest(
-  d: WarehousePostRequest,
-): Promise<WarehouseResponse> {
-  return instance.post("v1/warehouse-requests", d).then((r) => r.data);
-}
-
-export async function postWarehouseRequestsUploadUrl(): Promise<WarehouseRequestsUploadUrlPostResponse> {
-  return instance.post("v1/warehouse-requests/upload-url").then((r) => r.data);
-}
-
-export async function postWarehouseRequestConfirmUpload(
-  d: WarehouseRequestConfirmUploadPostRequest,
-): Promise<WarehouseRequestConfirmUploadPostResponse> {
-  return instance
-    .post("v1/warehouse-requests/confirm-upload", d)
-    .then((r) => r.data);
 }
 
 // Favorites

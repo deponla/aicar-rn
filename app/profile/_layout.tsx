@@ -7,7 +7,6 @@ export default function ProfileLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="my-warehouses" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="phone-number" />

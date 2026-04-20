@@ -25,15 +25,6 @@ export async function patchFavoriteCategory(
     .then((r) => r.data);
 }
 
-export async function patchWarehouseStatus(
-  id: string,
-  status: "ACTIVE" | "INACTIVE",
-) {
-  return instance
-    .patch(`v1/warehouses/${id}/status/${status}`)
-    .then((r) => r.data);
-}
-
 export async function patchUsers(
   id: string,
   d: UserUpdateRequest,

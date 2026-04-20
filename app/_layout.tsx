@@ -39,10 +39,6 @@ export default function RootLayout() {
                         options={{ headerShown: false }}
                       />
                       <Stack.Screen
-                        name="warehouse-edit/[id]"
-                        options={{ headerShown: false }}
-                      />
-                      <Stack.Screen
                         name="chat/[conversationId]"
                         options={{ headerShown: false }}
                       />

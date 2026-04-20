@@ -11,7 +11,14 @@ import {
   WarehouseCategories,
 } from "@/store/useWarehouse";
 import { IPagination, IPaginationQuery } from "./utils";
-import { ImageItem } from "./warehouse-requests";
+
+export interface ImageItem {
+  key: string;
+  url: string;
+  contentType: string;
+  size: number;
+  uploadedAt: string;
+}
 
 export interface WarehouseLocation {
   type: "Point";

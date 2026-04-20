@@ -28,11 +28,6 @@ import {
   WarehouseQueryParams,
   WarehouseResponse,
 } from "@/types/warehouse";
-import {
-  WarehouseFilterQueryDto,
-  WarehouseListResponse as WarehouseRequestListResponse,
-  WarehouseResponse as WarehouseRequestResponse,
-} from "@/types/warehouse-requests";
 import { instance } from "./config";
 
 export async function getMe({ token }: { token: string }): Promise<MeResponse> {
@@ -97,40 +92,6 @@ export async function getDistrictById({
   id: string;
 }): Promise<DistrictResponse> {
   return instance.get(`v1/locations/districts/${id}`).then((r) => r.data);
-}
-
-export async function getWarehouseRequests({
-  filters,
-}: {
-  filters?: WarehouseFilterQueryDto;
-}): Promise<WarehouseRequestListResponse> {
-  return instance
-    .get("v1/warehouse-requests", { params: filters })
-    .then((r) => r.data);
-}
-
-export async function getWarehouseRequestsById({
-  id,
-}: {
-  id: string;
-}): Promise<WarehouseRequestResponse> {
-  return instance.get(`v1/warehouse-requests/${id}`).then((r) => r.data);
-}
-
-export async function getWarehouses({
-  filters,
-}: {
-  filters?: WarehouseQueryParams;
-}): Promise<WarehouseListResponse> {
-  return instance.get("v1/warehouses", { params: filters }).then((r) => r.data);
-}
-
-export async function getWarehouseById({
-  id,
-}: {
-  id: string;
-}): Promise<WarehouseResponse> {
-  return instance.get(`v1/warehouses/${id}`).then((r) => r.data);
 }
 
 export async function getNeighborhoodById({
