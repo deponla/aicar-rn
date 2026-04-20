@@ -18,16 +18,20 @@ function toPermissionStatus(status: string): PermissionStatus {
 }
 
 async function gatherPermissions(): Promise<DevicePermissions> {
-  const [notif, loc, cam, photos] = await Promise.all([
-    Notifications.getPermissionsAsync().catch(() => ({ status: "undetermined" as const })),
-    Location.getForegroundPermissionsAsync().catch(() => ({ status: "undetermined" as const })),
-    ImagePicker.getCameraPermissionsAsync().catch(() => ({ status: "undetermined" as const })),
-    ImagePicker.getMediaLibraryPermissionsAsync().catch(() => ({ status: "undetermined" as const })),
+  const [notif, loc, photos] = await Promise.all([
+    Notifications.getPermissionsAsync().catch(() => ({
+      status: "undetermined" as const,
+    })),
+    Location.getForegroundPermissionsAsync().catch(() => ({
+      status: "undetermined" as const,
+    })),
+    ImagePicker.getMediaLibraryPermissionsAsync().catch(() => ({
+      status: "undetermined" as const,
+    })),
   ]);
   return {
     notifications: toPermissionStatus(notif.status),
     location: toPermissionStatus(loc.status),
-    camera: toPermissionStatus(cam.status),
     mediaLibrary: toPermissionStatus(photos.status),
   };
 }
@@ -41,7 +45,11 @@ export async function registerDeviceAfterLogin(
 ): Promise<string | null> {
   try {
     const platform: "ios" | "android" | "web" =
-      Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "web";
+      Platform.OS === "ios"
+        ? "ios"
+        : Platform.OS === "android"
+          ? "android"
+          : "web";
 
     const permissions = await gatherPermissions();
 

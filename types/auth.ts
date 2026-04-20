@@ -30,7 +30,6 @@ interface User {
   emailVerified: boolean;
   emailVerifiedAt: string | null;
   isPhoneVerified: boolean;
-  isIdentityVerified: boolean;
   userAccountType: UserAccountType;
   enabledPolicies: string[];
   photo: string | null;

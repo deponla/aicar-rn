@@ -3,7 +3,6 @@ export type PermissionStatus = "granted" | "denied" | "undetermined";
 export interface DevicePermissions {
   notifications?: PermissionStatus;
   location?: PermissionStatus;
-  camera?: PermissionStatus;
   mediaLibrary?: PermissionStatus;
 }
 

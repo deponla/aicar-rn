@@ -403,26 +403,6 @@ export default function ProfileScreen() {
                   </Text>
                 </View>
               ) : null}
-              {user?.isIdentityVerified ? (
-                <View
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor: t.primaryLight,
-                      borderColor: t.borderDefault,
-                    },
-                  ]}
-                >
-                  <MaterialIcons
-                    name="badge"
-                    size={12}
-                    color={Colors.primary}
-                  />
-                  <Text style={[styles.chipText, { color: t.textPrimary }]}>
-                    Kimlik
-                  </Text>
-                </View>
-              ) : null}
               {user?.isPhoneVerified ? (
                 <View
                   style={[

@@ -13,7 +13,6 @@ export default function ProfileLayout() {
       <Stack.Screen name="phone-number" />
       <Stack.Screen name="email-address" />
       <Stack.Screen name="delete-account" />
-      <Stack.Screen name="id-verification" />
       <Stack.Screen name="legal" />
       <Stack.Screen name="blog" />
       <Stack.Screen name="permissions" />

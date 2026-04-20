@@ -62,7 +62,6 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const NEUTRAL_ICON_COLOR = "#8E8E93";
 const NEUTRAL_ICON_BG = "#F2F2F7";
-const NEUTRAL_STATUS_TEXT = "#6B7280";
 
 const parsePrice = (value: string): number => {
   if (!value) return 0;
@@ -777,8 +776,7 @@ export default function WarehouseEditScreen() {
   // Verification gate
   const authUser = useAuthStore((s) => s.user?.user);
   const emailVerified = authUser?.emailVerified ?? false;
-  const identityVerified = authUser?.isIdentityVerified ?? false;
-  const needsVerification = !emailVerified || !identityVerified;
+  const needsVerification = !emailVerified;
   const { mutateAsync: sendEmailVerification, isPending: isSendingEmail } =
     useSendEmailVerification();
 
@@ -796,8 +794,8 @@ export default function WarehouseEditScreen() {
             </View>
             <Text style={verificationStyles.title}>Doğrulama Gerekli</Text>
             <Text style={verificationStyles.description}>
-              İlan paylaşabilmek için aşağıdaki doğrulama adımlarını
-              tamamlamanız gerekmektedir.
+              İlan paylaşabilmek için e-posta doğrulamanızı tamamlamanız
+              gerekmektedir.
             </Text>
 
             {/* Email Verification */}
@@ -864,66 +862,6 @@ export default function WarehouseEditScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-            </View>
-
-            {/* Identity Verification */}
-            <View style={verificationStyles.card}>
-              <View style={verificationStyles.cardRow}>
-                <View
-                  style={[
-                    verificationStyles.iconBadge,
-                    identityVerified
-                      ? verificationStyles.iconBadgeSuccess
-                      : verificationStyles.iconBadgeWarning,
-                  ]}
-                >
-                  <MaterialIcons
-                    name="fingerprint"
-                    size={20}
-                    color={NEUTRAL_ICON_COLOR}
-                  />
-                </View>
-                <View style={verificationStyles.cardTextContainer}>
-                  <Text style={verificationStyles.cardTitle}>
-                    Kimlik Doğrulama
-                  </Text>
-                  <Text style={verificationStyles.cardSubtitle}>
-                    {identityVerified
-                      ? "Kimlik doğrulandı"
-                      : "Kimliğiniz henüz doğrulanmamış"}
-                  </Text>
-                </View>
-                {identityVerified ? (
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={24}
-                    color={NEUTRAL_ICON_COLOR}
-                  />
-                ) : (
-                  <TouchableOpacity
-                    style={verificationStyles.actionButton}
-                    onPress={() => router.push("/profile/id-verification")}
-                  >
-                    <Text style={verificationStyles.actionButtonText}>
-                      Doğrula
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              {!identityVerified && (
-                <View style={verificationStyles.infoBox}>
-                  <MaterialIcons
-                    name="smartphone"
-                    size={18}
-                    color={NEUTRAL_ICON_COLOR}
-                  />
-                  <Text style={verificationStyles.infoText}>
-                    Kimlik doğrulama NFC destekli kimlik kartınız ile yapılır.
-                    Doğrula butonuna tıklayarak kimlik doğrulama adımlarını
-                    başlatabilirsiniz.
-                  </Text>
-                </View>
-              )}
             </View>
           </View>
         </ScreenContainer>
@@ -2955,20 +2893,5 @@ const verificationStyles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
-  },
-  infoBox: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: NEUTRAL_ICON_BG,
-    borderRadius: 8,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    color: NEUTRAL_STATUS_TEXT,
-    lineHeight: 18,
   },
 });

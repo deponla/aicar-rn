@@ -2,12 +2,11 @@ import { patchUsers } from "@/api/patch";
 import {
   postChangePassword,
   postDeleteAccount,
-  postIdentityVerification,
   postSendEmailVerification,
   postSendSmsOtp,
   postVerifySmsOtp,
 } from "@/api/post";
-import { IdentityVerificationRequest, UserUpdateRequest } from "@/types/user";
+import { UserUpdateRequest } from "@/types/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export enum UserQueryKeys {
@@ -60,11 +59,5 @@ export const useVerifySmsOtp = () => {
         queryKey: [UserQueryKeys.USERS],
       });
     },
-  });
-};
-
-export const useIdentityVerification = () => {
-  return useMutation({
-    mutationFn: (d: IdentityVerificationRequest) => postIdentityVerification(d),
   });
 };

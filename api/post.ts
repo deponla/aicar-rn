@@ -1,5 +1,9 @@
 import { RefreshRequest, UserResponseData } from "@/types/auth";
-import { DevicePermissions, DeviceResponse, RegisterDevicePayload } from "@/types/device";
+import {
+  DevicePermissions,
+  DeviceResponse,
+  RegisterDevicePayload,
+} from "@/types/device";
 import {
   ConversationResponse,
   MessageResponse,
@@ -14,8 +18,6 @@ import {
 import {
   ChangePasswordRequest,
   EmailVerificationResponse,
-  IdentityVerificationRequest,
-  IdentityVerificationResponse,
   SendSmsOtpRequest,
   SendSmsOtpResponse,
   VerifySmsOtpRequest,
@@ -115,14 +117,6 @@ export async function postVerifySmsOtp(
   d: VerifySmsOtpRequest,
 ): Promise<VerifySmsOtpResponse> {
   return instance.post("v1/auth/verify-sms-otp", d).then((r) => r.data);
-}
-
-export async function postIdentityVerification(
-  d: IdentityVerificationRequest,
-): Promise<IdentityVerificationResponse> {
-  return instance
-    .post("v1/identity-verification/submit", d)
-    .then((r) => r.data);
 }
 
 // Devices

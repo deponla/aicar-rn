@@ -82,10 +82,10 @@ function PermissionCard({
           styles.cardButton,
           granted
             ? {
-                backgroundColor: tokens.bgSubtle,
-                borderColor: tokens.borderDefault,
-                borderWidth: 1,
-              }
+              backgroundColor: tokens.bgSubtle,
+              borderColor: tokens.borderDefault,
+              borderWidth: 1,
+            }
             : { backgroundColor: Colors.primary },
         ]}
         activeOpacity={0.7}
@@ -120,26 +120,22 @@ function toPermissionStatus(status: string): PermissionStatus {
 
 export default function PermissionsScreen() {
   const [locationGranted, setLocationGranted] = useState(false);
-  const [cameraGranted, setCameraGranted] = useState(false);
   const [photosGranted, setPhotosGranted] = useState(false);
   const [notificationsGranted, setNotificationsGranted] = useState(false);
 
   const checkPermissions = useCallback(async () => {
-    const [loc, cam, photos, notif] = await Promise.all([
+    const [loc, photos, notif] = await Promise.all([
       Location.getForegroundPermissionsAsync(),
-      ImagePicker.getCameraPermissionsAsync(),
       ImagePicker.getMediaLibraryPermissionsAsync(),
       Notifications.getPermissionsAsync(),
     ]);
     setLocationGranted(loc.status === "granted");
-    setCameraGranted(cam.status === "granted");
     setPhotosGranted(photos.status === "granted");
     setNotificationsGranted(notif.status === "granted");
 
     // Mevcut durumu backend'e sync et
     syncPermissions({
       location: toPermissionStatus(loc.status),
-      camera: toPermissionStatus(cam.status),
       mediaLibrary: toPermissionStatus(photos.status),
       notifications: toPermissionStatus(notif.status),
     });
@@ -160,18 +156,6 @@ export default function PermissionsScreen() {
     if (!granted) openAppSettings();
     syncPermissions({ location: toPermissionStatus(status) });
   }, [locationGranted]);
-
-  const handleCamera = useCallback(async () => {
-    if (cameraGranted) {
-      openAppSettings();
-      return;
-    }
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    const granted = status === "granted";
-    setCameraGranted(granted);
-    if (!granted) openAppSettings();
-    syncPermissions({ camera: toPermissionStatus(status) });
-  }, [cameraGranted]);
 
   const handlePhotos = useCallback(async () => {
     if (photosGranted) {
@@ -211,12 +195,6 @@ export default function PermissionsScreen() {
           description="Yakınındaki depoları göstermek için kullanılır"
           granted={locationGranted}
           onPress={handleLocation}
-        />
-        <PermissionCard
-          label="Kamera"
-          description="Kimlik doğrulama için belge taraması"
-          granted={cameraGranted}
-          onPress={handleCamera}
         />
         <PermissionCard
           label="Fotoğraf Galerisi"

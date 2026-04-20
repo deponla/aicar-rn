@@ -79,18 +79,6 @@ export default function SettingsScreen() {
         <Text style={styles.infoText}>
           Telefon: {user.isPhoneVerified ? "Doğrulandı" : "Doğrulanmadı"}
         </Text>
-        <Text style={styles.infoText}>
-          Kimlik: {user.isIdentityVerified ? "Doğrulandı" : "Doğrulanmadı"}
-        </Text>
-        {!user.isIdentityVerified ? (
-          <TouchableOpacity
-            style={styles.identityButton}
-            onPress={() => router.push("/profile/id-verification")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.identityButtonText}>Kimlik doğrula</Text>
-          </TouchableOpacity>
-        ) : null}
       </View>
 
       <View style={styles.helpCard}>
@@ -165,21 +153,6 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     color: "#3C3C43",
-  },
-  identityButton: {
-    marginTop: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: Colors.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-  },
-  identityButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
   },
   helpCard: {
     backgroundColor: "#FFF7ED",
