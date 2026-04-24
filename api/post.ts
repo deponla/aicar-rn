@@ -1,9 +1,5 @@
 import { RefreshRequest, UserResponseData } from "@/types/auth";
-import {
-  DevicePermissions,
-  DeviceResponse,
-  RegisterDevicePayload,
-} from "@/types/device";
+import { DeviceResponse, RegisterDevicePayload } from "@/types/device";
 import {
   ConversationResponse,
   MessageResponse,
@@ -23,6 +19,13 @@ import {
   VerifySmsOtpRequest,
   VerifySmsOtpResponse,
 } from "@/types/user";
+import {
+  AiImageUploadInitResponse,
+  AiUploadCompleteResponse,
+  AiVideoUploadInitResponse,
+  AnalyzeMediaRequest,
+  AnalyzeMediaResponse,
+} from "@/types/ai";
 import { instance } from "./config";
 
 export async function postRefreshToken(
@@ -99,4 +102,34 @@ export async function postRegisterDevice(
   payload: RegisterDevicePayload,
 ): Promise<DeviceResponse> {
   return instance.post("v1/devices", payload).then((r) => r.data);
+}
+
+export async function postInitializeAiImageUpload(): Promise<AiImageUploadInitResponse> {
+  return instance.post("v1/ai/uploads/images/init").then((r) => r.data);
+}
+
+export async function postCompleteAiImageUpload(payload: {
+  id: string;
+}): Promise<AiUploadCompleteResponse> {
+  return instance
+    .post("v1/ai/uploads/images/complete", payload)
+    .then((r) => r.data);
+}
+
+export async function postInitializeAiVideoUpload(): Promise<AiVideoUploadInitResponse> {
+  return instance.post("v1/ai/uploads/videos/init").then((r) => r.data);
+}
+
+export async function postCompleteAiVideoUpload(payload: {
+  videoId: string;
+}): Promise<AiUploadCompleteResponse> {
+  return instance
+    .post("v1/ai/uploads/videos/complete", payload)
+    .then((r) => r.data);
+}
+
+export async function postAnalyzeMedia(
+  payload: AnalyzeMediaRequest,
+): Promise<AnalyzeMediaResponse> {
+  return instance.post("v1/ai/analyze", payload).then((r) => r.data);
 }
