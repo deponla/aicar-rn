@@ -1,5 +1,4 @@
 import { MeResponse } from "@/types/auth";
-import { BlogListFilters, BlogListResponse, BlogResponse } from "@/types/blog";
 import {
   ConversationListResponse,
   ConversationQuery,
@@ -156,22 +155,4 @@ export async function getChatMessages({
       params: filters,
     })
     .then((r) => r.data);
-}
-
-// ─── Blog ──────────────────────────────────────────────────────────────────────
-
-export async function getBlogs({
-  filters,
-}: {
-  filters?: BlogListFilters;
-}): Promise<BlogListResponse> {
-  return instance.get("v1/blogs", { params: filters }).then((r) => r.data);
-}
-
-export async function getBlogBySlug({
-  slug,
-}: {
-  slug: string;
-}): Promise<BlogResponse> {
-  return instance.get(`v1/blogs/slug/${slug}`).then((r) => r.data);
 }

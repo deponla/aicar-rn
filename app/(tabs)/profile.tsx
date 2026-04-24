@@ -299,17 +299,6 @@ export default function ProfileScreen() {
           </Text>
 
           {/* ── Keşfet ── */}
-          <SectionLabel label="KEŞFET" />
-          <MenuSection>
-            <MenuItem
-              icon="article"
-              iconBg="#FEF3C7"
-              iconColor="#D97706"
-              label="Blog"
-              onPress={() => router.push("/profile/blog")}
-              showDivider={false}
-            />
-          </MenuSection>
         </ScrollView>
       </SafeAreaView>
     );
@@ -446,18 +435,6 @@ export default function ProfileScreen() {
         </MenuSection>
 
         {/* ── Keşfet ── */}
-        <SectionLabel label="KEŞFET" />
-        <MenuSection>
-          <MenuItem
-            icon="article"
-            iconBg="#FEF3C7"
-            iconColor="#D97706"
-            label="Blog"
-            onPress={() => router.push("/profile/blog")}
-            showDivider={false}
-          />
-        </MenuSection>
-
         {/* ── Destek ── */}
         <SectionLabel label="DESTEK" />
         <MenuSection>
