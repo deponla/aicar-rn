@@ -10,10 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.deponla.app",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Yak\u0131n\u0131ndaki depolar\u0131 g\u00f6sterebilmemiz i\u00e7in konumuna ihtiyac\u0131m\u0131z var.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Yak\u0131n\u0131ndaki depolar\u0131 g\u00f6sterebilmemiz i\u00e7in konumuna ihtiyac\u0131m\u0131z var."
-      }
+      "appleTeamId": "HBXB78DL97"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,11 +25,7 @@
         "googleMaps": {
           "apiKey": "AIzaSyDxDF6TiS6JKM-tsyEmzH3AQytwbhFfnXg"
         }
-      },
-      "permissions": [
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      }
     },
     "web": {
       "output": "static",
@@ -52,20 +45,12 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+          "photosPermission": "Aracinizin fotograflarini ve videolarini galeriden secebilmeniz icin erisim gerekiyor.",
+          "cameraPermission": "Aracinizin fotograflarini cekebilmeniz icin kamera erisimi gerekiyor.",
+          "microphonePermission": false
         }
       ],
       "expo-secure-store",
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Yak\u0131n\u0131ndaki depolar\u0131 g\u00f6sterebilmemiz i\u00e7in konumuna ihtiyac\u0131m\u0131z var.",
-          "locationAlwaysPermission": "Yak\u0131n\u0131ndaki depolar\u0131 g\u00f6sterebilmemiz i\u00e7in konumuna ihtiyac\u0131m\u0131z var.",
-          "locationWhenInUsePermission": "Yak\u0131n\u0131ndaki depolar\u0131 g\u00f6sterebilmemiz i\u00e7in konumuna ihtiyac\u0131m\u0131z var.",
-          "isAndroidBackgroundLocationEnabled": false,
-          "isAndroidForegroundServiceEnabled": false
-        }
-      ],
       "expo-font",
       "expo-image",
       "expo-web-browser"

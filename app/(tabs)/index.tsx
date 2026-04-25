@@ -29,6 +29,7 @@ import {
   type AnalyzeMediaResponse,
 } from '@/types/ai';
 import { AuthStatusEnum } from '@/types/auth';
+import { syncPermissions } from '@/utils/deviceRegistration';
 
 type SelectedMediaPreview = {
   localUri: string;
@@ -173,6 +174,18 @@ function getErrorMessage(error: unknown): string {
   return 'Beklenmeyen bir hata olustu.';
 }
 
+function toPermissionStatus(status: string): 'granted' | 'denied' | 'undetermined' {
+  if (status === 'granted') {
+    return 'granted';
+  }
+
+  if (status === 'denied') {
+    return 'denied';
+  }
+
+  return 'undetermined';
+}
+
 export default function ScanScreen() {
   const { status, user } = useAuthStore();
   const credits = useCreditsStore((state) => state.credits);
@@ -193,6 +206,8 @@ export default function ScanScreen() {
     }
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    void syncPermissions({ mediaLibrary: toPermissionStatus(permission.status) });
+
     if (permission.status !== 'granted') {
       Alert.alert('Izin gerekli', 'Fotograf veya video secmek icin galeri izni vermelisiniz.');
       return;

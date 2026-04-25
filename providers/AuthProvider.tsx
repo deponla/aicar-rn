@@ -5,7 +5,7 @@ import { SECURE_STORE_KEY, useAuthStore } from "@/store/useAuth";
 import { registerDeviceAfterLogin } from "@/utils/deviceRegistration";
 import { AuthStatusEnum, UserResponseData } from "@/types/auth";
 import * as SecureStore from "expo-secure-store";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 export default function AuthProvider({
@@ -14,6 +14,7 @@ export default function AuthProvider({
   children: React.ReactNode;
 }>) {
   const authStore = useAuthStore();
+  const lastRegisteredAccessToken = useRef<string | null>(null);
 
   useEffect(() => {
     async function loadAuthStore() {
@@ -45,7 +46,6 @@ export default function AuthProvider({
                   JSON.stringify(data),
                 );
                 authStore.login(data);
-                registerDeviceAfterLogin().catch(() => {});
               })
               .catch(() => {
                 authStore.logout();
@@ -58,7 +58,6 @@ export default function AuthProvider({
                 ...parsedResult,
                 user: response.user,
               });
-              registerDeviceAfterLogin().catch(() => {});
             })
             .catch(() => {
               authStore.logout();
@@ -70,6 +69,22 @@ export default function AuthProvider({
     }
     loadAuthStore();
   }, []);
+
+  useEffect(() => {
+    const accessToken = authStore.user?.accessToken.token;
+
+    if (authStore.status !== AuthStatusEnum.LOGGED_IN || !accessToken) {
+      lastRegisteredAccessToken.current = null;
+      return;
+    }
+
+    if (lastRegisteredAccessToken.current === accessToken) {
+      return;
+    }
+
+    lastRegisteredAccessToken.current = accessToken;
+    registerDeviceAfterLogin().catch(() => { });
+  }, [authStore.status, authStore.user?.accessToken.token]);
 
   useEffect(() => {
     if (authStore.status !== AuthStatusEnum.LOGGED_IN) return;

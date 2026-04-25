@@ -3,6 +3,7 @@ export type PermissionStatus = "granted" | "denied" | "undetermined";
 export interface DevicePermissions {
   notifications?: PermissionStatus;
   location?: PermissionStatus;
+  camera?: PermissionStatus;
   mediaLibrary?: PermissionStatus;
 }
 
@@ -10,6 +11,7 @@ export interface RegisterDevicePayload {
   platform: "ios" | "android" | "web";
   tokenType: "expo" | "web_push";
   expoPushToken?: string;
+  installationId?: string;
   permissions?: DevicePermissions;
   model?: string;
   osVersion?: string;
@@ -22,6 +24,7 @@ export interface DeviceResponse {
   platform: "ios" | "android" | "web";
   tokenType: "expo" | "web_push";
   expoPushToken?: string;
+  installationId?: string;
   permissions?: DevicePermissions;
   model?: string;
   osVersion?: string;

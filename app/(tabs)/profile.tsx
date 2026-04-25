@@ -1,6 +1,7 @@
 import { Colors, tokens } from "@/constants/theme";
 import { parseSessionFromUrl } from "@/utils/parseSessionFromUrl";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
@@ -116,6 +117,24 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
+function buildAuthSessionConfig(type: "login" | "register") {
+  const frontendUrl = process.env.EXPO_PUBLIC_FRONTEND_URL;
+
+  if (!frontendUrl) {
+    throw new Error("Frontend URL yapılandırması eksik");
+  }
+
+  const redirectUrl = Linking.createURL("/auth/callback");
+  const authUrl = new URL(`/auth/${type}`, frontendUrl);
+  authUrl.searchParams.set("from", "app");
+  authUrl.searchParams.set("redirect_uri", redirectUrl);
+
+  return {
+    authUrl: authUrl.toString(),
+    redirectUrl,
+  };
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
@@ -129,19 +148,39 @@ export default function ProfileScreen() {
   const user = authStore.user?.user;
 
   const handleAuth = async (type: "login" | "register") => {
-    const result = await WebBrowser.openAuthSessionAsync(
-      `${process.env.EXPO_PUBLIC_FRONTEND_URL}/auth/${type}?from=app`,
-      "deponla",
-    );
-    if (result.type === "success" && result.url) {
-      const sessionData = parseSessionFromUrl(result.url);
-      if (sessionData) {
-        await SecureStore.setItemAsync(
-          SECURE_STORE_KEY,
-          JSON.stringify(sessionData),
-        );
-        authStore.login(sessionData);
+    try {
+      const { authUrl, redirectUrl } = buildAuthSessionConfig(type);
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        redirectUrl,
+      );
+
+      if (result.type !== "success" || !result.url) {
+        return;
       }
+
+      const sessionData = parseSessionFromUrl(result.url);
+
+      if (!sessionData) {
+        Alert.alert(
+          "Giriş tamamlanamadı",
+          "Uygulamaya dönen oturum bilgisi okunamadı. Lütfen tekrar deneyin.",
+        );
+        return;
+      }
+
+      await SecureStore.setItemAsync(
+        SECURE_STORE_KEY,
+        JSON.stringify(sessionData),
+      );
+      authStore.login(sessionData);
+    } catch (error) {
+      Alert.alert(
+        type === "login" ? "Giriş başlatılamadı" : "Kayıt başlatılamadı",
+        error instanceof Error
+          ? error.message
+          : "Tarayıcı oturumu başlatılırken bir sorun oluştu.",
+      );
     }
   };
 

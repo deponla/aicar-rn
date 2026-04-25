@@ -1,7 +1,6 @@
 import * as Device from "expo-device";
 import * as Application from "expo-application";
 import * as Notifications from "expo-notifications";
-import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
@@ -10,6 +9,7 @@ import { patchDevicePermissions } from "@/api/patch";
 import type { DevicePermissions, PermissionStatus } from "@/types/device";
 
 export const DEVICE_ID_KEY = "device_id";
+export const DEVICE_INSTALLATION_ID_KEY = "device_installation_id";
 
 function toPermissionStatus(status: string): PermissionStatus {
   if (status === "granted") return "granted";
@@ -17,12 +17,59 @@ function toPermissionStatus(status: string): PermissionStatus {
   return "undetermined";
 }
 
+function createGeneratedInstallationId(): string {
+  return `aicar-install-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+async function getStoredFallbackInstallationId(): Promise<string | null> {
+  try {
+    const storedInstallationId = await SecureStore.getItemAsync(
+      DEVICE_INSTALLATION_ID_KEY,
+    );
+
+    if (storedInstallationId) {
+      return storedInstallationId;
+    }
+
+    const generatedInstallationId = createGeneratedInstallationId();
+    await SecureStore.setItemAsync(
+      DEVICE_INSTALLATION_ID_KEY,
+      generatedInstallationId,
+    );
+    return generatedInstallationId;
+  } catch {
+    return null;
+  }
+}
+
+async function getInstallationId(): Promise<string | null> {
+  try {
+    if (Platform.OS === "android") {
+      const androidId = Application.getAndroidId();
+      if (androidId) {
+        return androidId;
+      }
+    }
+
+    if (Platform.OS === "ios") {
+      const iosIdForVendor = await Application.getIosIdForVendorAsync();
+      if (iosIdForVendor) {
+        return iosIdForVendor;
+      }
+    }
+  } catch {
+    // fall back to a stored generated identifier below
+  }
+
+  return getStoredFallbackInstallationId();
+}
+
 async function gatherPermissions(): Promise<DevicePermissions> {
-  const [notif, loc, photos] = await Promise.all([
+  const [notif, camera, photos] = await Promise.all([
     Notifications.getPermissionsAsync().catch(() => ({
       status: "undetermined" as const,
     })),
-    Location.getForegroundPermissionsAsync().catch(() => ({
+    ImagePicker.getCameraPermissionsAsync().catch(() => ({
       status: "undetermined" as const,
     })),
     ImagePicker.getMediaLibraryPermissionsAsync().catch(() => ({
@@ -31,7 +78,7 @@ async function gatherPermissions(): Promise<DevicePermissions> {
   ]);
   return {
     notifications: toPermissionStatus(notif.status),
-    location: toPermissionStatus(loc.status),
+    camera: toPermissionStatus(camera.status),
     mediaLibrary: toPermissionStatus(photos.status),
   };
 }
@@ -51,12 +98,14 @@ export async function registerDeviceAfterLogin(
           ? "android"
           : "web";
 
+    const installationId = await getInstallationId();
     const permissions = await gatherPermissions();
 
     const payload = {
       platform,
       tokenType: "expo" as const,
       ...(expoPushToken ? { expoPushToken } : {}),
+      ...(installationId ? { installationId } : {}),
       model: Device.modelName ?? undefined,
       osVersion: Device.osVersion ?? undefined,
       appVersion: Application.nativeApplicationVersion ?? undefined,

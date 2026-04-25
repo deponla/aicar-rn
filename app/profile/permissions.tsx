@@ -1,7 +1,6 @@
 import ScreenContainer from "@/components/ScreenContainer";
 import { Colors, tokens } from "@/constants/theme";
 import * as ImagePicker from "expo-image-picker";
-import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -119,23 +118,23 @@ function toPermissionStatus(status: string): PermissionStatus {
 }
 
 export default function PermissionsScreen() {
-  const [locationGranted, setLocationGranted] = useState(false);
+  const [cameraGranted, setCameraGranted] = useState(false);
   const [photosGranted, setPhotosGranted] = useState(false);
   const [notificationsGranted, setNotificationsGranted] = useState(false);
 
   const checkPermissions = useCallback(async () => {
-    const [loc, photos, notif] = await Promise.all([
-      Location.getForegroundPermissionsAsync(),
+    const [camera, photos, notif] = await Promise.all([
+      ImagePicker.getCameraPermissionsAsync(),
       ImagePicker.getMediaLibraryPermissionsAsync(),
       Notifications.getPermissionsAsync(),
     ]);
-    setLocationGranted(loc.status === "granted");
+    setCameraGranted(camera.status === "granted");
     setPhotosGranted(photos.status === "granted");
     setNotificationsGranted(notif.status === "granted");
 
     // Mevcut durumu backend'e sync et
     syncPermissions({
-      location: toPermissionStatus(loc.status),
+      camera: toPermissionStatus(camera.status),
       mediaLibrary: toPermissionStatus(photos.status),
       notifications: toPermissionStatus(notif.status),
     });
@@ -145,17 +144,17 @@ export default function PermissionsScreen() {
     checkPermissions();
   }, [checkPermissions]);
 
-  const handleLocation = useCallback(async () => {
-    if (locationGranted) {
+  const handleCamera = useCallback(async () => {
+    if (cameraGranted) {
       openAppSettings();
       return;
     }
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
     const granted = status === "granted";
-    setLocationGranted(granted);
+    setCameraGranted(granted);
     if (!granted) openAppSettings();
-    syncPermissions({ location: toPermissionStatus(status) });
-  }, [locationGranted]);
+    syncPermissions({ camera: toPermissionStatus(status) });
+  }, [cameraGranted]);
 
   const handlePhotos = useCallback(async () => {
     if (photosGranted) {
@@ -191,14 +190,14 @@ export default function PermissionsScreen() {
           onPress={handleNotifications}
         />
         <PermissionCard
-          label="Konum"
-          description="Yakınındaki depoları göstermek için kullanılır"
-          granted={locationGranted}
-          onPress={handleLocation}
+          label="Kamera"
+          description="Araç fotoğrafı çekebilmek için kullanılır"
+          granted={cameraGranted}
+          onPress={handleCamera}
         />
         <PermissionCard
-          label="Fotoğraf Galerisi"
-          description="Depo ilanlarına fotoğraf eklemek için kullanılır"
+          label="Galeri ve Medya"
+          description="Araç fotoğrafı ve videolarını galeriden seçebilmek için kullanılır"
           granted={photosGranted}
           onPress={handlePhotos}
         />
