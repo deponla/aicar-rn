@@ -86,3 +86,32 @@ export interface VerifySmsOtpResponse {
   phoneNumber: string;
   verifiedAt: string;
 }
+
+export interface UploadUrlResponse {
+  result: {
+    url: string;
+    id: string;
+  };
+}
+
+export interface ConfirmUploadRequest {
+  id: string;
+  userId: string;
+}
+
+export interface ConfirmUploadResponse {
+  result: {
+    photo: string;
+  };
+}
+
+export interface DeletePhotoRequest {
+  id: string;
+  userId: string;
+}
+
+export interface DeletePhotoResponse {
+  result: {
+    photo: string | null;
+  };
+}

@@ -13,12 +13,18 @@ import {
 } from "@/types/favorite-categories";
 import {
   ChangePasswordRequest,
+  ConfirmUploadRequest,
+  ConfirmUploadResponse,
+  DeletePhotoRequest,
+  DeletePhotoResponse,
   EmailVerificationResponse,
   SendSmsOtpRequest,
   SendSmsOtpResponse,
+  UploadUrlResponse,
   VerifySmsOtpRequest,
   VerifySmsOtpResponse,
 } from "@/types/user";
+import { CheckVersionRequest, CheckVersionResponse } from "@/types/app-version";
 import {
   AiImageUploadInitResponse,
   AiUploadCompleteResponse,
@@ -132,4 +138,28 @@ export async function postAnalyzeMedia(
   payload: AnalyzeMediaRequest,
 ): Promise<AnalyzeMediaResponse> {
   return instance.post("v1/ai/analyze", payload).then((r) => r.data);
+}
+
+// User Photo
+export async function postUploadUrl(): Promise<UploadUrlResponse> {
+  return instance.post("v1/users/upload-url").then((r) => r.data);
+}
+
+export async function postConfirmUpload(
+  payload: ConfirmUploadRequest,
+): Promise<ConfirmUploadResponse> {
+  return instance.post("v1/users/confirm-upload", payload).then((r) => r.data);
+}
+
+export async function postDeletePhoto(
+  payload: DeletePhotoRequest,
+): Promise<DeletePhotoResponse> {
+  return instance.post("v1/users/delete-photo", payload).then((r) => r.data);
+}
+
+// App Version
+export async function postCheckAppVersion(
+  payload: CheckVersionRequest,
+): Promise<CheckVersionResponse> {
+  return instance.post("v1/app-version/check", payload).then((r) => r.data);
 }

@@ -481,7 +481,15 @@ export default function ProfileScreen() {
             icon="help-outline"
             iconBg="#EFF6FF"
             iconColor="#3B82F6"
-            label="Yardım al"
+            label="Yardım & Destek"
+            onPress={() => router.push("/profile/support")}
+          />
+          <MenuItem
+            icon="info-outline"
+            iconBg="#EFF6FF"
+            iconColor="#3B82F6"
+            label="Hakkında"
+            onPress={() => router.push("/profile/about")}
           />
           <MenuItem
             icon="description"
