@@ -16,6 +16,7 @@ import {
   ProvinceQueryParameters,
   ProvinceResponse,
 } from "@/types/city";
+import { CreditBalanceResponse } from "@/types/credit";
 import { FavoriteListResponse, FavoriteQuery } from "@/types/favorite";
 import {
   FavoriteCategoriesListResponse,
@@ -38,6 +39,10 @@ export async function getMe({ token }: { token: string }): Promise<MeResponse> {
       },
     })
     .then((r) => r.data);
+}
+
+export async function getCreditBalance(): Promise<CreditBalanceResponse> {
+  return instance.get("v1/account/balance").then((r) => r.data);
 }
 
 export async function getWarehousesPublic({

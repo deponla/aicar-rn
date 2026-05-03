@@ -12,3 +12,9 @@ export interface UserCredits {
   total: number;
   lastUpdated: string;
 }
+
+export interface CreditBalanceResponse {
+  remainingCredits: number;
+  isPremium: boolean;
+  premiumExpiresAt: string | null;
+}

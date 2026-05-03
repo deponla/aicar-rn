@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +11,13 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from '@gorhom/bottom-sheet';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/constants/theme';
 import {
   postCompleteAiImageUpload,
@@ -19,6 +26,10 @@ import {
   postInitializeAiVideoUpload,
 } from '@/api/post';
 import { useAnalyzeMedia } from '@/query-hooks/useAiAnalysis';
+import {
+  CreditQueryKeys,
+  useGetCreditBalance,
+} from '@/query-hooks/useCreditBalance';
 import { useAuthStore } from '@/store/useAuth';
 import { useCreditsStore } from '@/store/useCredits';
 import {
@@ -29,6 +40,7 @@ import {
   type AnalyzeMediaResponse,
 } from '@/types/ai';
 import { AuthStatusEnum } from '@/types/auth';
+import { type CreditBalanceResponse } from '@/types/credit';
 import { syncPermissions } from '@/utils/deviceRegistration';
 
 type SelectedMediaPreview = {
@@ -38,10 +50,26 @@ type SelectedMediaPreview = {
   thumbnailUrl?: string;
 };
 
+type ScanSource = 'camera' | 'video' | 'gallery';
+
+const MAX_VIDEO_DURATION_SECONDS = 180;
+
 const sleep = (ms: number) =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+
+function createCreditsSnapshot(balance: CreditBalanceResponse) {
+  const existingCredits = useCreditsStore.getState().credits;
+
+  return {
+    remaining: balance.remainingCredits,
+    total: existingCredits
+      ? Math.max(existingCredits.total, balance.remainingCredits)
+      : balance.remainingCredits,
+    lastUpdated: new Date().toISOString(),
+  };
+}
 
 function getAssetMediaType(asset: ImagePicker.ImagePickerAsset): AiMediaType {
   if (asset.type === 'video' || asset.mimeType?.startsWith('video/')) {
@@ -187,45 +215,106 @@ function toPermissionStatus(status: string): 'granted' | 'denied' | 'undetermine
 }
 
 export default function ScanScreen() {
+  const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
+  const sourceSheetRef = useRef<BottomSheetModal>(null);
   const { status, user } = useAuthStore();
-  const credits = useCreditsStore((state) => state.credits);
   const setCredits = useCreditsStore((state) => state.setCredits);
   const analyzeMedia = useAnalyzeMedia();
+  const creditBalanceQuery = useGetCreditBalance({
+    enabled: status === AuthStatusEnum.LOGGED_IN && !!user,
+  });
   const [selectedMedia, setSelectedMedia] = useState<SelectedMediaPreview | null>(null);
   const [analysis, setAnalysis] = useState<AnalyzeMediaResponse | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  const isAuthenticated = status === AuthStatusEnum.LOGGED_IN && !!user;
   const isBusy = isUploading || analyzeMedia.isPending;
+  const creditBalance = creditBalanceQuery.data ?? null;
   const analysisPayload = analysis?.result.aiResponse;
   const urgencyTone = getUrgencyTone(analysisPayload?.urgency);
+  const shouldShowBalance = isAuthenticated && !!creditBalance;
+  const isPremiumActive = shouldShowBalance && !!creditBalance?.isPremium;
 
-  const handleStartScan = async () => {
-    if (status !== AuthStatusEnum.LOGGED_IN || !user) {
+  useEffect(() => {
+    if (!creditBalance) {
+      return;
+    }
+
+    setCredits(createCreditsSnapshot(creditBalance));
+  }, [creditBalance, setCredits]);
+
+  const closeSourceSheet = () => {
+    sourceSheetRef.current?.dismiss();
+  };
+
+  const openSourceSheet = () => {
+    if (!isAuthenticated) {
       Alert.alert('Giris gerekli', 'AI analizini kullanmak icin hesabiniza giris yapin.');
       return;
     }
 
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    void syncPermissions({ mediaLibrary: toPermissionStatus(permission.status) });
+    sourceSheetRef.current?.present();
+  };
 
-    if (permission.status !== 'granted') {
-      Alert.alert('Izin gerekli', 'Fotograf veya video secmek icin galeri izni vermelisiniz.');
-      return;
+  const pickAssetFromSource = async (
+    source: ScanSource,
+  ): Promise<ImagePicker.ImagePickerAsset | null> => {
+    if (source === 'gallery') {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      void syncPermissions({ mediaLibrary: toPermissionStatus(permission.status) });
+
+      if (permission.status !== 'granted') {
+        Alert.alert('Izin gerekli', 'Fotograf veya video secmek icin galeri izni vermelisiniz.');
+        return null;
+      }
+
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: false,
+        allowsMultipleSelection: false,
+        quality: 1,
+        videoMaxDuration: MAX_VIDEO_DURATION_SECONDS,
+      });
+
+      if (pickerResult.canceled || !pickerResult.assets[0]) {
+        return null;
+      }
+
+      return pickerResult.assets[0];
     }
 
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    void syncPermissions({ camera: toPermissionStatus(permission.status) });
+
+    if (permission.status !== 'granted') {
+      Alert.alert(
+        'Izin gerekli',
+        source === 'video'
+          ? 'Video cekmek icin kamera izni vermelisiniz.'
+          : 'Fotograf cekmek icin kamera izni vermelisiniz.',
+      );
+      return null;
+    }
+
+    const pickerResult = await ImagePicker.launchCameraAsync({
+      mediaTypes:
+        source === 'video'
+          ? ImagePicker.MediaTypeOptions.Videos
+          : ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
-      allowsMultipleSelection: false,
       quality: 1,
-      videoMaxDuration: 180,
+      videoMaxDuration: MAX_VIDEO_DURATION_SECONDS,
     });
 
     if (pickerResult.canceled || !pickerResult.assets[0]) {
-      return;
+      return null;
     }
 
-    const asset = pickerResult.assets[0];
+    return pickerResult.assets[0];
+  };
+
+  const processSelectedAsset = async (asset: ImagePicker.ImagePickerAsset) => {
     const mediaType = getAssetMediaType(asset);
 
     setSelectedMedia({
@@ -263,12 +352,18 @@ export default function ScanScreen() {
         analysisType: AiAnalysisType.GENERAL,
       });
 
+      const nextBalance: CreditBalanceResponse = {
+        remainingCredits: response.balance.remainingCredits,
+        isPremium: response.balance.isPremium,
+        premiumExpiresAt: response.balance.premiumExpiresAt ?? null,
+      };
+
       setAnalysis(response);
-      setCredits({
-        remaining: response.balance.remainingCredits,
-        total: credits ? Math.max(credits.total, response.balance.remainingCredits) : response.balance.remainingCredits,
-        lastUpdated: new Date().toISOString(),
-      });
+      setCredits(createCreditsSnapshot(nextBalance));
+      queryClient.setQueryData<CreditBalanceResponse>(
+        [CreditQueryKeys.BALANCE],
+        nextBalance,
+      );
     } catch (error) {
       Alert.alert('Analiz basarisiz', getErrorMessage(error));
     } finally {
@@ -276,106 +371,208 @@ export default function ScanScreen() {
     }
   };
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.heroCard}>
-        <MaterialIcons name="camera-alt" size={72} color={tokens.primary} />
-        <Text style={styles.title}>Aracini Tara</Text>
-        <Text style={styles.subtitle}>
-          Ikaz lambasi, ariza kodu veya kisa bir video secip yerel AI modeliyle analiz al.
-        </Text>
+  const handleSelectSource = async (source: ScanSource) => {
+    if (!isAuthenticated) {
+      Alert.alert('Giris gerekli', 'AI analizini kullanmak icin hesabiniza giris yapin.');
+      return;
+    }
 
-        <View style={styles.metaRow}>
-          <View style={styles.metaBadge}>
-            <MaterialIcons name="bolt" size={16} color={tokens.primary} />
-            <Text style={styles.metaBadgeText}>
-              {credits ? `${credits.remaining} kredi` : 'Kredi bilgisi hazir degil'}
+    closeSourceSheet();
+    await sleep(180);
+
+    const asset = await pickAssetFromSource(source);
+    if (!asset) {
+      return;
+    }
+
+    await processSelectedAsset(asset);
+  };
+
+  return (
+    <>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.heroCard}>
+          <MaterialIcons name="camera-alt" size={72} color={tokens.primary} />
+          <Text style={styles.title}>Aracini Tara</Text>
+          <Text style={styles.subtitle}>
+            Ikaz lambasi, ariza kodu veya kisa bir video icin fotograf cek, video kaydet ya da galeriden sec.
+          </Text>
+
+          {shouldShowBalance ? (
+            <View style={styles.metaRow}>
+              <View style={styles.metaBadge}>
+                <MaterialIcons name="bolt" size={16} color={tokens.primary} />
+                <Text style={styles.metaBadgeText}>{creditBalance.remainingCredits} kredi</Text>
+              </View>
+              {isPremiumActive ? (
+                <View style={[styles.metaBadge, styles.metaBadgeSecondary]}>
+                  <MaterialIcons name="workspace-premium" size={16} color={tokens.secondary} />
+                  <Text style={[styles.metaBadgeText, styles.metaBadgeSecondaryText]}>
+                    Premium aktif
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
+          <TouchableOpacity
+            style={[styles.button, isBusy ? styles.buttonDisabled : null]}
+            disabled={isBusy}
+            onPress={openSourceSheet}
+            activeOpacity={0.85}
+          >
+            {isBusy ? (
+              <ActivityIndicator color={tokens.textInverse} />
+            ) : (
+              <Text style={styles.buttonText}>Taramayi Baslat</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {selectedMedia ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Secilen Medya</Text>
+            {selectedMedia.mediaType === AiMediaType.IMAGE || selectedMedia.thumbnailUrl ? (
+              <Image
+                source={{ uri: selectedMedia.thumbnailUrl ?? selectedMedia.localUri }}
+                style={styles.previewImage}
+              />
+            ) : (
+              <View style={styles.videoPlaceholder}>
+                <MaterialIcons name="videocam" size={32} color={tokens.primary} />
+                <Text style={styles.videoPlaceholderText}>Video secildi</Text>
+              </View>
+            )}
+            <Text style={styles.mediaMetaText}>
+              {selectedMedia.mediaType === AiMediaType.VIDEO ? 'Video analizi' : 'Fotograf analizi'}
+            </Text>
+            {selectedMedia.fileName ? (
+              <Text style={styles.mediaMetaSubtext}>{selectedMedia.fileName}</Text>
+            ) : null}
+          </View>
+        ) : null}
+
+        {analysis && analysisPayload ? (
+          <View style={styles.card}>
+            <View style={styles.resultHeader}>
+              <Text style={styles.cardTitle}>{analysisPayload.title}</Text>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: urgencyTone.backgroundColor },
+                ]}
+              >
+                <Text style={[styles.statusBadgeText, { color: urgencyTone.textColor }]}>
+                  {urgencyTone.label}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.resultSummary}>{analysisPayload.summary}</Text>
+            <Text style={styles.sectionLabel}>Detay</Text>
+            <Text style={styles.resultBody}>{analysisPayload.description}</Text>
+            <Text style={styles.sectionLabel}>Oneri</Text>
+            <Text style={styles.resultBody}>{analysisPayload.recommendation}</Text>
+
+            {analysisPayload.warnings.length > 0 ? (
+              <View style={styles.warningList}>
+                <Text style={styles.sectionLabel}>Tespit Edilen Uyarilar</Text>
+                {analysisPayload.warnings.map((warning, index) => (
+                  <View key={`${warning.name}-${index}`} style={styles.warningCard}>
+                    <Text style={styles.warningTitle}>{warning.name}</Text>
+                    <Text style={styles.warningDescription}>{warning.description}</Text>
+                    <Text style={styles.warningRecommendation}>{warning.recommendation}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+      </ScrollView>
+
+      <BottomSheetModal
+        ref={sourceSheetRef}
+        enableDynamicSizing
+        enablePanDownToClose
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            appearsOnIndex={0}
+            disappearsOnIndex={-1}
+            opacity={0.18}
+          />
+        )}
+        backgroundStyle={styles.sheetBackground}
+        handleIndicatorStyle={styles.sheetIndicator}
+      >
+        <BottomSheetView
+          style={[styles.sheetContent, { paddingBottom: insets.bottom + 20 }]}
+        >
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Tarama Kaynagini Sec</Text>
+            <Text style={styles.sheetSubtitle}>
+              Analiz etmek istediginiz medya kaynagini belirleyin.
             </Text>
           </View>
-          {analysis?.balance.isPremium ? (
-            <View style={[styles.metaBadge, styles.metaBadgeSecondary]}>
-              <MaterialIcons name="workspace-premium" size={16} color={tokens.secondary} />
-              <Text style={[styles.metaBadgeText, styles.metaBadgeSecondaryText]}>
-                Premium aktif
-              </Text>
-            </View>
-          ) : null}
-        </View>
 
-        <TouchableOpacity
-          style={[styles.button, isBusy ? styles.buttonDisabled : null]}
-          disabled={isBusy}
-          onPress={handleStartScan}
-          activeOpacity={0.85}
-        >
-          {isBusy ? (
-            <ActivityIndicator color={tokens.textInverse} />
-          ) : (
-            <Text style={styles.buttonText}>Taramayi Baslat</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {selectedMedia ? (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Secilen Medya</Text>
-          {selectedMedia.mediaType === AiMediaType.IMAGE || selectedMedia.thumbnailUrl ? (
-            <Image
-              source={{ uri: selectedMedia.thumbnailUrl ?? selectedMedia.localUri }}
-              style={styles.previewImage}
-            />
-          ) : (
-            <View style={styles.videoPlaceholder}>
-              <MaterialIcons name="videocam" size={32} color={tokens.primary} />
-              <Text style={styles.videoPlaceholderText}>Video secildi</Text>
-            </View>
-          )}
-          <Text style={styles.mediaMetaText}>
-            {selectedMedia.mediaType === AiMediaType.VIDEO ? 'Video analizi' : 'Fotograf analizi'}
-          </Text>
-          {selectedMedia.fileName ? (
-            <Text style={styles.mediaMetaSubtext}>{selectedMedia.fileName}</Text>
-          ) : null}
-        </View>
-      ) : null}
-
-      {analysis && analysisPayload ? (
-        <View style={styles.card}>
-          <View style={styles.resultHeader}>
-            <Text style={styles.cardTitle}>{analysisPayload.title}</Text>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: urgencyTone.backgroundColor },
-              ]}
+          <View style={styles.sourceOptions}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.sourceOption}
+              disabled={isBusy}
+              onPress={() => void handleSelectSource('camera')}
             >
-              <Text style={[styles.statusBadgeText, { color: urgencyTone.textColor }]}>
-                {urgencyTone.label}
-              </Text>
-            </View>
+              <View style={styles.sourceOptionIcon}>
+                <MaterialIcons name="photo-camera" size={22} color={tokens.primary} />
+              </View>
+              <View style={styles.sourceOptionBody}>
+                <Text style={styles.sourceOptionTitle}>Fotograf Cek</Text>
+                <Text style={styles.sourceOptionDescription}>
+                  Ikaz lambasi veya parca goruntusunu kamerayla yakalayin.
+                </Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={tokens.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.sourceOption}
+              disabled={isBusy}
+              onPress={() => void handleSelectSource('video')}
+            >
+              <View style={styles.sourceOptionIcon}>
+                <MaterialIcons name="videocam" size={22} color={tokens.primary} />
+              </View>
+              <View style={styles.sourceOptionBody}>
+                <Text style={styles.sourceOptionTitle}>Video Cek</Text>
+                <Text style={styles.sourceOptionDescription}>
+                  Kisa bir video cekerek aracin sesini ya da davranisini paylasin.
+                </Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={tokens.textTertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.sourceOption}
+              disabled={isBusy}
+              onPress={() => void handleSelectSource('gallery')}
+            >
+              <View style={styles.sourceOptionIcon}>
+                <MaterialIcons name="photo-library" size={22} color={tokens.primary} />
+              </View>
+              <View style={styles.sourceOptionBody}>
+                <Text style={styles.sourceOptionTitle}>Galeriden Sec</Text>
+                <Text style={styles.sourceOptionDescription}>
+                  Onceden cektiginiz fotograf ya da videoyu kullanin.
+                </Text>
+              </View>
+              <MaterialIcons name="keyboard-arrow-right" size={24} color={tokens.textTertiary} />
+            </TouchableOpacity>
           </View>
-
-          <Text style={styles.resultSummary}>{analysisPayload.summary}</Text>
-          <Text style={styles.sectionLabel}>Detay</Text>
-          <Text style={styles.resultBody}>{analysisPayload.description}</Text>
-          <Text style={styles.sectionLabel}>Oneri</Text>
-          <Text style={styles.resultBody}>{analysisPayload.recommendation}</Text>
-
-          {analysisPayload.warnings.length > 0 ? (
-            <View style={styles.warningList}>
-              <Text style={styles.sectionLabel}>Tespit Edilen Uyarilar</Text>
-              {analysisPayload.warnings.map((warning, index) => (
-                <View key={`${warning.name}-${index}`} style={styles.warningCard}>
-                  <Text style={styles.warningTitle}>{warning.name}</Text>
-                  <Text style={styles.warningDescription}>{warning.description}</Text>
-                  <Text style={styles.warningRecommendation}>{warning.recommendation}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </View>
-      ) : null}
-    </ScrollView>
+        </BottomSheetView>
+      </BottomSheetModal>
+    </>
   );
 }
 
@@ -456,6 +653,67 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: tokens.borderDefault,
+  },
+  sheetBackground: {
+    backgroundColor: tokens.bgElevated,
+    borderRadius: 28,
+  },
+  sheetIndicator: {
+    backgroundColor: tokens.borderDefault,
+    width: 56,
+  },
+  sheetContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  sheetHeader: {
+    gap: 6,
+    marginBottom: 14,
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: tokens.textPrimary,
+  },
+  sheetSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.textSecondary,
+  },
+  sourceOptions: {
+    gap: 12,
+  },
+  sourceOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: tokens.borderDefault,
+    backgroundColor: tokens.bgSurface,
+  },
+  sourceOptionIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.primaryLight,
+  },
+  sourceOptionBody: {
+    flex: 1,
+    gap: 4,
+  },
+  sourceOptionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: tokens.textPrimary,
+  },
+  sourceOptionDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.textSecondary,
   },
   cardTitle: {
     fontSize: 20,
