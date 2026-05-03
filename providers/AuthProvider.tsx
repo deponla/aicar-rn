@@ -32,25 +32,24 @@ export default function AuthProvider({
         const refreshTokenExpires = new Date(
           parsedResult.refreshToken.expires,
         ).getTime();
+        const shouldRefreshSession =
+          refreshTokenExpires >= nowTime &&
+          (accessTokenExpires < nowTime || !parsedResult.sessionId);
 
-        if (accessTokenExpires < nowTime) {
-          // Refresh token da mı dolmuş?
-          if (refreshTokenExpires < nowTime) {
-            authStore.logout();
-          } else {
-            // Refresh token ile yeni access token al
-            postRefreshToken({ token: parsedResult.refreshToken.token })
-              .then(async (data) => {
-                await SecureStore.setItemAsync(
-                  SECURE_STORE_KEY,
-                  JSON.stringify(data),
-                );
-                authStore.login(data);
-              })
-              .catch(() => {
-                authStore.logout();
-              });
-          }
+        if (shouldRefreshSession) {
+          postRefreshToken({ token: parsedResult.refreshToken.token })
+            .then(async (data) => {
+              await SecureStore.setItemAsync(
+                SECURE_STORE_KEY,
+                JSON.stringify(data),
+              );
+              authStore.login(data);
+            })
+            .catch(() => {
+              authStore.logout();
+            });
+        } else if (accessTokenExpires < nowTime) {
+          authStore.logout();
         } else {
           getMe({ token: parsedResult.accessToken.token })
             .then((response) => {

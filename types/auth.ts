@@ -44,6 +44,7 @@ export interface UserResponseData {
   user: User;
   accessToken: Token;
   refreshToken: Token;
+  sessionId: string;
 }
 
 export enum AuthStatusEnum {

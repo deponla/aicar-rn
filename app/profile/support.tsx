@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
     LayoutAnimation,
@@ -140,6 +141,7 @@ function ContactCard({
 
 export default function SupportScreen() {
     const t = tokens;
+    const router = useRouter();
 
     const deviceInfo = [
         `Cihaz: ${Device.modelName || "Bilinmiyor"}`,
@@ -191,6 +193,39 @@ export default function SupportScreen() {
                         onPress={handleEmailContact}
                     />
                 </View>
+            </View>
+
+            <View style={styles.section}>
+                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
+                    ŞİKAYET VE ÖNERİ
+                </Text>
+                <TouchableOpacity
+                    style={[
+                        styles.bugReportCard,
+                        { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
+                    ]}
+                    onPress={() => router.push("/profile/feedback")}
+                    activeOpacity={0.7}
+                >
+                    <View style={styles.bugReportContent}>
+                        <MaterialIcons name="campaign" size={28} color={Colors.primary} />
+                        <View style={styles.bugReportText}>
+                            <Text style={[styles.bugReportTitle, { color: t.textPrimary }]}>
+                                Şikayet veya öneri gönder
+                            </Text>
+                            <Text style={[styles.bugReportDesc, { color: t.textTertiary }]}>
+                                Deneyiminizi geliştirmemize yardımcı olacak görüşlerinizi
+                                doğrudan uygulama içinden iletin.
+                            </Text>
+                        </View>
+                    </View>
+                    <View
+                        style={[styles.bugReportButton, { backgroundColor: Colors.primary }]}
+                    >
+                        <MaterialIcons name="arrow-forward" size={16} color="#fff" />
+                        <Text style={styles.bugReportButtonText}>Forma Git</Text>
+                    </View>
+                </TouchableOpacity>
             </View>
 
             {/* Bug Report Section */}

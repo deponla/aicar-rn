@@ -9,12 +9,15 @@ import { useState } from "react";
 import {
     ActivityIndicator,
     Image,
+    Modal,
     Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { WebView } from "react-native-webview";
 
 function InfoRow({
     label,
@@ -74,6 +77,8 @@ export default function AboutScreen() {
     const t = tokens;
     const { notify } = useNotification();
     const [isChecking, setIsChecking] = useState(false);
+    const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
+    const [webViewTitle, setWebViewTitle] = useState("");
 
     const appVersion = Constants.expoConfig?.version || "1.0.0";
     const buildNumber =
@@ -116,8 +121,60 @@ export default function AboutScreen() {
         }
     };
 
+    const closeWebView = () => {
+        setWebViewUrl(null);
+    };
+
+    const openInAppBrowser = (title: string, url: string) => {
+        setWebViewTitle(title);
+        setWebViewUrl(url);
+    };
+
+    const webViewModal = (
+        <Modal
+            visible={webViewUrl !== null}
+            animationType="slide"
+            presentationStyle="pageSheet"
+            onRequestClose={closeWebView}
+        >
+            <SafeAreaView
+                style={[styles.modalContainer, { backgroundColor: t.bgSurface }]}
+                edges={["top"]}
+            >
+                <View
+                    style={[
+                        styles.modalHeader,
+                        { borderBottomColor: t.borderDefault },
+                    ]}
+                >
+                    <View style={styles.modalHeaderSpacer} />
+                    <Text style={[styles.modalTitle, { color: t.textPrimary }]}>
+                        {webViewTitle}
+                    </Text>
+                    <TouchableOpacity onPress={closeWebView} style={styles.closeButton}>
+                        <View
+                            style={[
+                                styles.closeButtonCircle,
+                                { backgroundColor: t.bgMuted },
+                            ]}
+                        >
+                            <MaterialIcons
+                                size={16}
+                                name="close"
+                                color={t.textSecondary}
+                            />
+                        </View>
+                    </TouchableOpacity>
+                </View>
+                {webViewUrl && <WebView source={{ uri: webViewUrl }} style={styles.webView} />}
+            </SafeAreaView>
+        </Modal>
+    );
+
     return (
         <ScreenContainer title="Hakkında" showBackButton>
+            {webViewModal}
+
             {/* App Identity */}
             <View style={styles.appHeader}>
                 <View
@@ -186,19 +243,26 @@ export default function AboutScreen() {
                 <LinkRow
                     icon="description"
                     label="Kullanım Koşulları"
-                    onPress={() => Linking.openURL("https://deponla.com/terms")}
+                    onPress={() => {
+                        openInAppBrowser("Kullanım Koşulları", "https://deponla.com/terms");
+                    }}
                 />
                 <LinkRow
                     icon="privacy-tip"
                     label="Gizlilik Politikası"
-                    onPress={() => Linking.openURL("https://deponla.com/privacy")}
+                    onPress={() => {
+                        openInAppBrowser("Gizlilik Politikası", "https://deponla.com/privacy");
+                    }}
                 />
                 <LinkRow
                     icon="article"
                     label="Açık Kaynak Lisansları"
-                    onPress={() =>
-                        Linking.openURL("https://deponla.com/open-source-licenses")
-                    }
+                    onPress={() => {
+                        openInAppBrowser(
+                            "Açık Kaynak Lisansları",
+                            "https://deponla.com/open-source-licenses"
+                        );
+                    }}
                 />
             </View>
 
@@ -215,6 +279,39 @@ export default function AboutScreen() {
 }
 
 const styles = StyleSheet.create({
+    modalContainer: {
+        flex: 1,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+    modalHeaderSpacer: {
+        width: 30,
+    },
+    modalTitle: {
+        flex: 1,
+        textAlign: "center",
+        fontSize: 17,
+        fontWeight: "600",
+    },
+    closeButton: {
+        padding: 4,
+    },
+    closeButtonCircle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    webView: {
+        flex: 1,
+    },
     appHeader: {
         alignItems: "center",
         paddingTop: 32,

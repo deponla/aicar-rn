@@ -4,6 +4,8 @@ import {
   postConfirmUpload,
   postDeleteAccount,
   postDeletePhoto,
+  postFreezeAccount,
+  postReactivateAccount,
   postSendEmailVerification,
   postSendSmsOtp,
   postUploadUrl,
@@ -11,7 +13,9 @@ import {
 } from "@/api/post";
 import {
   ConfirmUploadRequest,
+  DeleteAccountRequest,
   DeletePhotoRequest,
+  ReactivateAccountRequest,
   UserUpdateRequest,
 } from "@/types/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -47,7 +51,20 @@ export const useChangePassword = () => {
 
 export const useDeleteAccount = () => {
   return useMutation({
-    mutationFn: postDeleteAccount,
+    mutationFn: (payload: DeleteAccountRequest) => postDeleteAccount(payload),
+  });
+};
+
+export const useFreezeAccount = () => {
+  return useMutation({
+    mutationFn: postFreezeAccount,
+  });
+};
+
+export const useReactivateAccount = () => {
+  return useMutation({
+    mutationFn: (payload: ReactivateAccountRequest) =>
+      postReactivateAccount(payload),
   });
 };
 

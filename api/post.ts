@@ -2,7 +2,7 @@ import { RefreshRequest, UserResponseData } from "@/types/auth";
 import { DeviceResponse, RegisterDevicePayload } from "@/types/device";
 import {
   ConversationResponse,
-  MessageResponse,
+  MessageResponse as ChatMessageResponse,
   SendMessageRequest,
   StartConversationRequest,
 } from "@/types/chat";
@@ -15,9 +15,12 @@ import {
   ChangePasswordRequest,
   ConfirmUploadRequest,
   ConfirmUploadResponse,
+  DeleteAccountRequest,
   DeletePhotoRequest,
   DeletePhotoResponse,
   EmailVerificationResponse,
+  MessageResponse as UserMessageResponse,
+  ReactivateAccountRequest,
   SendSmsOtpRequest,
   SendSmsOtpResponse,
   UploadUrlResponse,
@@ -25,6 +28,7 @@ import {
   VerifySmsOtpResponse,
 } from "@/types/user";
 import { CheckVersionRequest, CheckVersionResponse } from "@/types/app-version";
+import { CreateFeedbackRequest, FeedbackResponse } from "@/types/feedback";
 import {
   AiImageUploadInitResponse,
   AiUploadCompleteResponse,
@@ -65,7 +69,7 @@ export async function postStartConversation(
 
 export async function postSendMessage(
   payload: SendMessageRequest,
-): Promise<MessageResponse> {
+): Promise<ChatMessageResponse> {
   return instance.post("v1/chat/messages", payload).then((r) => r.data);
 }
 
@@ -83,12 +87,32 @@ export async function postSendEmailVerification(): Promise<EmailVerificationResp
 
 export async function postChangePassword(
   d: ChangePasswordRequest,
-): Promise<MessageResponse> {
+): Promise<UserMessageResponse> {
   return instance.post("v1/auth/change-password", d).then((r) => r.data);
 }
 
-export async function postDeleteAccount(): Promise<MessageResponse> {
-  return instance.post("v1/auth/delete-account").then((r) => r.data);
+export async function postFreezeAccount(): Promise<UserMessageResponse> {
+  return instance.post("v1/auth/freeze-account").then((r) => r.data);
+}
+
+export async function postDeleteAccount(
+  payload: DeleteAccountRequest,
+): Promise<UserMessageResponse> {
+  return instance.post("v1/auth/delete-account", payload).then((r) => r.data);
+}
+
+export async function postReactivateAccount(
+  payload: ReactivateAccountRequest,
+): Promise<UserResponseData> {
+  return instance
+    .post("v1/auth/reactivate-account", payload)
+    .then((r) => r.data);
+}
+
+export async function postCreateFeedback(
+  payload: CreateFeedbackRequest,
+): Promise<FeedbackResponse> {
+  return instance.post("v1/feedback", payload).then((r) => r.data);
 }
 
 export async function postSendSmsOtp(

@@ -22,9 +22,19 @@ export enum UserStatus {
   PENDING = "pending",
   ACTIVE = "active",
   INACTIVE = "inactive",
+  FROZEN = "frozen",
   BLOCKED = "blocked",
   DELETED = "deleted",
   BANNED = "banned",
+}
+
+export interface DeleteAccountRequest {
+  confirmationEmail: string;
+}
+
+export interface ReactivateAccountRequest {
+  email: string;
+  password: string;
 }
 
 export interface User {

@@ -318,6 +318,21 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
+          <TouchableOpacity
+            style={[
+              styles.reactivateCta,
+              { borderColor: t.borderDefault, backgroundColor: t.bgSurface },
+            ]}
+            onPress={() => router.push("/auth/reactivate")}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="lock-reset" size={20} color={Colors.primary} />
+            <View style={styles.reactivateCtaContent}>
+              <Text style={[styles.reactivateCtaTitle, { color: t.textPrimary }]}>Hesabınızı yeniden açın</Text>
+              <Text style={[styles.reactivateCtaText, { color: t.textSecondary }]}>Hesabınızı dondurduysanız e-posta ve şifrenizle tekrar etkinleştirebilirsiniz.</Text>
+            </View>
+          </TouchableOpacity>
+
           {/* Terms */}
           <Text style={[styles.termsText, { color: t.textTertiary }]}>
             Devam ederek{" "}
@@ -483,6 +498,13 @@ export default function ProfileScreen() {
             iconColor="#3B82F6"
             label="Yardım & Destek"
             onPress={() => router.push("/profile/support")}
+          />
+          <MenuItem
+            icon="campaign"
+            iconBg="#FFF7ED"
+            iconColor="#C2410C"
+            label="Şikayet ve Öneri"
+            onPress={() => router.push("/profile/feedback")}
           />
           <MenuItem
             icon="info-outline"
@@ -715,6 +737,29 @@ const styles = StyleSheet.create({
   authBtnOutlineText: {
     fontSize: 15,
     fontWeight: "600",
+  },
+  reactivateCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  reactivateCtaContent: {
+    flex: 1,
+    gap: 2,
+  },
+  reactivateCtaTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  reactivateCtaText: {
+    fontSize: 12,
+    lineHeight: 18,
   },
   termsText: {
     fontSize: 12,

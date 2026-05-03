@@ -1,5 +1,5 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { tokens } from "@/constants/theme";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -184,6 +184,12 @@ export default function SettingsScreen() {
       {/* Hesap */}
       <SectionLabel label="HESAP" />
       <MenuCard>
+        <SettingsMenuItem
+          title="Hesabı Dondur"
+          icon="pause-circle-outline"
+          onPress={() => router.push("/profile/freeze-account")}
+          destructive
+        />
         <SettingsMenuItem
           title="Hesabı Kapat"
           icon="delete-outline"

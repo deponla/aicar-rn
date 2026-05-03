@@ -23,7 +23,7 @@ import {
   FavoriteCategoriesQuery,
   FavoriteCategoriesResponse,
 } from "@/types/favorite-categories";
-import { Session } from "@/types/session";
+import { Session, SessionResponse } from "@/types/session";
 import {
   WarehouseListResponse,
   WarehouseQueryParams,
@@ -165,5 +165,9 @@ export async function getChatMessages({
 
 // Sessions
 export async function getActiveSessions(): Promise<Session[]> {
-  return instance.get("v1/sessions/active").then((r) => r.data);
+  return instance.get("v1/sessions/active").then((r) => {
+    const response = r.data as SessionResponse[];
+
+    return response.map((item) => item.result);
+  });
 }

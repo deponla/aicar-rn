@@ -4,11 +4,13 @@ import { useDeleteAccount } from "@/query-hooks/useUser";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -19,8 +21,17 @@ export default function DeleteAccountScreen() {
   const router = useRouter();
   const { notify } = useNotification();
   const deleteAccount = useDeleteAccount();
+  const [confirmationEmail, setConfirmationEmail] = useState("");
+
+  const normalizedConfirmationEmail = confirmationEmail.trim().toLowerCase();
+  const normalizedUserEmail = user?.email.trim().toLowerCase() ?? "";
+  const canSubmit = normalizedConfirmationEmail === normalizedUserEmail;
 
   const handleDelete = () => {
+    if (!user || !canSubmit) {
+      return;
+    }
+
     Alert.alert(
       "Hesabı kapat",
       "Hesabınız kapatılacak ve oturumunuz sonlandırılacak. Bu işlemden sonra tekrar giriş yapamazsınız.",
@@ -31,7 +42,9 @@ export default function DeleteAccountScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteAccount.mutateAsync();
+              await deleteAccount.mutateAsync({
+                confirmationEmail: confirmationEmail.trim(),
+              });
               await authStore.logout();
               notify({
                 type: "success",
@@ -83,10 +96,30 @@ export default function DeleteAccountScreen() {
         </Text>
       </View>
 
+      <View style={styles.confirmationCard}>
+        <Text style={styles.confirmationTitle}>E-posta doğrulaması</Text>
+        <Text style={styles.confirmationText}>
+          Devam etmek için hesap e-posta adresinizi tekrar yazın.
+        </Text>
+        <TextInput
+          style={styles.input}
+          value={confirmationEmail}
+          onChangeText={setConfirmationEmail}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          placeholder={user.email}
+          placeholderTextColor="#C7C7CC"
+        />
+      </View>
+
       <TouchableOpacity
-        style={styles.deleteButton}
+        style={[
+          styles.deleteButton,
+          (!canSubmit || deleteAccount.isPending) && styles.disabledButton,
+        ]}
         onPress={handleDelete}
-        disabled={deleteAccount.isPending}
+        disabled={!canSubmit || deleteAccount.isPending}
         activeOpacity={0.85}
       >
         {deleteAccount.isPending ? (
@@ -152,6 +185,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#4B5563",
   },
+  confirmationCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#ECECEC",
+    padding: 18,
+    gap: 10,
+    marginBottom: 18,
+  },
+  confirmationTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1C1C1E",
+  },
+  confirmationText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#6B7280",
+  },
+  input: {
+    minHeight: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#FAFAFA",
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: "#1C1C1E",
+  },
   deleteButton: {
     minHeight: 52,
     borderRadius: 14,
@@ -160,6 +222,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: 8,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   deleteButtonText: {
     color: "#FFFFFF",

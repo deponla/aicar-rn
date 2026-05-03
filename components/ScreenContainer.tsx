@@ -2,6 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { ReactNode } from "react";
 import {
+  Keyboard,
   RefreshControlProps,
   ScrollView,
   StyleProp,
@@ -40,6 +41,13 @@ export default function ScreenContainer({
 }: ScreenContainerProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  const handleBack = () => {
+    Keyboard.dismiss();
+    requestAnimationFrame(() => {
+      router.back();
+    });
+  };
 
   const renderContent = () => {
     if (!scrollable) {
@@ -87,7 +95,7 @@ export default function ScreenContainer({
           <View style={styles.headerSide}>
             {showBackButton && (
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={handleBack}
                 style={styles.backButton}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >

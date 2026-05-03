@@ -5,6 +5,7 @@ import {
     useActiveSessions,
     useRevokeSession,
 } from "@/query-hooks/useSession";
+import { useAuthStore } from "@/store/useAuth";
 import { Session, SessionPlatform } from "@/types/session";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
@@ -177,9 +178,16 @@ function SessionCard({
 
 export default function ActiveSessionsScreen() {
     const t = tokens;
+    const authStore = useAuthStore();
     const { notify } = useNotification();
-    const { data: sessions, isLoading, refetch } = useActiveSessions();
+    const { data: sessions, error, isError, isLoading, refetch } = useActiveSessions();
     const revokeSession = useRevokeSession();
+    const currentSessionId = authStore.user?.sessionId;
+    const normalizedSessions =
+        sessions?.map((session) => ({
+            ...session,
+            isCurrent: Boolean(session.isCurrent) || session.id === currentSessionId,
+        })) || [];
 
     const handleRevoke = (id: string) => {
         Alert.alert(
@@ -208,7 +216,7 @@ export default function ActiveSessionsScreen() {
     };
 
     const handleRevokeAll = () => {
-        const otherSessions = sessions?.filter((s) => !s.isCurrent) || [];
+        const otherSessions = normalizedSessions.filter((session) => !session.isCurrent);
         if (otherSessions.length === 0) {
             notify({ type: "info", title: "Başka aktif oturum yok" });
             return;
@@ -245,7 +253,7 @@ export default function ActiveSessionsScreen() {
     };
 
     const otherSessionCount =
-        sessions?.filter((s) => !s.isCurrent).length || 0;
+        normalizedSessions.filter((session) => !session.isCurrent).length;
 
     return (
         <ScreenContainer
@@ -263,13 +271,23 @@ export default function ActiveSessionsScreen() {
                 </Text>
             </View>
 
-            {isLoading && !sessions ? (
+            {isLoading && sessions === undefined ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} />
                 </View>
-            ) : sessions && sessions.length > 0 ? (
+            ) : isError ? (
+                <View style={styles.emptyState}>
+                    <MaterialIcons name="error-outline" size={48} color={t.dangerText} />
+                    <Text style={[styles.emptyText, { color: t.textPrimary }]}>Oturumlar yüklenemedi</Text>
+                    <Text style={styles.emptySubtext}>
+                        {error instanceof Error
+                            ? error.message
+                            : "Lütfen sayfayı yenileyip tekrar deneyin."}
+                    </Text>
+                </View>
+            ) : normalizedSessions.length > 0 ? (
                 <View style={styles.sessionsList}>
-                    {sessions.map((session) => (
+                    {normalizedSessions.map((session) => (
                         <SessionCard
                             key={session.id}
                             session={session}
@@ -416,5 +434,12 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 15,
         color: "#8E8E93",
+    },
+    emptySubtext: {
+        fontSize: 13,
+        lineHeight: 19,
+        color: "#8E8E93",
+        textAlign: "center",
+        paddingHorizontal: 24,
     },
 });
