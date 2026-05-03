@@ -507,6 +507,13 @@ export default function ProfileScreen() {
             onPress={() => router.push("/profile/feedback")}
           />
           <MenuItem
+            icon="history"
+            iconBg="#EEF2FF"
+            iconColor="#4338CA"
+            label="Geri Bildirimlerim"
+            onPress={() => router.push("/profile/feedback-history")}
+          />
+          <MenuItem
             icon="info-outline"
             iconBg="#EFF6FF"
             iconColor="#3B82F6"

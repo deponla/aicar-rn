@@ -17,6 +17,7 @@ import {
   ProvinceResponse,
 } from "@/types/city";
 import { CreditBalanceResponse } from "@/types/credit";
+import { FeedbackListResponse, FeedbackQuery } from "@/types/feedback";
 import { FavoriteListResponse, FavoriteQuery } from "@/types/favorite";
 import {
   FavoriteCategoriesListResponse,
@@ -139,6 +140,12 @@ export async function getFavoriteCategoryById({
   id: string;
 }): Promise<FavoriteCategoriesResponse> {
   return instance.get(`v1/favorite-categories/${id}`).then((r) => r.data);
+}
+
+export async function getFeedbacks(
+  filters?: FeedbackQuery,
+): Promise<FeedbackListResponse> {
+  return instance.get("v1/feedback", { params: filters }).then((r) => r.data);
 }
 
 export async function getChatConversations(

@@ -1,3 +1,5 @@
+import { IPagination, IPaginationQuery } from "./utils";
+
 export enum FeedbackType {
   COMPLAINT = "complaint",
   SUGGESTION = "suggestion",
@@ -30,6 +32,16 @@ export interface CreateFeedbackRequest {
   message: string;
 }
 
+export interface FeedbackQuery extends IPaginationQuery {
+  type?: FeedbackType;
+  status?: FeedbackStatus;
+}
+
 export interface FeedbackResponse {
   result: Feedback;
+}
+
+export interface FeedbackListResponse extends IPagination {
+  results: Feedback[];
+  count: number;
 }

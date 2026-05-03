@@ -14,6 +14,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="freeze-account" />
       <Stack.Screen name="delete-account" />
       <Stack.Screen name="feedback" />
+      <Stack.Screen name="feedback-history" />
       <Stack.Screen name="legal" />
       <Stack.Screen name="permissions" />
       <Stack.Screen name="change-password" />

@@ -60,7 +60,7 @@ export default function FeedbackScreen() {
                 title: type === FeedbackType.COMPLAINT ? "Şikayet gönderildi" : "Öneri gönderildi",
                 message: "Ekibimiz geri bildiriminizi inceleyecek.",
             });
-            router.back();
+            router.replace("/profile/feedback-history");
         } catch (error: unknown) {
             const err = error as { response?: { data?: { message?: string } } };
             notify({
@@ -83,6 +83,15 @@ export default function FeedbackScreen() {
                     </Text>
 
                     <View style={styles.optionList}>
+                        <TouchableOpacity
+                            style={styles.historyButton}
+                            onPress={() => router.push("/profile/feedback-history")}
+                            activeOpacity={0.85}
+                        >
+                            <MaterialIcons name="history" size={16} color={Colors.primary} />
+                            <Text style={styles.historyButtonText}>Gönderilerim</Text>
+                        </TouchableOpacity>
+
                         {FEEDBACK_OPTIONS.map((option) => {
                             const isSelected = option.value === type;
 
@@ -189,6 +198,23 @@ const styles = StyleSheet.create({
     },
     optionList: {
         gap: 10,
+    },
+    historyButton: {
+        alignSelf: "flex-start",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#D6DCE8",
+        backgroundColor: "#F8FAFF",
+    },
+    historyButtonText: {
+        fontSize: 13,
+        fontWeight: "700",
+        color: Colors.primary,
     },
     optionCard: {
         flexDirection: "row",
