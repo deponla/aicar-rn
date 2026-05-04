@@ -1,4 +1,3 @@
-import ChatWarehouseCard from "@/components/ChatWarehouseCard";
 import { Colors, tokens } from "@/constants/theme";
 import {
   ChatQueryKeys,
@@ -317,7 +316,9 @@ export default function ChatDetailScreen() {
               { backgroundColor: t.bgSurface },
             ]}
           >
-            <ChatWarehouseCard warehouseId={conversation.relatedWarehouseId} />
+            <Text style={{ color: t.textSecondary, fontSize: 13 }}>
+              Depo: {conversation.relatedWarehouseId}
+            </Text>
           </View>
         )}
         <View

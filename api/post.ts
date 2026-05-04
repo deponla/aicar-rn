@@ -6,11 +6,6 @@ import {
   SendMessageRequest,
   StartConversationRequest,
 } from "@/types/chat";
-import { CreateFavoriteRequest, FavoriteResponse } from "@/types/favorite";
-import {
-  CreateFavoriteCategoriesRequest,
-  FavoriteCategoriesResponse,
-} from "@/types/favorite-categories";
 import {
   ChangePasswordRequest,
   ConfirmUploadRequest,
@@ -42,20 +37,6 @@ export async function postRefreshToken(
   d: RefreshRequest,
 ): Promise<UserResponseData> {
   return instance.post("v1/auth/refresh", d).then((r) => r.data);
-}
-
-// Favorites
-export async function postFavorite(
-  payload: CreateFavoriteRequest,
-): Promise<FavoriteResponse> {
-  return instance.post("v1/favorites", payload).then((r) => r.data);
-}
-
-// Favorite Categories
-export async function postFavoriteCategory(
-  payload: CreateFavoriteCategoriesRequest,
-): Promise<FavoriteCategoriesResponse> {
-  return instance.post("v1/favorite-categories", payload).then((r) => r.data);
 }
 
 // Chat

@@ -5,31 +5,9 @@ import {
   MessageListResponse,
   MessageQuery,
 } from "@/types/chat";
-import {
-  DistrictListResponse,
-  DistrictQueryParameters,
-  DistrictResponse,
-  NeighborhoodListResponse,
-  NeighborhoodQueryParameters,
-  NeighborhoodResponse,
-  ProvinceListResponse,
-  ProvinceQueryParameters,
-  ProvinceResponse,
-} from "@/types/city";
 import { CreditBalanceResponse } from "@/types/credit";
 import { FeedbackListResponse, FeedbackQuery } from "@/types/feedback";
-import { FavoriteListResponse, FavoriteQuery } from "@/types/favorite";
-import {
-  FavoriteCategoriesListResponse,
-  FavoriteCategoriesQuery,
-  FavoriteCategoriesResponse,
-} from "@/types/favorite-categories";
 import { Session, SessionResponse } from "@/types/session";
-import {
-  WarehouseListResponse,
-  WarehouseQueryParams,
-  WarehouseResponse,
-} from "@/types/warehouse";
 import { instance } from "./config";
 
 export async function getMe({ token }: { token: string }): Promise<MeResponse> {
@@ -44,102 +22,6 @@ export async function getMe({ token }: { token: string }): Promise<MeResponse> {
 
 export async function getCreditBalance(): Promise<CreditBalanceResponse> {
   return instance.get("v1/account/balance").then((r) => r.data);
-}
-
-export async function getWarehousesPublic({
-  filters,
-}: {
-  filters?: WarehouseQueryParams;
-}): Promise<WarehouseListResponse> {
-  return instance
-    .get("v1/warehouses/public", { params: filters })
-    .then((r) => r.data);
-}
-
-export async function getWarehouseByIdPublic({
-  id,
-}: {
-  id: string;
-}): Promise<WarehouseResponse> {
-  return instance.get(`v1/warehouses/${id}/public`).then((r) => r.data);
-}
-
-export async function getProvinces({
-  filters,
-}: {
-  filters?: ProvinceQueryParameters;
-}): Promise<ProvinceListResponse> {
-  return instance
-    .get("v1/locations/provinces", { params: filters })
-    .then((r) => r.data);
-}
-
-export async function getDistricts({
-  filters,
-}: {
-  filters?: DistrictQueryParameters;
-}): Promise<DistrictListResponse> {
-  return instance
-    .get("v1/locations/districts", { params: filters })
-    .then((r) => r.data);
-}
-
-export async function getProvinceById({
-  id,
-}: {
-  id: string;
-}): Promise<ProvinceResponse> {
-  return instance.get(`v1/locations/provinces/${id}`).then((r) => r.data);
-}
-
-export async function getDistrictById({
-  id,
-}: {
-  id: string;
-}): Promise<DistrictResponse> {
-  return instance.get(`v1/locations/districts/${id}`).then((r) => r.data);
-}
-
-export async function getNeighborhoodById({
-  id,
-}: {
-  id?: string;
-}): Promise<NeighborhoodResponse> {
-  return instance
-    .get(`v1/locations/neighborhoods/detail/${id}`)
-    .then((r) => r.data);
-}
-
-export async function getNeighborhoods({
-  filters,
-}: {
-  filters?: NeighborhoodQueryParameters;
-}): Promise<NeighborhoodListResponse> {
-  return instance
-    .get(`v1/locations/neighborhoods`, { params: filters })
-    .then((r) => r.data);
-}
-
-export async function getFavorites(
-  filters?: FavoriteQuery,
-): Promise<FavoriteListResponse> {
-  return instance.get("v1/favorites", { params: filters }).then((r) => r.data);
-}
-
-export async function getFavoriteCategories(
-  filters?: FavoriteCategoriesQuery,
-): Promise<FavoriteCategoriesListResponse> {
-  return instance
-    .get("v1/favorite-categories", { params: filters })
-    .then((r) => r.data);
-}
-
-export async function getFavoriteCategoryById({
-  id,
-}: {
-  id: string;
-}): Promise<FavoriteCategoriesResponse> {
-  return instance.get(`v1/favorite-categories/${id}`).then((r) => r.data);
 }
 
 export async function getFeedbacks(
