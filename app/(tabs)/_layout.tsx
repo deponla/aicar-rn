@@ -47,7 +47,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="favorites"
+        name="history"
         options={{
           title: "Geçmiş",
           tabBarIcon: ({ color, size }) => (
