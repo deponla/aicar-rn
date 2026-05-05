@@ -31,6 +31,13 @@ import {
   AnalyzeMediaRequest,
   AnalyzeMediaResponse,
 } from "@/types/ai";
+import { CarResponse, CreateCarRequest } from "@/types/car";
+import {
+  AccountResponse,
+  PurchaseCreditsRequest,
+  TransactionResponse,
+  VerifyReceiptRequest,
+} from "@/types/credit";
 import { instance } from "./config";
 
 export async function postRefreshToken(
@@ -167,4 +174,33 @@ export async function postCheckAppVersion(
   payload: CheckVersionRequest,
 ): Promise<CheckVersionResponse> {
   return instance.post("v1/app-version/check", payload).then((r) => r.data);
+}
+
+// Auth Logout
+export async function postLogout(
+  tokenUUID: string,
+): Promise<{ message: string }> {
+  return instance.post("v1/auth/logout", { tokenUUID }).then((r) => r.data);
+}
+
+// Cars
+export async function postCreateCar(
+  payload: CreateCarRequest,
+): Promise<CarResponse> {
+  return instance.post("v1/cars", payload).then((r) => r.data);
+}
+
+// Account / Credits
+export async function postPurchaseCredits(
+  payload: PurchaseCreditsRequest,
+): Promise<TransactionResponse> {
+  return instance.post("v1/account/purchase", payload).then((r) => r.data);
+}
+
+export async function postVerifyReceipt(
+  payload: VerifyReceiptRequest,
+): Promise<AccountResponse> {
+  return instance
+    .post("v1/account/verify-receipt", payload)
+    .then((r) => r.data);
 }

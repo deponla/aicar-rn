@@ -1,5 +1,6 @@
 import { DevicePermissions } from "@/types/device";
 import { UserGetResponse, UserUpdateRequest } from "@/types/user";
+import { CarResponse, UpdateCarRequest } from "@/types/car";
 import { instance } from "./config";
 
 export async function patchUsers(
@@ -17,4 +18,12 @@ export async function patchDevicePermissions(
   return instance
     .patch(`v1/devices/${deviceId}`, { permissions })
     .then((r) => r.data);
+}
+
+// Cars
+export async function patchCar(
+  id: string,
+  payload: UpdateCarRequest,
+): Promise<CarResponse> {
+  return instance.patch(`v1/cars/${id}`, payload).then((r) => r.data);
 }

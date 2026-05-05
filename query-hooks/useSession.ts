@@ -1,4 +1,4 @@
-import { deleteSession } from "@/api/delete";
+import { deleteSession, deleteAllSessions } from "@/api/delete";
 import { getActiveSessions } from "@/api/get";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -18,6 +18,18 @@ export const useRevokeSession = () => {
   const query = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteSession(id),
+    onSuccess: () => {
+      query.invalidateQueries({
+        queryKey: [SessionQueryKeys.ACTIVE_SESSIONS],
+      });
+    },
+  });
+};
+
+export const useRevokeAllSessions = () => {
+  const query = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteAllSessions(),
     onSuccess: () => {
       query.invalidateQueries({
         queryKey: [SessionQueryKeys.ACTIVE_SESSIONS],

@@ -1,97 +1,163 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors } from "@/constants/theme";
+import { Colors, tokens } from "@/constants/theme";
+import { useGetLegalDocuments } from "@/query-hooks/useLegal";
+import { LegalDocument, LegalDocumentTypeEnum } from "@/types/legal";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { WebView } from "react-native-webview";
+import RenderHtml from "react-native-render-html";
 
-export default function LegalScreen() {
-  const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
-  const [webViewTitle, setWebViewTitle] = useState<string>("");
+const ICON_MAP: Record<
+  string,
+  keyof typeof MaterialIcons.glyphMap
+> = {
+  [LegalDocumentTypeEnum.TERMS_OF_USE]: "description",
+  [LegalDocumentTypeEnum.PRIVACY_POLICY]: "privacy-tip",
+  [LegalDocumentTypeEnum.COOKIE_POLICY]: "cookie",
+  [LegalDocumentTypeEnum.TERMS_AND_RULES]: "gavel",
+  [LegalDocumentTypeEnum.ACCOUNT_AGREEMENT]: "assignment",
+  [LegalDocumentTypeEnum.HELP_GUIDE]: "help-outline",
+};
 
-  const closeWebView = () => {
-    setWebViewUrl(null);
-  };
+function LegalDocumentViewer({
+  document,
+  onClose,
+}: {
+  document: LegalDocument;
+  onClose: () => void;
+}) {
+  const { width } = useWindowDimensions();
 
-  const webViewModal = (
+  return (
     <Modal
-      visible={webViewUrl !== null}
+      visible
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={closeWebView}
+      onRequestClose={onClose}
     >
       <SafeAreaView style={styles.modalContainer} edges={["top"]}>
         <View style={styles.modalHeader}>
           <View style={styles.modalHeaderSpacer} />
-          <Text style={styles.modalTitle}>{webViewTitle}</Text>
-          <TouchableOpacity onPress={closeWebView} style={styles.closeButton}>
+          <Text style={styles.modalTitle} numberOfLines={1}>
+            {document.title}
+          </Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <View style={styles.closeButtonCircle}>
               <MaterialIcons size={16} name="close" color="#8E8E93" />
             </View>
           </TouchableOpacity>
         </View>
-        {webViewUrl && (
-          <WebView source={{ uri: webViewUrl }} style={styles.webView} />
-        )}
+        <ScrollView
+          style={styles.contentScroll}
+          contentContainerStyle={styles.contentContainer}
+        >
+          <RenderHtml
+            contentWidth={width - 48}
+            source={{ html: document.content }}
+            baseStyle={{
+              color: tokens.textPrimary,
+              fontSize: 15,
+              lineHeight: 22,
+            }}
+          />
+          <Text style={styles.versionText}>
+            Versiyon {document.version}
+          </Text>
+        </ScrollView>
       </SafeAreaView>
     </Modal>
   );
+}
+
+export default function LegalScreen() {
+  const { data, isLoading, refetch } = useGetLegalDocuments();
+  const [selected, setSelected] = useState<LegalDocument | null>(null);
+
+  const documents = Array.isArray(data) ? data : [];
 
   return (
-    <ScreenContainer title="Yasal" showBackButton>
-      {webViewModal}
+    <ScreenContainer
+      title="Yasal"
+      showBackButton
+      refreshControl={
+        <RefreshControl refreshing={isLoading} onRefresh={refetch} />
+      }
+    >
+      {selected && (
+        <LegalDocumentViewer
+          document={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
 
-      <View style={styles.card}>
-        <TouchableOpacity
-          style={styles.menuItem}
-          activeOpacity={0.6}
-          onPress={() => {
-            setWebViewTitle("Kullanım Koşulları");
-            setWebViewUrl("https://deponla.com/terms");
-          }}
-        >
-          <View style={styles.menuItemLeft}>
-            <View style={styles.iconCircle}>
-              <MaterialIcons
-                name="description"
-                size={20}
-                color={Colors.primary}
-              />
+      {isLoading && !data ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : documents.length > 0 ? (
+        <View style={styles.card}>
+          {documents.map((doc, index) => (
+            <View key={doc.id}>
+              {index > 0 && <View style={styles.divider} />}
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.6}
+                onPress={() => setSelected(doc)}
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.iconCircle}>
+                    <MaterialIcons
+                      name={ICON_MAP[doc.type] ?? "article"}
+                      size={20}
+                      color={Colors.primary}
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.menuItemTitle}>{doc.title}</Text>
+                    {doc.excerpt && (
+                      <Text style={styles.menuItemSubtitle} numberOfLines={1}>
+                        {doc.excerpt}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                <MaterialIcons
+                  size={20}
+                  name="chevron-right"
+                  color="#C7C7CC"
+                />
+              </TouchableOpacity>
             </View>
-            <Text style={styles.menuItemTitle}>Kullanım Koşulları</Text>
-          </View>
-          <MaterialIcons size={20} name="chevron-right" color="#C7C7CC" />
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          activeOpacity={0.6}
-          onPress={() => {
-            setWebViewTitle("Gizlilik Politikası");
-            setWebViewUrl("https://deponla.com/privacy");
-          }}
-        >
-          <View style={styles.menuItemLeft}>
-            <View style={styles.iconCircle}>
-              <MaterialIcons
-                name="privacy-tip"
-                size={20}
-                color={Colors.primary}
-              />
-            </View>
-            <Text style={styles.menuItemTitle}>Gizlilik Politikası</Text>
-          </View>
-          <MaterialIcons size={20} name="chevron-right" color="#C7C7CC" />
-        </TouchableOpacity>
-      </View>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <MaterialIcons name="article" size={48} color={tokens.textTertiary} />
+          <Text style={styles.emptyText}>Yasal belge bulunamadı</Text>
+        </View>
+      )}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 80,
+  },
   modalContainer: {
     flex: 1,
     backgroundColor: "#FFFFFF",
@@ -126,8 +192,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  webView: {
+  contentScroll: {
     flex: 1,
+  },
+  contentContainer: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  versionText: {
+    fontSize: 12,
+    color: tokens.textTertiary,
+    marginTop: 24,
+    textAlign: "center",
   },
   card: {
     backgroundColor: "#FFFFFF",
@@ -140,6 +216,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#E5E5EA",
+    marginTop: 10,
   },
   menuItem: {
     flexDirection: "row",
@@ -151,6 +228,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
+    flex: 1,
   },
   iconCircle: {
     width: 36,
@@ -165,9 +243,25 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#1C1C1E",
   },
+  menuItemSubtitle: {
+    fontSize: 12,
+    color: tokens.textTertiary,
+    marginTop: 2,
+  },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: "#E5E5EA",
     marginLeft: 50,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+    gap: 12,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: tokens.textSecondary,
   },
 });

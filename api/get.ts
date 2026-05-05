@@ -5,9 +5,23 @@ import {
   MessageListResponse,
   MessageQuery,
 } from "@/types/chat";
-import { CreditBalanceResponse } from "@/types/credit";
+import {
+  AccountResponse,
+  CreditBalanceResponse,
+  CreditPackageListResponse,
+  TransactionListResponse,
+  TransactionQuery,
+} from "@/types/credit";
 import { FeedbackListResponse, FeedbackQuery } from "@/types/feedback";
 import { Session, SessionResponse } from "@/types/session";
+import { CarListResponse, CarQuery, CarResponse } from "@/types/car";
+import { AicarListResponse, AicarQuery, AicarResponse } from "@/types/aicar";
+import {
+  NotificationListResponse,
+  NotificationQuery,
+} from "@/types/notification";
+import { LegalDocument } from "@/types/legal";
+import { ActivityListResponse, ActivityQuery } from "@/types/activity";
 import { instance } from "./config";
 
 export async function getMe({ token }: { token: string }): Promise<MeResponse> {
@@ -59,4 +73,86 @@ export async function getActiveSessions(): Promise<Session[]> {
 
     return response.map((item) => item.result);
   });
+}
+
+// Cars
+export async function getCars(filters?: CarQuery): Promise<CarListResponse> {
+  return instance.get("v1/cars", { params: filters }).then((r) => r.data);
+}
+
+export async function getCar(id: string): Promise<CarResponse> {
+  return instance.get(`v1/cars/${id}`).then((r) => r.data);
+}
+
+// Aicars (listings)
+export async function getMyAicars(
+  filters?: AicarQuery,
+): Promise<AicarListResponse> {
+  return instance.get("v1/aicars", { params: filters }).then((r) => r.data);
+}
+
+export async function getAicar(id: string): Promise<AicarResponse> {
+  return instance.get(`v1/aicars/${id}`).then((r) => r.data);
+}
+
+export async function getPublicAicars(
+  filters?: AicarQuery,
+): Promise<AicarListResponse> {
+  return instance
+    .get("v1/aicars/public", { params: filters })
+    .then((r) => r.data);
+}
+
+export async function getPublicAicar(id: string): Promise<AicarResponse> {
+  return instance.get(`v1/aicars/${id}/public`).then((r) => r.data);
+}
+
+// Notifications
+export async function getNotifications(
+  filters?: NotificationQuery,
+): Promise<NotificationListResponse> {
+  return instance
+    .get("v1/notifications", { params: filters })
+    .then((r) => r.data);
+}
+
+// Credit Packages
+export async function getCreditPackages(): Promise<CreditPackageListResponse> {
+  return instance.get("v1/credit-packages").then((r) => r.data);
+}
+
+// Account
+export async function getMyAccount(): Promise<AccountResponse> {
+  return instance.get("v1/account").then((r) => r.data);
+}
+
+// Transactions
+export async function getTransactions(
+  filters?: TransactionQuery,
+): Promise<TransactionListResponse> {
+  return instance
+    .get("v1/transactions", { params: filters })
+    .then((r) => r.data);
+}
+
+export async function getTransaction(
+  id: string,
+): Promise<{ result: import("@/types/credit").Transaction }> {
+  return instance.get(`v1/transactions/${id}`).then((r) => r.data);
+}
+
+// Legal
+export async function getLegalDocuments(): Promise<LegalDocument[]> {
+  return instance.get("v1/legal").then((r) => r.data);
+}
+
+export async function getLegalDocument(type: string): Promise<LegalDocument> {
+  return instance.get(`v1/legal/${type}`).then((r) => r.data);
+}
+
+// Activities
+export async function getActivities(
+  filters?: ActivityQuery,
+): Promise<ActivityListResponse> {
+  return instance.get("v1/activities", { params: filters }).then((r) => r.data);
 }
