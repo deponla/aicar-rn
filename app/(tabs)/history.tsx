@@ -220,11 +220,11 @@ export default function HistoryScreen() {
     );
   }
 
-  const logs = data?.results ?? [];
-  const filtered =
+  const logs: AnalyzeMediaLog[] = data?.results ?? [];
+  const filtered: AnalyzeMediaLog[] =
     urgencyFilter === "all"
       ? logs
-      : logs.filter((l) => l.aiResponse?.urgency === urgencyFilter);
+      : logs.filter((l: AnalyzeMediaLog) => l.aiResponse?.urgency === urgencyFilter);
 
   const handlePress = (item: AnalyzeMediaLog) => {
     setSelected(item);

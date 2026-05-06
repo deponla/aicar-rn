@@ -16,7 +16,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import RenderHtml from "react-native-render-html";
 
 const ICON_MAP: Record<
   string,
@@ -37,7 +36,7 @@ function LegalDocumentViewer({
   document: LegalDocument;
   onClose: () => void;
 }) {
-  const { width } = useWindowDimensions();
+  const { width: _width } = useWindowDimensions();
 
   return (
     <Modal
@@ -62,15 +61,9 @@ function LegalDocumentViewer({
           style={styles.contentScroll}
           contentContainerStyle={styles.contentContainer}
         >
-          <RenderHtml
-            contentWidth={width - 48}
-            source={{ html: document.content }}
-            baseStyle={{
-              color: tokens.textPrimary,
-              fontSize: 15,
-              lineHeight: 22,
-            }}
-          />
+          <Text style={{ color: tokens.textPrimary, fontSize: 15, lineHeight: 22 }}>
+            {document.content.replace(/<[^>]*>/g, '')}
+          </Text>
           <Text style={styles.versionText}>
             Versiyon {document.version}
           </Text>
