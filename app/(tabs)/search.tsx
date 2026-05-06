@@ -25,6 +25,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 const FUEL_LABELS: Record<FuelTypeEnum, string> = {
   [FuelTypeEnum.GASOLINE]: "Benzin",
@@ -41,13 +42,15 @@ const TRANSMISSION_LABELS: Record<TransmissionEnum, string> = {
 
 function CarCard({
   item,
+  onPress,
   onDelete,
 }: {
   item: Car;
+  onPress: () => void;
   onDelete: (id: string) => void;
 }) {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.cardHeader}>
         <View style={styles.cardTitleRow}>
           <MaterialIcons
@@ -115,7 +118,7 @@ function CarCard({
       <Text style={styles.dateText}>
         Eklendi: {dayjs(item.createdAt).format("DD.MM.YYYY")}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -305,6 +308,7 @@ export default function GarageScreen() {
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const { notify } = useNotification();
+  const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
 
   const { data, isLoading, refetch } = useGetCars();
@@ -385,7 +389,7 @@ export default function GarageScreen() {
       ) : cars.length > 0 ? (
         <View style={styles.list}>
           {cars.map((car) => (
-            <CarCard key={car.id} item={car} onDelete={handleDelete} />
+            <CarCard key={car.id} item={car} onPress={() => router.push(`/car/${car.id}`)} onDelete={handleDelete} />
           ))}
         </View>
       ) : (

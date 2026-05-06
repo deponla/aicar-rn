@@ -22,6 +22,7 @@ import {
 } from "@/types/notification";
 import { LegalDocument } from "@/types/legal";
 import { ActivityListResponse, ActivityQuery } from "@/types/activity";
+import { AnalyzeMediaLog } from "@/types/ai";
 import { instance } from "./config";
 
 export async function getMe({ token }: { token: string }): Promise<MeResponse> {
@@ -148,6 +149,16 @@ export async function getLegalDocuments(): Promise<LegalDocument[]> {
 
 export async function getLegalDocument(type: string): Promise<LegalDocument> {
   return instance.get(`v1/legal/${type}`).then((r) => r.data);
+}
+
+// Analysis Logs
+export async function getAnalysisLogs(filters?: {
+  limit?: number;
+  page?: number;
+  carId?: string;
+  sort?: string;
+}): Promise<{ results: AnalyzeMediaLog[]; count: number; page: number; limit: number }> {
+  return instance.get("v1/analysis-logs", { params: filters }).then((r) => r.data);
 }
 
 // Activities

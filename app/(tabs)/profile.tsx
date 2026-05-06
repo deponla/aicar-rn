@@ -484,6 +484,13 @@ export default function ProfileScreen() {
             iconColor="#059669"
             label="İzinler"
             onPress={() => router.push("/profile/permissions")}
+          />
+          <MenuItem
+            icon="monetization-on"
+            iconBg="#EFF6FF"
+            iconColor="#2563EB"
+            label="Krediler"
+            onPress={() => router.push("/credits")}
             showDivider={false}
           />
         </MenuSection>
