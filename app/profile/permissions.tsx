@@ -173,11 +173,11 @@ export default function PermissionsScreen() {
       openAppSettings();
       return;
     }
-    const { status } = await Notifications.requestPermissionsAsync();
-    const granted = status === "granted";
+    const perms = await Notifications.requestPermissionsAsync() as unknown as { status: string };
+    const granted = perms.status === 'granted';
     setNotificationsGranted(granted);
     if (!granted) openAppSettings();
-    syncPermissions({ notifications: toPermissionStatus(status) });
+    syncPermissions({ notifications: toPermissionStatus(perms.status) });
   }, [notificationsGranted]);
 
   return (
