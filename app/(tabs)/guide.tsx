@@ -12,10 +12,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { tokens } from '@/constants/theme';
 import ScreenContainer from '@/components/ScreenContainer';
-import { useAnalyzeMedia } from '@/query-hooks/useAiAnalysis';
+import { useAnalyzeObd } from '@/query-hooks/useAiAnalysis';
 import {
-  AiAnalysisType,
-  AiMediaType,
   type AiAnalysisPayload,
   type AiWarning,
 } from '@/types/ai';
@@ -248,7 +246,7 @@ function MaintenanceCard({ entry }: { entry: MaintenanceEntry }) {
 export default function GuideScreen() {
   const [obdCode, setObdCode] = useState('');
   const [obdResult, setObdResult] = useState<AiAnalysisPayload | null>(null);
-  const analyzeMedia = useAnalyzeMedia();
+  const analyzeObd = useAnalyzeObd();
 
   const handleObdSearch = async () => {
     const code = obdCode.trim().toUpperCase();
@@ -260,11 +258,9 @@ export default function GuideScreen() {
     setObdResult(null);
 
     try {
-      const response = await analyzeMedia.mutateAsync({
-        analysisType: AiAnalysisType.OBD_CODE,
-        mediaUrl: 'obd://' + code,
-        mediaType: AiMediaType.IMAGE,
-        prompt: `OBD hata kodu: ${code}`,
+      const response = await analyzeObd.mutateAsync({
+        code,
+        prompt: `OBD hata kodu analizi`,
       });
 
       if (response.result.aiResponse) {
@@ -310,12 +306,12 @@ export default function GuideScreen() {
               onSubmitEditing={() => void handleObdSearch()}
             />
             <TouchableOpacity
-              style={[styles.obdButton, analyzeMedia.isPending && styles.obdButtonDisabled]}
-              disabled={analyzeMedia.isPending}
+              style={[styles.obdButton, analyzeObd.isPending && styles.obdButtonDisabled]}
+              disabled={analyzeObd.isPending}
               onPress={() => void handleObdSearch()}
               activeOpacity={0.85}
             >
-              {analyzeMedia.isPending ? (
+              {analyzeObd.isPending ? (
                 <ActivityIndicator color={tokens.textInverse} size="small" />
               ) : (
                 <Text style={styles.obdButtonText}>Sorgula</Text>
