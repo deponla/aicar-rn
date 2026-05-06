@@ -103,8 +103,8 @@ export default function NotificationPreferencesScreen() {
     const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
 
     const checkPushPermission = useCallback(async () => {
-        const { status } = await Notifications.getPermissionsAsync();
-        setPushEnabled(status === "granted");
+        const perms = await Notifications.getPermissionsAsync() as unknown as { status: string };
+        setPushEnabled(perms.status === 'granted');
     }, []);
 
     const loadPrefs = useCallback(async () => {
@@ -132,8 +132,8 @@ export default function NotificationPreferencesScreen() {
         if (pushEnabled) {
             openAppSettings();
         } else {
-            const { status } = await Notifications.requestPermissionsAsync();
-            const granted = status === "granted";
+            const perms = await Notifications.requestPermissionsAsync() as unknown as { status: string };
+            const granted = perms.status === 'granted';
             setPushEnabled(granted);
             if (!granted) {
                 openAppSettings();

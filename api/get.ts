@@ -156,3 +156,13 @@ export async function getActivities(
 ): Promise<ActivityListResponse> {
   return instance.get("v1/activities", { params: filters }).then((r) => r.data);
 }
+
+// Analysis Logs
+export async function getAnalysisLogs(filters?: {
+  limit?: number;
+  page?: number;
+  carId?: string;
+  sort?: string;
+}): Promise<{ results: import("@/types/ai").AnalyzeMediaLog[]; count: number; page: number; limit: number }> {
+  return instance.get("v1/analysis-logs", { params: filters }).then((r) => r.data);
+}

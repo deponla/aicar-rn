@@ -86,8 +86,8 @@ function AicarCard({ item }: { item: Aicar }) {
       <View style={styles.cardBody}>
         <View style={styles.cardHeaderRow}>
           <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.name ??
-              [item.brand, item.model, item.year].filter(Boolean).join(" ") ||
+            {(item.name ??
+              [item.brand, item.model, item.year].filter(Boolean).join(" ")) ||
               "İlan"}
           </Text>
           <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
