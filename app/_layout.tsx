@@ -46,6 +46,14 @@ export default function RootLayout() {
                         name="notifications"
                         options={{ headerShown: false }}
                       />
+                      <Stack.Screen
+                        name="car/[id]"
+                        options={{ headerShown: false }}
+                      />
+                      <Stack.Screen
+                        name="credits"
+                        options={{ headerShown: false }}
+                      />
                     </Stack>
                     <StatusBar style="dark" />
                   </NotificationProvider>
