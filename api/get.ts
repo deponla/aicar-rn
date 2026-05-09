@@ -167,3 +167,4 @@ export async function getActivities(
 ): Promise<ActivityListResponse> {
   return instance.get("v1/activities", { params: filters }).then((r) => r.data);
 }
+
