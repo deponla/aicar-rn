@@ -1,5 +1,8 @@
 import { Colors, tokens } from "@/constants/theme";
-import { parseSessionFromUrl } from "@/utils/parseSessionFromUrl";
+import {
+  AUTH_CALLBACK_ACTIONS,
+  parseAuthCallbackFromUrl,
+} from "@/utils/parseSessionFromUrl";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
@@ -159,9 +162,9 @@ export default function ProfileScreen() {
         return;
       }
 
-      const sessionData = parseSessionFromUrl(result.url);
+      const authCallback = parseAuthCallbackFromUrl(result.url);
 
-      if (!sessionData) {
+      if (!authCallback) {
         Alert.alert(
           "Giriş tamamlanamadı",
           "Uygulamaya dönen oturum bilgisi okunamadı. Lütfen tekrar deneyin.",
@@ -169,11 +172,30 @@ export default function ProfileScreen() {
         return;
       }
 
+      if (authCallback.type === "intent") {
+        if (authCallback.action === AUTH_CALLBACK_ACTIONS.REACTIVATE_ACCOUNT) {
+          router.push({
+            pathname: "/auth/reactivate",
+            params: {
+              email: authCallback.email,
+              reason: authCallback.reason,
+            },
+          });
+          return;
+        }
+
+        Alert.alert(
+          "Giriş tamamlanamadı",
+          "Hesabınız için ek bir işlem gerekiyor. Lütfen tekrar deneyin.",
+        );
+        return;
+      }
+
       await SecureStore.setItemAsync(
         SECURE_STORE_KEY,
-        JSON.stringify(sessionData),
+        JSON.stringify(authCallback.session),
       );
-      authStore.login(sessionData);
+      authStore.login(authCallback.session);
     } catch (error) {
       Alert.alert(
         type === "login" ? "Giriş başlatılamadı" : "Kayıt başlatılamadı",
@@ -317,21 +339,6 @@ export default function ProfileScreen() {
               <Text style={styles.authBtnFilledText}>Giriş Yap</Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={[
-              styles.reactivateCta,
-              { borderColor: t.borderDefault, backgroundColor: t.bgSurface },
-            ]}
-            onPress={() => router.push("/auth/reactivate")}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons name="lock-reset" size={20} color={Colors.primary} />
-            <View style={styles.reactivateCtaContent}>
-              <Text style={[styles.reactivateCtaTitle, { color: t.textPrimary }]}>Hesabınızı yeniden açın</Text>
-              <Text style={[styles.reactivateCtaText, { color: t.textSecondary }]}>Hesabınızı dondurduysanız e-posta ve şifrenizle tekrar etkinleştirebilirsiniz.</Text>
-            </View>
-          </TouchableOpacity>
 
           {/* Terms */}
           <Text style={[styles.termsText, { color: t.textTertiary }]}>
@@ -751,29 +758,6 @@ const styles = StyleSheet.create({
   authBtnOutlineText: {
     fontSize: 15,
     fontWeight: "600",
-  },
-  reactivateCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  reactivateCtaContent: {
-    flex: 1,
-    gap: 2,
-  },
-  reactivateCtaTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  reactivateCtaText: {
-    fontSize: 12,
-    lineHeight: 18,
   },
   termsText: {
     fontSize: 12,

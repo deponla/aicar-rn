@@ -75,7 +75,10 @@ function AnalysisCard({
             <MaterialIcons name={icon} size={18} color={Colors.primary} />
           </View>
           <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.aiResponse?.title ?? item.analysisType}
+            {item.aiResponse?.title ??
+              item.name ??
+              ([item.brand, item.model, item.year].filter(Boolean).join(" ") ||
+                item.analysisType)}
           </Text>
         </View>
         {urgency && uColors && (

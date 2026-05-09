@@ -12,10 +12,18 @@ import {
 } from "react-native";
 import { SECURE_STORE_KEY, useAuthStore } from "../../store/useAuth";
 import { UserResponseData } from "../../types/auth";
-import { parseSessionFromUrl } from "../../utils/parseSessionFromUrl";
+import {
+  AUTH_CALLBACK_ACTIONS,
+  parseAuthCallbackFromUrl,
+} from "../../utils/parseSessionFromUrl";
 
 export default function AuthCallback() {
-  const params = useLocalSearchParams<{ session?: string }>();
+  const params = useLocalSearchParams<{
+    session?: string;
+    action?: string;
+    reason?: string;
+    email?: string;
+  }>();
   const router = useRouter();
   const authStore = useAuthStore();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -30,13 +38,41 @@ export default function AuthCallback() {
       router.replace("/(tabs)/profile");
     };
 
+    const routeToReactivation = (email?: string, reason?: string) => {
+      router.replace({
+        pathname: "/auth/reactivate",
+        params: {
+          email,
+          reason,
+        },
+      });
+    };
+
+    const handleAuthCallback = async (rawUrl: string) => {
+      const authCallback = parseAuthCallbackFromUrl(rawUrl);
+
+      if (!authCallback) {
+        return false;
+      }
+
+      if (authCallback.type === "session") {
+        await saveSessionAndRedirect(authCallback.session);
+        return true;
+      }
+
+      if (authCallback.action === AUTH_CALLBACK_ACTIONS.REACTIVATE_ACCOUNT) {
+        routeToReactivation(authCallback.email, authCallback.reason);
+        return true;
+      }
+
+      return false;
+    };
+
     const handleDeepLink = async () => {
       const url = await Linking.getInitialURL();
 
       if (url) {
-        const sessionData = parseSessionFromUrl(url);
-        if (sessionData) {
-          await saveSessionAndRedirect(sessionData);
+        if (await handleAuthCallback(url)) {
           return;
         }
 
@@ -46,10 +82,26 @@ export default function AuthCallback() {
         return;
       }
 
-      if (params.session) {
-        const sessionData = parseSessionFromUrl(`?session=${params.session}`);
-        if (sessionData) {
-          await saveSessionAndRedirect(sessionData);
+      if (params.session || params.action) {
+        const callbackParams = new URLSearchParams();
+
+        if (typeof params.session === "string") {
+          callbackParams.set("session", params.session);
+        }
+
+        if (typeof params.action === "string") {
+          callbackParams.set("action", params.action);
+        }
+
+        if (typeof params.reason === "string") {
+          callbackParams.set("reason", params.reason);
+        }
+
+        if (typeof params.email === "string") {
+          callbackParams.set("email", params.email);
+        }
+
+        if (await handleAuthCallback(`?${callbackParams.toString()}`)) {
           return;
         }
 
@@ -65,7 +117,7 @@ export default function AuthCallback() {
     };
 
     handleDeepLink();
-  }, [params.session, authStore, router]);
+  }, [params.action, params.email, params.reason, params.session, authStore, router]);
 
   if (errorMessage) {
     return (

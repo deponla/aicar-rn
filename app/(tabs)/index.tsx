@@ -52,7 +52,7 @@ type SelectedMediaPreview = {
 
 type ScanSource = 'camera' | 'video' | 'gallery';
 
-const MAX_VIDEO_DURATION_SECONDS = 180;
+const MAX_VIDEO_DURATION_SECONDS = 30;
 
 const sleep = (ms: number) =>
   new Promise((resolve) => {
