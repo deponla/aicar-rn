@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -26,6 +27,7 @@ import {
   postInitializeAiVideoUpload,
 } from '@/api/post';
 import { useAnalyzeMedia } from '@/query-hooks/useAiAnalysis';
+import { useGetCars } from '@/query-hooks/useCars';
 import {
   CreditQueryKeys,
   useGetCreditBalance,
@@ -220,6 +222,7 @@ export default function ScanScreen() {
   const sourceSheetRef = useRef<BottomSheetModal>(null);
   const { status, user } = useAuthStore();
   const setCredits = useCreditsStore((state) => state.setCredits);
+  const router = useRouter();
   const analyzeMedia = useAnalyzeMedia();
   const creditBalanceQuery = useGetCreditBalance({
     enabled: status === AuthStatusEnum.LOGGED_IN && !!user,
@@ -227,6 +230,10 @@ export default function ScanScreen() {
   const [selectedMedia, setSelectedMedia] = useState<SelectedMediaPreview | null>(null);
   const [analysis, setAnalysis] = useState<AnalyzeMediaResponse | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
+
+  const carsQuery = useGetCars();
+  const cars = carsQuery.data?.results ?? [];
 
   const isAuthenticated = status === AuthStatusEnum.LOGGED_IN && !!user;
   const isBusy = isUploading || analyzeMedia.isPending;
@@ -350,6 +357,7 @@ export default function ScanScreen() {
         thumbnailUrl: uploadedMedia.thumbnailUrl,
         videoId: uploadedMedia.videoId,
         analysisType: AiAnalysisType.GENERAL,
+        ...(selectedCarId ? { carId: selectedCarId } : {}),
       });
 
       const nextBalance: CreditBalanceResponse = {
@@ -427,6 +435,19 @@ export default function ScanScreen() {
               <Text style={styles.buttonText}>Taramayi Baslat</Text>
             )}
           </TouchableOpacity>
+          {shouldShowBalance &&
+            creditBalance !== null &&
+            creditBalance.remainingCredits <= 2 && (
+              <TouchableOpacity
+                style={styles.lowCreditBanner}
+                onPress={() => router.push('/credits')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.lowCreditText}>
+                  Krediniz azalıyor, yeni kredi satın alın
+                </Text>
+              </TouchableOpacity>
+            )}
         </View>
 
         {selectedMedia ? (
@@ -514,6 +535,51 @@ export default function ScanScreen() {
               Analiz etmek istediginiz medya kaynagini belirleyin.
             </Text>
           </View>
+
+          {isAuthenticated && cars.length > 0 ? (
+            <View style={styles.carSection}>
+              <Text style={styles.carSectionTitle}>Aracla Iliskilendir</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carScroll}>
+                <TouchableOpacity
+                  style={[
+                    styles.carChip,
+                    selectedCarId === null && styles.carChipSelected,
+                  ]}
+                  onPress={() => setSelectedCarId(null)}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.carChipText,
+                      selectedCarId === null && styles.carChipTextSelected,
+                    ]}
+                  >
+                    Yok
+                  </Text>
+                </TouchableOpacity>
+                {cars.map((car) => (
+                  <TouchableOpacity
+                    key={car.id}
+                    style={[
+                      styles.carChip,
+                      selectedCarId === car.id && styles.carChipSelected,
+                    ]}
+                    onPress={() => setSelectedCarId(car.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={[
+                        styles.carChipText,
+                        selectedCarId === car.id && styles.carChipTextSelected,
+                      ]}
+                    >
+                      {car.brand} {car.model} ({car.year})
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          ) : null}
 
           <View style={styles.sourceOptions}>
             <TouchableOpacity
@@ -647,6 +713,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  lowCreditBanner: {
+    marginTop: 10,
+    backgroundColor: '#FEF9C3',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  lowCreditText: {
+    color: '#854D0E',
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
   card: {
     backgroundColor: tokens.bgSurface,
     borderRadius: 24,
@@ -665,6 +744,41 @@ const styles = StyleSheet.create({
   sheetContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
+  },
+  carSection: {
+    marginBottom: 6,
+  },
+  carSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: tokens.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  carScroll: {
+    flexDirection: 'row',
+  },
+  carChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: tokens.borderDefault,
+    backgroundColor: tokens.bgSubtle,
+    marginRight: 8,
+  },
+  carChipSelected: {
+    borderColor: tokens.primary,
+    backgroundColor: tokens.primaryLight,
+  },
+  carChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: tokens.textSecondary,
+  },
+  carChipTextSelected: {
+    color: tokens.primary,
   },
   sheetHeader: {
     gap: 6,

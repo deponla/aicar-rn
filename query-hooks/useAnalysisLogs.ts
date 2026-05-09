@@ -19,7 +19,6 @@ export interface AnalysisLogListResponse {
   page: number;
   limit: number;
 }
-
 export const useGetAnalysisLogs = (filters?: AnalysisLogQuery) => {
   return useQuery({
     queryKey: [AnalysisLogQueryKeys.LOGS, filters],

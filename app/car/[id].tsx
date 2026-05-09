@@ -263,7 +263,7 @@ export default function CarDetailScreen() {
 
   const isLoading = carLoading || logsLoading;
   const car = carData?.result;
-  const logs = logsData?.results ?? [];
+  const logs: AnalyzeMediaLog[] = logsData?.results ?? [];
 
   const handleRefresh = () => {
     refetchCar();

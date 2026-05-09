@@ -146,6 +146,18 @@ export async function postCompleteAiVideoUpload(payload: {
     .then((r) => r.data);
 }
 
+export interface AnalyzeObdRequest {
+  code: string;
+  carId?: string;
+  prompt?: string;
+}
+
+export async function postAnalyzeObd(
+  payload: AnalyzeObdRequest,
+): Promise<AnalyzeMediaResponse> {
+  return instance.post("v1/ai/analyze/obd", payload).then((r) => r.data);
+}
+
 export async function postAnalyzeMedia(
   payload: AnalyzeMediaRequest,
 ): Promise<AnalyzeMediaResponse> {
