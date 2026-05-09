@@ -227,7 +227,7 @@ export default function HistoryScreen() {
   const filtered: AnalyzeMediaLog[] =
     urgencyFilter === "all"
       ? logs
-      : logs.filter((l: AnalyzeMediaLog) => l.aiResponse?.urgency === urgencyFilter);
+      : logs.filter((l) => l.aiResponse?.urgency === urgencyFilter);
 
   const handlePress = (item: AnalyzeMediaLog) => {
     setSelected(item);
