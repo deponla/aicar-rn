@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
 
-const ANALYSIS_TYPE_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+const ANALYSIS_TYPE_ICONS: Record<AiAnalysisType, keyof typeof MaterialIcons.glyphMap> = {
   [AiAnalysisType.DASHBOARD]: "dashboard",
   [AiAnalysisType.WARNING_LIGHT]: "warning",
   [AiAnalysisType.OBD_CODE]: "bluetooth-searching",
