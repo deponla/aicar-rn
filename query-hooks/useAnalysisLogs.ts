@@ -23,7 +23,7 @@ export interface AnalysisLogListResponse {
 export const useGetAnalysisLogs = (filters?: AnalysisLogQuery) => {
   return useQuery({
     queryKey: [AnalysisLogQueryKeys.LOGS, filters],
-    queryFn: () => getAnalysisLogs(filters) as Promise<AnalysisLogListResponse>,
+    queryFn: () => getAnalysisLogs(filters),
     staleTime: 30_000,
   });
 };
