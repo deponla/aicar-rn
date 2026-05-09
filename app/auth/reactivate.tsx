@@ -4,7 +4,7 @@ import { Colors } from "@/constants/theme";
 import { useReactivateAccount } from "@/query-hooks/useUser";
 import { SECURE_STORE_KEY, useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useMemo, useState } from "react";
 import {
@@ -18,13 +18,17 @@ import {
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function ReactivateAccountScreen() {
+    const params = useLocalSearchParams<{ email?: string; reason?: string }>();
     const router = useRouter();
     const authStore = useAuthStore();
     const { notify } = useNotification();
     const reactivateAccount = useReactivateAccount();
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState(
+        typeof params.email === "string" ? params.email : "",
+    );
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const isFrozenLoginRecovery = params.reason === "ACCOUNT_FROZEN";
 
     const isValid = useMemo(() => {
         return email.trim().includes("@") && password.trim().length > 0;
@@ -51,13 +55,13 @@ export default function ReactivateAccountScreen() {
             });
             router.replace("/(tabs)/profile");
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } } };
             notify({
                 type: "error",
                 title: "Hesap yeniden açılamadı",
                 message:
-                    err?.response?.data?.message ||
-                    "Bilgilerinizi kontrol edip tekrar deneyin.",
+                    error instanceof Error
+                        ? error.message
+                        : "Bilgilerinizi kontrol edip tekrar deneyin.",
             });
         }
     };
@@ -69,10 +73,11 @@ export default function ReactivateAccountScreen() {
                     <View style={styles.heroIconWrap}>
                         <MaterialIcons name="lock-reset" size={32} color={Colors.primary} />
                     </View>
-                    <Text style={styles.heroTitle}>Dondurulmuş hesabınızı yeniden açın</Text>
+                    <Text style={styles.heroTitle}>Hesabınızı yeniden etkinleştirin</Text>
                     <Text style={styles.heroText}>
-                        Hesabınızı daha önce dondurduysanız, e-posta adresiniz ve şifrenizle
-                        tekrar etkinleştirebilirsiniz.
+                        {isFrozenLoginRecovery
+                            ? "Giriş sırasında hesabınızın dondurulduğunu fark ettik. Devam etmek için e-posta adresinizi ve şifrenizi doğrulayın."
+                            : "Hesabınızı daha önce dondurduysanız, e-posta adresiniz ve şifrenizle tekrar etkinleştirebilirsiniz."}
                     </Text>
                 </View>
 

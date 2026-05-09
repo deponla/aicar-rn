@@ -23,7 +23,7 @@ export default function FreezeAccountScreen() {
     const handleFreeze = () => {
         Alert.alert(
             "Hesabı dondur",
-            "Hesabınız geçici olarak dondurulacak, tüm oturumlarınız sonlandırılacak ve daha sonra e-posta ile şifrenizle yeniden açılabilecektir.",
+            "Hesabınız geçici olarak dondurulacak ve tüm oturumlarınız sonlandırılacak. Daha sonra giriş yaptığınızda hesabınızı e-posta ve şifrenizle yeniden etkinleştirebilirsiniz.",
             [
                 { text: "Vazgeç", style: "cancel" },
                 {
@@ -36,16 +36,15 @@ export default function FreezeAccountScreen() {
                             notify({
                                 type: "success",
                                 title: "Hesap donduruldu",
-                                message: "İstediğiniz zaman hesabınızı yeniden etkinleştirebilirsiniz.",
+                                message: "Tekrar giriş yaptığınızda hesabınızı yeniden etkinleştirebilirsiniz.",
                             });
                             router.replace("/(tabs)/profile");
                         } catch (error: unknown) {
-                            const err = error as { response?: { data?: { message?: string } } };
                             notify({
                                 type: "error",
                                 title: "Hesap dondurulamadı",
                                 message:
-                                    err?.response?.data?.message ||
+                                    (error instanceof Error ? error.message : undefined) ||
                                     "Lütfen daha sonra tekrar deneyin.",
                             });
                         }
@@ -73,7 +72,7 @@ export default function FreezeAccountScreen() {
                 <Text style={styles.warningTitle}>Bu işlem geri alınabilir</Text>
                 <Text style={styles.warningText}>
                     Hesabınız dondurulduğunda mevcut oturumlarınız kapanır ve korumalı
-                    alanlara erişemezsiniz. Daha sonra hesabınızı yeniden açabilirsiniz.
+                    alanlara erişemezsiniz. Bir sonraki girişinizde hesabınızı yeniden etkinleştirebilirsiniz.
                 </Text>
             </View>
 
