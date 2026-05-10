@@ -1,16 +1,23 @@
+import { LegendList } from "@legendapp/list";
 import { Colors, tokens } from "@/constants/theme";
 import ScreenContainer from "@/components/ScreenContainer";
+import { useNotification } from "@/components/Notification";
 import { useGetCar, useUpdateCar } from "@/query-hooks/useCars";
 import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
 import { AnalyzeMediaLog, AiAnalysisType, AiUrgency } from "@/types/ai";
-import { Car, FuelTypeEnum, TransmissionEnum, UpdateCarRequest } from "@/types/car";
+import {
+  Car,
+  FuelTypeEnum,
+  TransmissionEnum,
+  UpdateCarRequest,
+} from "@/types/car";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,8 +25,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useNotification } from "@/components/Notification";
 
 const FUEL_LABELS: Record<FuelTypeEnum, string> = {
   [FuelTypeEnum.GASOLINE]: "Benzin",
@@ -33,6 +38,9 @@ const TRANSMISSION_LABELS: Record<TransmissionEnum, string> = {
   [TransmissionEnum.MANUAL]: "Manuel",
   [TransmissionEnum.AUTOMATIC]: "Otomatik",
 };
+
+const FUEL_OPTIONS = Object.values(FuelTypeEnum);
+const TRANSMISSION_OPTIONS = Object.values(TransmissionEnum);
 
 const ANALYSIS_TYPE_ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   [AiAnalysisType.DASHBOARD]: "dashboard",
@@ -65,9 +73,9 @@ function statusLabel(status: string) {
   return status;
 }
 
-function AnalysisCard({ item }: { item: AnalyzeMediaLog }) {
+const AnalysisCard = React.memo(function AnalysisCard({ item }: { item: AnalyzeMediaLog }) {
   const urgency = item.aiResponse?.urgency;
-  const uColors = urgency ? urgencyColors(urgency) : null;
+  const colors = urgency ? urgencyColors(urgency) : null;
   const icon = ANALYSIS_TYPE_ICONS[item.analysisType] ?? "search";
 
   return (
@@ -81,25 +89,34 @@ function AnalysisCard({ item }: { item: AnalyzeMediaLog }) {
             {item.aiResponse?.title ?? item.analysisType}
           </Text>
         </View>
-        {urgency && uColors && (
-          <View style={[styles.urgencyBadge, { backgroundColor: uColors.bg }]}>
-            <Text style={[styles.urgencyText, { color: uColors.text }]}>
-              {urgency === "critical" ? "Kritik" : urgency === "warning" ? "Uyarı" : "Bilgi"}
+        {urgency && colors ? (
+          <View style={[styles.urgencyBadge, { backgroundColor: colors.bg }]}>
+            <Text style={[styles.urgencyText, { color: colors.text }]}>
+              {urgency === "critical"
+                ? "Kritik"
+                : urgency === "warning"
+                  ? "Uyarı"
+                  : "Bilgi"}
             </Text>
           </View>
-        )}
+        ) : null}
       </View>
-      {item.aiResponse?.summary && (
+      {item.aiResponse?.summary ? (
         <Text style={styles.analysisSummary} numberOfLines={2}>
           {item.aiResponse.summary}
         </Text>
-      )}
+      ) : null}
       <View style={styles.metaRow}>
         <Text style={styles.metaText}>
           {dayjs(item.createdAt).format("DD.MM.YYYY HH:mm")}
         </Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <View style={[styles.statusDot, { backgroundColor: statusColor(item.status) }]} />
+        <View style={styles.metaRight}>
+          <View
+            style={[
+              styles.statusDot,
+              { backgroundColor: statusColor(item.status) },
+            ]}
+          />
           <Text style={[styles.metaText, { color: statusColor(item.status) }]}>
             {statusLabel(item.status)}
           </Text>
@@ -107,9 +124,9 @@ function AnalysisCard({ item }: { item: AnalyzeMediaLog }) {
       </View>
     </View>
   );
-}
+});
 
-function EditCarModal({
+const EditCarModal = React.memo(function EditCarModal({
   car,
   visible,
   onClose,
@@ -126,21 +143,28 @@ function EditCarModal({
   const [model, setModel] = useState(car.model);
   const [year, setYear] = useState(String(car.year));
   const [fuelType, setFuelType] = useState<FuelTypeEnum | undefined>(car.fuelType);
-  const [transmission, setTransmission] = useState<TransmissionEnum | undefined>(car.transmission);
-  const [engineCC, setEngineCC] = useState(car.engineCC != null ? String(car.engineCC) : "");
+  const [transmission, setTransmission] = useState<TransmissionEnum | undefined>(
+    car.transmission,
+  );
+  const [engineCC, setEngineCC] = useState(
+    car.engineCC != null ? String(car.engineCC) : "",
+  );
 
-  const handleSubmit = () => {
-    const y = parseInt(year, 10);
-    if (!brand.trim() || !model.trim() || isNaN(y)) return;
+  const handleSubmit = useCallback(() => {
+    const parsedYear = parseInt(year, 10);
+    if (!brand.trim() || !model.trim() || Number.isNaN(parsedYear)) {
+      return;
+    }
+
     onSubmit({
       brand: brand.trim(),
       model: model.trim(),
-      year: y,
+      year: parsedYear,
       fuelType,
       transmission,
       engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
     });
-  };
+  }, [brand, engineCC, fuelType, model, onSubmit, transmission, year]);
 
   return (
     <Modal
@@ -191,14 +215,24 @@ function EditCarModal({
 
           <Text style={styles.inputLabel}>Yakıt Tipi</Text>
           <View style={styles.chipRow}>
-            {Object.values(FuelTypeEnum).map((ft) => (
+            {FUEL_OPTIONS.map((fuelValue) => (
               <TouchableOpacity
-                key={ft}
-                style={[styles.selectChip, fuelType === ft && styles.selectChipActive]}
-                onPress={() => setFuelType(fuelType === ft ? undefined : ft)}
+                key={fuelValue}
+                style={[
+                  styles.selectChip,
+                  fuelType === fuelValue && styles.selectChipActive,
+                ]}
+                onPress={() =>
+                  setFuelType(fuelType === fuelValue ? undefined : fuelValue)
+                }
               >
-                <Text style={[styles.selectChipText, fuelType === ft && styles.selectChipTextActive]}>
-                  {FUEL_LABELS[ft]}
+                <Text
+                  style={[
+                    styles.selectChipText,
+                    fuelType === fuelValue && styles.selectChipTextActive,
+                  ]}
+                >
+                  {FUEL_LABELS[fuelValue]}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -206,14 +240,27 @@ function EditCarModal({
 
           <Text style={styles.inputLabel}>Vites</Text>
           <View style={styles.chipRow}>
-            {Object.values(TransmissionEnum).map((tr) => (
+            {TRANSMISSION_OPTIONS.map((transmissionValue) => (
               <TouchableOpacity
-                key={tr}
-                style={[styles.selectChip, transmission === tr && styles.selectChipActive]}
-                onPress={() => setTransmission(transmission === tr ? undefined : tr)}
+                key={transmissionValue}
+                style={[
+                  styles.selectChip,
+                  transmission === transmissionValue && styles.selectChipActive,
+                ]}
+                onPress={() =>
+                  setTransmission(
+                    transmission === transmissionValue ? undefined : transmissionValue,
+                  )
+                }
               >
-                <Text style={[styles.selectChipText, transmission === tr && styles.selectChipTextActive]}>
-                  {TRANSMISSION_LABELS[tr]}
+                <Text
+                  style={[
+                    styles.selectChipText,
+                    transmission === transmissionValue &&
+                      styles.selectChipTextActive,
+                  ]}
+                >
+                  {TRANSMISSION_LABELS[transmissionValue]}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -233,10 +280,13 @@ function EditCarModal({
           <TouchableOpacity
             style={[
               styles.submitButton,
-              (!brand.trim() || !model.trim() || !year.trim()) && styles.submitButtonDisabled,
+              (!brand.trim() || !model.trim() || !year.trim()) &&
+                styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={isLoading || !brand.trim() || !model.trim() || !year.trim()}
+            disabled={
+              isLoading || !brand.trim() || !model.trim() || !year.trim()
+            }
             activeOpacity={0.85}
           >
             {isLoading ? (
@@ -249,6 +299,10 @@ function EditCarModal({
       </View>
     </Modal>
   );
+});
+
+function ListSeparator() {
+  return <View style={styles.listSeparator} />;
 }
 
 export default function CarDetailScreen() {
@@ -257,154 +311,248 @@ export default function CarDetailScreen() {
   const { notify } = useNotification();
   const [editVisible, setEditVisible] = useState(false);
 
-  const { data: carData, isLoading: carLoading, refetch: refetchCar } = useGetCar(id ?? "");
-  const { data: logsData, isLoading: logsLoading, refetch: refetchLogs } = useGetAnalysisLogs({ carId: id ?? "" });
+  const { data: carData, isLoading: carLoading, refetch: refetchCar } = useGetCar(
+    id ?? "",
+  );
+  const {
+    data: logsData,
+    isLoading: logsLoading,
+    refetch: refetchLogs,
+  } = useGetAnalysisLogs({ carId: id ?? "" });
   const updateCar = useUpdateCar();
 
   const isLoading = carLoading || logsLoading;
   const car = carData?.result;
-  const logs: AnalyzeMediaLog[] = logsData?.results ?? [];
+  const logs = useMemo(() => logsData?.results ?? [], [logsData?.results]);
 
-  const handleRefresh = () => {
+  const openEdit = useCallback(() => {
+    setEditVisible(true);
+  }, []);
+
+  const closeEdit = useCallback(() => {
+    setEditVisible(false);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
     refetchCar();
     refetchLogs();
-  };
+  }, [refetchCar, refetchLogs]);
 
-  const handleUpdate = (data: UpdateCarRequest) => {
-    if (!id) return;
-    updateCar.mutate(
-      { id, payload: data },
-      {
-        onSuccess: () => {
-          setEditVisible(false);
-          notify({ type: "success", title: "Araç güncellendi" });
-          refetchCar();
+  const handleUpdate = useCallback(
+    (data: UpdateCarRequest) => {
+      if (!id) return;
+      updateCar.mutate(
+        { id, payload: data },
+        {
+          onSuccess: () => {
+            setEditVisible(false);
+            notify({ type: "success", title: "Araç güncellendi" });
+            refetchCar();
+          },
+          onError: (error) => {
+            notify({
+              type: "error",
+              title: "Güncelleme başarısız",
+              message: error instanceof Error ? error.message : undefined,
+            });
+          },
         },
-        onError: (err) => {
-          notify({
-            type: "error",
-            title: "Güncelleme başarısız",
-            message: err instanceof Error ? err.message : undefined,
-          });
-        },
-      },
+      );
+    },
+    [id, notify, refetchCar, updateCar],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: AnalyzeMediaLog }) => <AnalysisCard item={item} />,
+    [],
+  );
+  const keyExtractor = useCallback((item: AnalyzeMediaLog) => item.id, []);
+
+  const listHeader = useMemo(() => {
+    if (!car) return null;
+
+    return (
+      <>
+        <View style={styles.carCard}>
+          <View style={styles.carCardHeader}>
+            <MaterialIcons
+              name="directions-car"
+              size={24}
+              color={Colors.primary}
+            />
+            <Text style={styles.carCardTitle}>
+              {car.brand} {car.model}
+            </Text>
+          </View>
+          <View style={styles.detailsRow}>
+            <View style={styles.detailChip}>
+              <MaterialIcons
+                name="calendar-today"
+                size={14}
+                color={tokens.textSecondary}
+              />
+              <Text style={styles.detailText}>{car.year}</Text>
+            </View>
+            {car.fuelType ? (
+              <View style={styles.detailChip}>
+                <MaterialIcons
+                  name="local-gas-station"
+                  size={14}
+                  color={tokens.textSecondary}
+                />
+                <Text style={styles.detailText}>
+                  {FUEL_LABELS[car.fuelType] ?? car.fuelType}
+                </Text>
+              </View>
+            ) : null}
+            {car.transmission ? (
+              <View style={styles.detailChip}>
+                <MaterialIcons
+                  name="settings"
+                  size={14}
+                  color={tokens.textSecondary}
+                />
+                <Text style={styles.detailText}>
+                  {TRANSMISSION_LABELS[car.transmission] ?? car.transmission}
+                </Text>
+              </View>
+            ) : null}
+            {car.engineCC != null ? (
+              <View style={styles.detailChip}>
+                <MaterialIcons
+                  name="speed"
+                  size={14}
+                  color={tokens.textSecondary}
+                />
+                <Text style={styles.detailText}>{car.engineCC} cc</Text>
+              </View>
+            ) : null}
+          </View>
+          <Text style={styles.dateText}>
+            Eklendi: {dayjs(car.createdAt).format("DD.MM.YYYY")}
+          </Text>
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Analizler</Text>
+          <Text style={styles.sectionCount}>{logs.length}</Text>
+        </View>
+      </>
     );
-  };
+  }, [car, logs.length]);
 
-  return (
-    <ScreenContainer
-      title={car ? `${car.brand} ${car.model}` : "Araç Detayı"}
-      showBackButton
-      refreshControl={
-        <RefreshControl refreshing={isLoading && !!carData} onRefresh={handleRefresh} />
-      }
-      headerRight={
-        car ? (
-          <TouchableOpacity
-            onPress={() => setEditVisible(true)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <MaterialIcons name="edit" size={22} color={Colors.primary} />
-          </TouchableOpacity>
-        ) : undefined
-      }
-    >
-      {carLoading && !carData ? (
+  const emptyState = useMemo(
+    () => (
+      <View style={styles.emptyAnalysis}>
+        <MaterialIcons name="history" size={40} color={tokens.textTertiary} />
+        <Text style={styles.emptyText}>Bu araç için analiz yok</Text>
+      </View>
+    ),
+    [],
+  );
+
+  if (carLoading && !carData) {
+    return (
+      <ScreenContainer
+        title="Araç Detayı"
+        showBackButton
+        scrollable={false}
+        contentContainerStyle={styles.screenContent}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-      ) : car ? (
-        <>
-          {/* Car Info Card */}
-          <View style={styles.carCard}>
-            <View style={styles.carCardHeader}>
-              <MaterialIcons name="directions-car" size={24} color={Colors.primary} />
-              <Text style={styles.carCardTitle}>
-                {car.brand} {car.model}
-              </Text>
-            </View>
-            <View style={styles.detailsRow}>
-              <View style={styles.detailChip}>
-                <MaterialIcons name="calendar-today" size={14} color={tokens.textSecondary} />
-                <Text style={styles.detailText}>{car.year}</Text>
-              </View>
-              {car.fuelType && (
-                <View style={styles.detailChip}>
-                  <MaterialIcons name="local-gas-station" size={14} color={tokens.textSecondary} />
-                  <Text style={styles.detailText}>
-                    {FUEL_LABELS[car.fuelType] ?? car.fuelType}
-                  </Text>
-                </View>
-              )}
-              {car.transmission && (
-                <View style={styles.detailChip}>
-                  <MaterialIcons name="settings" size={14} color={tokens.textSecondary} />
-                  <Text style={styles.detailText}>
-                    {TRANSMISSION_LABELS[car.transmission] ?? car.transmission}
-                  </Text>
-                </View>
-              )}
-              {car.engineCC != null && (
-                <View style={styles.detailChip}>
-                  <MaterialIcons name="speed" size={14} color={tokens.textSecondary} />
-                  <Text style={styles.detailText}>{car.engineCC} cc</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.dateText}>
-              Eklendi: {dayjs(car.createdAt).format("DD.MM.YYYY")}
-            </Text>
-          </View>
+      </ScreenContainer>
+    );
+  }
 
-          {/* Analysis Logs */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Analizler</Text>
-            <Text style={styles.sectionCount}>{logs.length}</Text>
-          </View>
-
-          {logsLoading && !logsData ? (
-            <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: 20 }} />
-          ) : logs.length > 0 ? (
-            <View style={styles.list}>
-              {logs.map((log) => (
-                <AnalysisCard key={log.id} item={log} />
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyAnalysis}>
-              <MaterialIcons name="history" size={40} color={tokens.textTertiary} />
-              <Text style={styles.emptyText}>Bu araç için analiz yok</Text>
-            </View>
-          )}
-
-          {editVisible && (
-            <EditCarModal
-              car={car}
-              visible={editVisible}
-              onClose={() => setEditVisible(false)}
-              onSubmit={handleUpdate}
-              isLoading={updateCar.isPending}
-            />
-          )}
-        </>
-      ) : (
+  if (!car) {
+    return (
+      <ScreenContainer
+        title="Araç Detayı"
+        showBackButton
+        scrollable={false}
+        contentContainerStyle={styles.screenContent}
+      >
         <View style={styles.loadingContainer}>
           <Text style={styles.errorText}>Araç bulunamadı</Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.backLink}>Geri dön</Text>
           </TouchableOpacity>
         </View>
+      </ScreenContainer>
+    );
+  }
+
+  return (
+    <ScreenContainer
+      title={`${car.brand} ${car.model}`}
+      showBackButton
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
+      headerRight={
+        <TouchableOpacity
+          onPress={openEdit}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <MaterialIcons name="edit" size={22} color={Colors.primary} />
+        </TouchableOpacity>
+      }
+    >
+      {logsLoading && !logsData ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={Colors.primary} />
+        </View>
+      ) : (
+        <LegendList
+          data={logs}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={104}
+          recycleItems
+          refreshing={isLoading}
+          onRefresh={handleRefresh}
+          style={styles.listView}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={ListSeparator}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={emptyState}
+          showsVerticalScrollIndicator={false}
+        />
       )}
+
+      {editVisible ? (
+        <EditCarModal
+          car={car}
+          visible={editVisible}
+          onClose={closeEdit}
+          onSubmit={handleUpdate}
+          isLoading={updateCar.isPending}
+        />
+      ) : null}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  screenContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingTop: 80,
+  },
+  listView: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: 8,
+  },
+  listSeparator: {
+    height: 12,
   },
   errorText: {
     fontSize: 16,
@@ -474,9 +622,6 @@ const styles = StyleSheet.create({
     color: tokens.textTertiary,
     fontWeight: "600",
   },
-  list: {
-    gap: 12,
-  },
   analysisCard: {
     backgroundColor: tokens.bgSurface,
     borderRadius: 14,
@@ -530,6 +675,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  metaRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   metaText: {
     fontSize: 12,
     color: tokens.textTertiary,
@@ -548,7 +698,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: tokens.textSecondary,
   },
-  // Modal
   modalContainer: {
     flex: 1,
     backgroundColor: tokens.bgSurface,

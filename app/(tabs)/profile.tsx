@@ -8,11 +8,12 @@ import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -38,7 +39,7 @@ interface MenuItemProps {
   destructive?: boolean;
 }
 
-function MenuItem({
+const MenuItem = memo(function MenuItem({
   icon,
   iconColor,
   iconBg,
@@ -92,9 +93,13 @@ function MenuItem({
       )}
     </>
   );
-}
+});
 
-function MenuSection({ children }: { children: React.ReactNode }) {
+const MenuSection = memo(function MenuSection({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const t = tokens;
   return (
     <View
@@ -109,16 +114,20 @@ function MenuSection({ children }: { children: React.ReactNode }) {
       {children}
     </View>
   );
-}
+});
 
-function SectionLabel({ label }: { label: string }) {
+const SectionLabel = memo(function SectionLabel({
+  label,
+}: {
+  label: string;
+}) {
   const t = tokens;
   return (
     <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
       {label}
     </Text>
   );
-}
+});
 
 function buildAuthSessionConfig(type: "login" | "register") {
   const frontendUrl = process.env.EXPO_PUBLIC_FRONTEND_URL;
@@ -131,10 +140,13 @@ function buildAuthSessionConfig(type: "login" | "register") {
   const authUrl = new URL(`/auth/${type}`, frontendUrl);
   authUrl.searchParams.set("from", "app");
   authUrl.searchParams.set("redirect_uri", redirectUrl);
+  const useExternalBrowser =
+    Platform.OS === "ios" && authUrl.protocol !== "https:";
 
   return {
     authUrl: authUrl.toString(),
     redirectUrl,
+    useExternalBrowser,
   };
 }
 
@@ -150,63 +162,85 @@ export default function ProfileScreen() {
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const user = authStore.user?.user;
 
-  const handleAuth = async (type: "login" | "register") => {
-    try {
-      const { authUrl, redirectUrl } = buildAuthSessionConfig(type);
-      const result = await WebBrowser.openAuthSessionAsync(
-        authUrl,
-        redirectUrl,
-      );
+  const closeWebView = useCallback(() => {
+    setWebViewUrl(null);
+  }, []);
 
-      if (result.type !== "success" || !result.url) {
-        return;
-      }
+  const handleAuth = useCallback(
+    async (type: "login" | "register") => {
+      try {
+        const { authUrl, redirectUrl, useExternalBrowser } =
+          buildAuthSessionConfig(type);
 
-      const authCallback = parseAuthCallbackFromUrl(result.url);
-
-      if (!authCallback) {
-        Alert.alert(
-          "Giriş tamamlanamadı",
-          "Uygulamaya dönen oturum bilgisi okunamadı. Lütfen tekrar deneyin.",
-        );
-        return;
-      }
-
-      if (authCallback.type === "intent") {
-        if (authCallback.action === AUTH_CALLBACK_ACTIONS.REACTIVATE_ACCOUNT) {
-          router.push({
-            pathname: "/auth/reactivate",
-            params: {
-              email: authCallback.email,
-              reason: authCallback.reason,
-            },
-          });
+        if (useExternalBrowser) {
+          await Linking.openURL(authUrl);
           return;
         }
 
-        Alert.alert(
-          "Giriş tamamlanamadı",
-          "Hesabınız için ek bir işlem gerekiyor. Lütfen tekrar deneyin.",
+        const result = await WebBrowser.openAuthSessionAsync(
+          authUrl,
+          redirectUrl,
         );
-        return;
+
+        if (result.type !== "success" || !result.url) {
+          return;
+        }
+
+        const authCallback = parseAuthCallbackFromUrl(result.url);
+
+        if (!authCallback) {
+          Alert.alert(
+            "Giriş tamamlanamadı",
+            "Uygulamaya dönen oturum bilgisi okunamadı. Lütfen tekrar deneyin.",
+          );
+          return;
+        }
+
+        if (authCallback.type === "intent") {
+          if (authCallback.action === AUTH_CALLBACK_ACTIONS.REACTIVATE_ACCOUNT) {
+            router.push({
+              pathname: "/auth/reactivate",
+              params: {
+                email: authCallback.email,
+                reason: authCallback.reason,
+              },
+            });
+            return;
+          }
+
+          Alert.alert(
+            "Giriş tamamlanamadı",
+            "Hesabınız için ek bir işlem gerekiyor. Lütfen tekrar deneyin.",
+          );
+          return;
+        }
+
+        await SecureStore.setItemAsync(
+          SECURE_STORE_KEY,
+          JSON.stringify(authCallback.session),
+        );
+        authStore.login(authCallback.session);
+      } catch (error) {
+        Alert.alert(
+          type === "login" ? "Giriş başlatılamadı" : "Kayıt başlatılamadı",
+          error instanceof Error
+            ? error.message
+            : "Tarayıcı oturumu başlatılırken bir sorun oluştu.",
+        );
       }
+    },
+    [authStore, router],
+  );
 
-      await SecureStore.setItemAsync(
-        SECURE_STORE_KEY,
-        JSON.stringify(authCallback.session),
-      );
-      authStore.login(authCallback.session);
-    } catch (error) {
-      Alert.alert(
-        type === "login" ? "Giriş başlatılamadı" : "Kayıt başlatılamadı",
-        error instanceof Error
-          ? error.message
-          : "Tarayıcı oturumu başlatılırken bir sorun oluştu.",
-      );
-    }
-  };
+  const handleRegister = useCallback(() => {
+    void handleAuth("register");
+  }, [handleAuth]);
 
-  const handleLogout = () => {
+  const handleLogin = useCallback(() => {
+    void handleAuth("login");
+  }, [handleAuth]);
+
+  const handleLogout = useCallback(() => {
     Alert.alert("Çıkış Yap", "Çıkış yapmak istediğinize emin misiniz?", [
       { text: "İptal", style: "cancel" },
       {
@@ -217,29 +251,64 @@ export default function ProfileScreen() {
         },
       },
     ]);
-  };
+  }, [authStore]);
 
-  const openTerms = () => {
+  const openTerms = useCallback(() => {
     setWebViewTitle("Kullanım Koşulları");
     setWebViewUrl("https://deponla.com/terms");
-  };
+  }, []);
 
-  const openPrivacy = () => {
+  const openPrivacy = useCallback(() => {
     setWebViewTitle("Gizlilik Politikası");
     setWebViewUrl("https://deponla.com/privacy");
-  };
+  }, []);
 
-  const getInitials = () => {
-    const n = user?.name || "";
-    const s = user?.surname || "";
-    if (n || s) return `${n.charAt(0)}${s.charAt(0)}`.toUpperCase();
+  const goToSettings = useCallback(() => {
+    router.push("/profile/settings");
+  }, [router]);
+
+  const goToPermissions = useCallback(() => {
+    router.push("/profile/permissions");
+  }, [router]);
+
+  const goToCredits = useCallback(() => {
+    router.push("/credits");
+  }, [router]);
+
+  const goToSupport = useCallback(() => {
+    router.push("/profile/support");
+  }, [router]);
+
+  const goToFeedback = useCallback(() => {
+    router.push("/profile/feedback");
+  }, [router]);
+
+  const goToFeedbackHistory = useCallback(() => {
+    router.push("/profile/feedback-history");
+  }, [router]);
+
+  const goToAbout = useCallback(() => {
+    router.push("/profile/about");
+  }, [router]);
+
+  const initials = useMemo(() => {
+    const name = user?.name || "";
+    const surname = user?.surname || "";
+
+    if (name || surname) {
+      return `${name.charAt(0)}${surname.charAt(0)}`.toUpperCase();
+    }
+
     return user?.email?.charAt(0).toUpperCase() ?? "?";
-  };
+  }, [user?.email, user?.name, user?.surname]);
 
-  const displayName =
-    user?.name && user?.surname
-      ? `${user.name} ${user.surname}`
-      : (user?.email ?? "");
+  const displayName = useMemo(
+    () =>
+      user?.name && user?.surname
+        ? `${user.name} ${user.surname}`
+        : (user?.email ?? ""),
+    [user?.email, user?.name, user?.surname],
+  );
 
   // ── WebView modal ──
   const webViewModal = (
@@ -247,7 +316,7 @@ export default function ProfileScreen() {
       visible={webViewUrl !== null}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={() => setWebViewUrl(null)}
+      onRequestClose={closeWebView}
     >
       <SafeAreaView
         style={[styles.modalContainer, { backgroundColor: t.bgSurface }]}
@@ -261,7 +330,7 @@ export default function ProfileScreen() {
             {webViewTitle}
           </Text>
           <TouchableOpacity
-            onPress={() => setWebViewUrl(null)}
+            onPress={closeWebView}
             style={styles.closeButton}
           >
             <View
@@ -322,7 +391,7 @@ export default function ProfileScreen() {
                 styles.authBtnOutline,
                 { borderColor: t.borderDefault, backgroundColor: t.bgSurface },
               ]}
-              onPress={() => handleAuth("register")}
+              onPress={handleRegister}
               activeOpacity={0.8}
             >
               <Text
@@ -333,7 +402,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.authBtn, styles.authBtnFilled]}
-              onPress={() => handleAuth("login")}
+              onPress={handleLogin}
               activeOpacity={0.8}
             >
               <Text style={styles.authBtnFilledText}>Giriş Yap</Text>
@@ -387,7 +456,7 @@ export default function ProfileScreen() {
             {/* Avatar */}
             <TouchableOpacity
               style={styles.avatarWrap}
-              onPress={() => router.push("/profile/settings")}
+              onPress={goToSettings}
               activeOpacity={0.85}
             >
               {user?.photo ? (
@@ -399,7 +468,7 @@ export default function ProfileScreen() {
                     { backgroundColor: Colors.primary },
                   ]}
                 >
-                  <Text style={styles.avatarText}>{getInitials()}</Text>
+                  <Text style={styles.avatarText}>{initials}</Text>
                 </View>
               )}
               {/* Camera badge */}
@@ -483,21 +552,21 @@ export default function ProfileScreen() {
           <MenuItem
             icon="manage-accounts"
             label="Hesap Ayarları"
-            onPress={() => router.push("/profile/settings")}
+            onPress={goToSettings}
           />
           <MenuItem
             icon="security"
             iconBg="#ECFDF3"
             iconColor="#059669"
             label="İzinler"
-            onPress={() => router.push("/profile/permissions")}
+            onPress={goToPermissions}
           />
           <MenuItem
             icon="monetization-on"
             iconBg="#EFF6FF"
             iconColor="#2563EB"
             label="Krediler"
-            onPress={() => router.push("/credits")}
+            onPress={goToCredits}
             showDivider={false}
           />
         </MenuSection>
@@ -511,28 +580,28 @@ export default function ProfileScreen() {
             iconBg="#EFF6FF"
             iconColor="#3B82F6"
             label="Yardım & Destek"
-            onPress={() => router.push("/profile/support")}
+            onPress={goToSupport}
           />
           <MenuItem
             icon="campaign"
             iconBg="#FFF7ED"
             iconColor="#C2410C"
             label="Şikayet ve Öneri"
-            onPress={() => router.push("/profile/feedback")}
+            onPress={goToFeedback}
           />
           <MenuItem
             icon="history"
             iconBg="#EEF2FF"
             iconColor="#4338CA"
             label="Geri Bildirimlerim"
-            onPress={() => router.push("/profile/feedback-history")}
+            onPress={goToFeedbackHistory}
           />
           <MenuItem
             icon="info-outline"
             iconBg="#EFF6FF"
             iconColor="#3B82F6"
             label="Hakkında"
-            onPress={() => router.push("/profile/about")}
+            onPress={goToAbout}
           />
           <MenuItem
             icon="description"

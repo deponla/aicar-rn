@@ -1,3 +1,4 @@
+import { LegendList } from "@legendapp/list";
 import ScreenContainer from "@/components/ScreenContainer";
 import { Colors, tokens } from "@/constants/theme";
 import { normalizeLanguage } from "@/i18n";
@@ -7,11 +8,10 @@ import {
   NotificationType,
 } from "@/types/notification";
 import { MaterialIcons } from "@expo/vector-icons";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -45,7 +45,7 @@ function formatNotificationDate(dateString: string, locale: string) {
   }).format(new Date(dateString));
 }
 
-function NotificationCard({
+const NotificationCard = React.memo(function NotificationCard({
   item,
   locale,
 }: {
@@ -53,10 +53,14 @@ function NotificationCard({
   locale: string;
 }) {
   const meta = TYPE_ICONS[item.type] ?? TYPE_ICONS[NotificationType.GENERAL];
+  const iconBoxStyle = useMemo(
+    () => [styles.iconBox, { backgroundColor: `${meta.color}15` }],
+    [meta.color],
+  );
 
   return (
     <View style={styles.card}>
-      <View style={[styles.iconBox, { backgroundColor: `${meta.color}15` }]}>
+      <View style={iconBoxStyle}>
         <MaterialIcons name={meta.icon} size={20} color={meta.color} />
       </View>
       <View style={styles.cardContent}>
@@ -72,7 +76,7 @@ function NotificationCard({
       </View>
     </View>
   );
-}
+});
 
 export default function NotificationsScreen() {
   const { t, i18n } = useTranslation();
@@ -82,53 +86,87 @@ export default function NotificationsScreen() {
     sort: "createdAt:desc",
   });
 
-  const notifications = data?.results ?? [];
+  const notifications = useMemo(() => data?.results ?? [], [data?.results]);
+  const keyExtractor = useCallback((item: AppNotification) => item.id, []);
+  const renderItem = useCallback(
+    ({ item }: { item: AppNotification }) => (
+      <NotificationCard item={item} locale={locale} />
+    ),
+    [locale],
+  );
+
+  const emptyState = useMemo(
+    () => (
+      <View style={styles.emptyContainer}>
+        <MaterialIcons
+          name="notifications-none"
+          size={64}
+          color={tokens.textPlaceholder}
+        />
+        <Text style={styles.emptyTitle}>{t("notifications.emptyTitle")}</Text>
+        <Text style={styles.emptyMessage}>
+          {t("notifications.emptyMessage")}
+        </Text>
+      </View>
+    ),
+    [t],
+  );
 
   return (
     <ScreenContainer
       title={t("notifications.title")}
       showBackButton
-      refreshControl={
-        <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-      }
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
     >
       {isLoading && data === undefined ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-      ) : notifications.length > 0 ? (
-        <View style={styles.list}>
-          {notifications.map((item) => (
-            <NotificationCard key={item.id} item={item} locale={locale} />
-          ))}
-        </View>
       ) : (
-        <View style={styles.emptyContainer}>
-          <MaterialIcons
-            name="notifications-none"
-            size={64}
-            color={tokens.textPlaceholder}
-          />
-          <Text style={styles.emptyTitle}>{t("notifications.emptyTitle")}</Text>
-          <Text style={styles.emptyMessage}>
-            {t("notifications.emptyMessage")}
-          </Text>
-        </View>
+        <LegendList
+          data={notifications}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={88}
+          recycleItems
+          refreshing={isLoading}
+          onRefresh={refetch}
+          style={styles.listView}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={ListSeparator}
+          ListEmptyComponent={emptyState}
+          showsVerticalScrollIndicator={false}
+        />
       )}
     </ScreenContainer>
   );
 }
 
+function ListSeparator() {
+  return <View style={styles.listSeparator} />;
+}
+
 const styles = StyleSheet.create({
+  screenContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingTop: 80,
   },
-  list: {
-    gap: 10,
+  listView: {
+    flex: 1,
+  },
+  listContent: {
     paddingTop: 12,
+    paddingBottom: 8,
+  },
+  listSeparator: {
+    height: 10,
   },
   card: {
     flexDirection: "row",

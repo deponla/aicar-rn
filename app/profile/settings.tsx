@@ -4,19 +4,24 @@ import { normalizeLanguage } from "@/i18n";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-function SectionLabel({ label }: { label: string }) {
+const SectionLabel = memo(function SectionLabel({
+  label,
+}: {
+  label: string;
+}) {
   const t = tokens;
   return (
     <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
       {label}
     </Text>
   );
-}
+});
 
-function SettingsMenuItem({
+const SettingsMenuItem = memo(function SettingsMenuItem({
   title,
   subtitle,
   icon,
@@ -78,9 +83,13 @@ function SettingsMenuItem({
       )}
     </>
   );
-}
+});
 
-function MenuCard({ children }: { children: React.ReactNode }) {
+const MenuCard = memo(function MenuCard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const t = tokens;
   return (
     <View
@@ -92,7 +101,7 @@ function MenuCard({ children }: { children: React.ReactNode }) {
       {children}
     </View>
   );
-}
+});
 
 export default function SettingsScreen() {
   const { t: translate } = useTranslation();
@@ -100,6 +109,45 @@ export default function SettingsScreen() {
   const user = authStore.user?.user;
   const router = useRouter();
   const t = tokens;
+  const languageLabel = translate(
+    `common.languages.${normalizeLanguage(user?.language)}`,
+  );
+
+  const goToEditProfile = useCallback(() => {
+    router.push("/profile/edit-profile");
+  }, [router]);
+
+  const goToPhoneNumber = useCallback(() => {
+    router.push("/profile/phone-number");
+  }, [router]);
+
+  const goToEmailAddress = useCallback(() => {
+    router.push("/profile/email-address");
+  }, [router]);
+
+  const goToChangePassword = useCallback(() => {
+    router.push("/profile/change-password");
+  }, [router]);
+
+  const goToActiveSessions = useCallback(() => {
+    router.push("/profile/active-sessions");
+  }, [router]);
+
+  const goToLanguage = useCallback(() => {
+    router.push("/profile/language");
+  }, [router]);
+
+  const goToNotificationPreferences = useCallback(() => {
+    router.push("/profile/notification-preferences");
+  }, [router]);
+
+  const goToFreezeAccount = useCallback(() => {
+    router.push("/profile/freeze-account");
+  }, [router]);
+
+  const goToDeleteAccount = useCallback(() => {
+    router.push("/profile/delete-account");
+  }, [router]);
 
   if (!user) {
     return (
@@ -110,10 +158,6 @@ export default function SettingsScreen() {
       </ScreenContainer>
     );
   }
-
-  const languageLabel = translate(
-    `common.languages.${normalizeLanguage(user.language)}`,
-  );
 
   const isLocalAuth = user.authProvider === "local";
 
@@ -131,7 +175,7 @@ export default function SettingsScreen() {
         <SettingsMenuItem
           title={translate("settings.editProfile")}
           icon="person"
-          onPress={() => router.push("/profile/edit-profile")}
+          onPress={goToEditProfile}
         />
         <SettingsMenuItem
           title={translate("settings.phoneNumber")}
@@ -141,7 +185,7 @@ export default function SettingsScreen() {
               ? translate("common.status.verified")
               : translate("common.status.unverified")
           }
-          onPress={() => router.push("/profile/phone-number")}
+          onPress={goToPhoneNumber}
         />
         <SettingsMenuItem
           title={translate("settings.emailAddress")}
@@ -151,7 +195,7 @@ export default function SettingsScreen() {
               ? translate("common.status.verified")
               : translate("common.status.unverified")
           }
-          onPress={() => router.push("/profile/email-address")}
+          onPress={goToEmailAddress}
           showDivider={false}
         />
       </MenuCard>
@@ -162,13 +206,13 @@ export default function SettingsScreen() {
           <SettingsMenuItem
             title={translate("settings.changePassword")}
             icon="lock"
-            onPress={() => router.push("/profile/change-password")}
+            onPress={goToChangePassword}
           />
         )}
         <SettingsMenuItem
           title={translate("settings.activeSessions")}
           icon="devices"
-          onPress={() => router.push("/profile/active-sessions")}
+          onPress={goToActiveSessions}
           showDivider={isLocalAuth}
         />
         {!isLocalAuth && null}
@@ -180,12 +224,12 @@ export default function SettingsScreen() {
           title={translate("settings.language")}
           icon="translate"
           subtitle={languageLabel}
-          onPress={() => router.push("/profile/language")}
+          onPress={goToLanguage}
         />
         <SettingsMenuItem
           title={translate("settings.notificationPreferences")}
           icon="notifications"
-          onPress={() => router.push("/profile/notification-preferences")}
+          onPress={goToNotificationPreferences}
           showDivider={false}
         />
       </MenuCard>
@@ -195,13 +239,13 @@ export default function SettingsScreen() {
         <SettingsMenuItem
           title={translate("settings.freezeAccount")}
           icon="pause-circle-outline"
-          onPress={() => router.push("/profile/freeze-account")}
+          onPress={goToFreezeAccount}
           destructive
         />
         <SettingsMenuItem
           title={translate("settings.deleteAccount")}
           icon="delete-outline"
-          onPress={() => router.push("/profile/delete-account")}
+          onPress={goToDeleteAccount}
           destructive
           showDivider={false}
         />

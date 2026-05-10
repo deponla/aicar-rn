@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -179,32 +179,49 @@ function getWarningSeverityStyle(severity: AiWarning['severity']) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionHeader({ title }: { title: string }) {
+const SectionHeader = memo(function SectionHeader({
+  title,
+}: {
+  title: string;
+}) {
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionHeaderText}>{title}</Text>
     </View>
   );
-}
+});
 
-function WarningLightCard({ entry }: { entry: WarningLightEntry }) {
+
+const WarningLightCard = memo(function WarningLightCard({
+  entry,
+}: {
+  entry: WarningLightEntry;
+}) {
   const [expanded, setExpanded] = useState(false);
-  const sev = getSeverityStyle(entry.severity);
+  const severityStyle = useMemo(
+    () => getSeverityStyle(entry.severity),
+    [entry.severity],
+  );
+  const toggleExpanded = useCallback(() => {
+    setExpanded((current) => !current);
+  }, []);
 
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      style={[styles.wlCard, { borderColor: sev.border }]}
-      onPress={() => setExpanded((v) => !v)}
+      style={[styles.wlCard, { borderColor: severityStyle.border }]}
+      onPress={toggleExpanded}
     >
       <View style={styles.wlCardHeader}>
-        <View style={[styles.wlIconBox, { backgroundColor: sev.bg }]}>
-          <MaterialIcons name={entry.icon} size={22} color={sev.text} />
+        <View style={[styles.wlIconBox, { backgroundColor: severityStyle.bg }]}> 
+          <MaterialIcons name={entry.icon} size={22} color={severityStyle.text} />
         </View>
         <View style={styles.wlCardBody}>
           <Text style={styles.wlCardName}>{entry.name}</Text>
-          <View style={[styles.badge, { backgroundColor: sev.bg }]}>
-            <Text style={[styles.badgeText, { color: sev.text }]}>{entry.severityLabel}</Text>
+          <View style={[styles.badge, { backgroundColor: severityStyle.bg }]}> 
+            <Text style={[styles.badgeText, { color: severityStyle.text }]}>
+              {entry.severityLabel}
+            </Text>
           </View>
         </View>
         <MaterialIcons
@@ -225,9 +242,14 @@ function WarningLightCard({ entry }: { entry: WarningLightEntry }) {
       ) : null}
     </TouchableOpacity>
   );
-}
+});
 
-function MaintenanceCard({ entry }: { entry: MaintenanceEntry }) {
+
+const MaintenanceCard = memo(function MaintenanceCard({
+  entry,
+}: {
+  entry: MaintenanceEntry;
+}) {
   return (
     <View style={styles.maintCard}>
       <View style={styles.maintIconBox}>
@@ -239,7 +261,8 @@ function MaintenanceCard({ entry }: { entry: MaintenanceEntry }) {
       </View>
     </View>
   );
-}
+});
+
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
@@ -248,32 +271,40 @@ export default function GuideScreen() {
   const [obdResult, setObdResult] = useState<AiAnalysisPayload | null>(null);
   const analyzeObd = useAnalyzeObd();
 
-  const handleObdSearch = async () => {
-    const code = obdCode.trim().toUpperCase();
-    if (!code) {
-      Alert.alert('Hata', 'Lutfen bir OBD kodu girin.');
-      return;
+const handleObdSearch = useCallback(async () => {
+  const code = obdCode.trim().toUpperCase();
+  if (!code) {
+    Alert.alert('Hata', 'Lutfen bir OBD kodu girin.');
+    return;
+  }
+
+  setObdResult(null);
+
+  try {
+    const response = await analyzeObd.mutateAsync({
+      code,
+      prompt: `OBD hata kodu analizi`,
+    });
+
+    if (response.result.aiResponse) {
+      setObdResult(response.result.aiResponse);
+    } else {
+      Alert.alert('Sonuc', 'Analiz tamamlandi ancak yanit bos.');
     }
+  } catch (error) {
+    Alert.alert('Hata', error instanceof Error ? error.message : 'Bilinmeyen bir hata olustu.');
+  }
+}, [analyzeObd, obdCode]);
 
-    setObdResult(null);
+const submitObdSearch = useCallback(() => {
+  void handleObdSearch();
+}, [handleObdSearch]);
 
-    try {
-      const response = await analyzeObd.mutateAsync({
-        code,
-        prompt: `OBD hata kodu analizi`,
-      });
+const urgencyStyle = useMemo(
+  () => getUrgencyStyle(obdResult?.urgency),
+  [obdResult?.urgency],
+);
 
-      if (response.result.aiResponse) {
-        setObdResult(response.result.aiResponse);
-      } else {
-        Alert.alert('Sonuc', 'Analiz tamamlandi ancak yanit bos.');
-      }
-    } catch (error) {
-      Alert.alert('Hata', error instanceof Error ? error.message : 'Bilinmeyen bir hata olustu.');
-    }
-  };
-
-  const urgencyStyle = getUrgencyStyle(obdResult?.urgency);
 
   return (
     <ScreenContainer title="Rehber">
@@ -303,12 +334,12 @@ export default function GuideScreen() {
               autoCapitalize="characters"
               autoCorrect={false}
               returnKeyType="search"
-              onSubmitEditing={() => void handleObdSearch()}
+              onSubmitEditing={submitObdSearch}
             />
             <TouchableOpacity
               style={[styles.obdButton, analyzeObd.isPending && styles.obdButtonDisabled]}
               disabled={analyzeObd.isPending}
-              onPress={() => void handleObdSearch()}
+              onPress={submitObdSearch}
               activeOpacity={0.85}
             >
               {analyzeObd.isPending ? (

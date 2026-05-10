@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,7 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
+import { LegendList } from '@legendapp/list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tokens } from '@/constants/theme';
 import {
@@ -42,6 +43,7 @@ import {
   type AnalyzeMediaResponse,
 } from '@/types/ai';
 import { AuthStatusEnum } from '@/types/auth';
+import { type Car } from '@/types/car';
 import { type CreditBalanceResponse } from '@/types/credit';
 import { syncPermissions } from '@/utils/deviceRegistration';
 
@@ -233,15 +235,24 @@ export default function ScanScreen() {
   const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
 
   const carsQuery = useGetCars();
-  const cars = carsQuery.data?.results ?? [];
+  const cars = useMemo(() => carsQuery.data?.results ?? [], [carsQuery.data?.results]);
 
   const isAuthenticated = status === AuthStatusEnum.LOGGED_IN && !!user;
   const isBusy = isUploading || analyzeMedia.isPending;
   const creditBalance = creditBalanceQuery.data ?? null;
   const analysisPayload = analysis?.result.aiResponse;
-  const urgencyTone = getUrgencyTone(analysisPayload?.urgency);
-  const shouldShowBalance = isAuthenticated && !!creditBalance;
-  const isPremiumActive = shouldShowBalance && !!creditBalance?.isPremium;
+  const urgencyTone = useMemo(
+    () => getUrgencyTone(analysisPayload?.urgency),
+    [analysisPayload?.urgency],
+  );
+  const shouldShowBalance = useMemo(
+    () => isAuthenticated && !!creditBalance,
+    [creditBalance, isAuthenticated],
+  );
+  const isPremiumActive = useMemo(
+    () => shouldShowBalance && !!creditBalance?.isPremium,
+    [creditBalance?.isPremium, shouldShowBalance],
+  );
 
   useEffect(() => {
     if (!creditBalance) {
@@ -251,20 +262,20 @@ export default function ScanScreen() {
     setCredits(createCreditsSnapshot(creditBalance));
   }, [creditBalance, setCredits]);
 
-  const closeSourceSheet = () => {
+  const closeSourceSheet = useCallback(() => {
     sourceSheetRef.current?.dismiss();
-  };
+  }, []);
 
-  const openSourceSheet = () => {
+  const openSourceSheet = useCallback(() => {
     if (!isAuthenticated) {
       Alert.alert('Giris gerekli', 'AI analizini kullanmak icin hesabiniza giris yapin.');
       return;
     }
 
     sourceSheetRef.current?.present();
-  };
+  }, [isAuthenticated]);
 
-  const pickAssetFromSource = async (
+  const pickAssetFromSource = useCallback(async (
     source: ScanSource,
   ): Promise<ImagePicker.ImagePickerAsset | null> => {
     if (source === 'gallery') {
@@ -319,9 +330,9 @@ export default function ScanScreen() {
     }
 
     return pickerResult.assets[0];
-  };
+  }, []);
 
-  const processSelectedAsset = async (asset: ImagePicker.ImagePickerAsset) => {
+  const processSelectedAsset = useCallback(async (asset: ImagePicker.ImagePickerAsset) => {
     const mediaType = getAssetMediaType(asset);
 
     setSelectedMedia({
@@ -377,9 +388,9 @@ export default function ScanScreen() {
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [analyzeMedia, queryClient, selectedCarId, setCredits]);
 
-  const handleSelectSource = async (source: ScanSource) => {
+  const handleSelectSource = useCallback(async (source: ScanSource) => {
     if (!isAuthenticated) {
       Alert.alert('Giris gerekli', 'AI analizini kullanmak icin hesabiniza giris yapin.');
       return;
@@ -394,7 +405,59 @@ export default function ScanScreen() {
     }
 
     await processSelectedAsset(asset);
-  };
+  }, [closeSourceSheet, isAuthenticated, pickAssetFromSource, processSelectedAsset]);
+
+  const handleSelectCar = useCallback((carId: string | null) => {
+    setSelectedCarId(carId);
+  }, []);
+
+  const carKeyExtractor = useCallback((item: Car) => item.id, []);
+
+  const renderCarChip = useCallback(
+    ({ item }: { item: Car }) => (
+      <TouchableOpacity
+        style={[
+          styles.carChip,
+          selectedCarId === item.id && styles.carChipSelected,
+        ]}
+        onPress={() => handleSelectCar(item.id)}
+        activeOpacity={0.8}
+      >
+        <Text
+          style={[
+            styles.carChipText,
+            selectedCarId === item.id && styles.carChipTextSelected,
+          ]}
+        >
+          {item.brand} {item.model} ({item.year})
+        </Text>
+      </TouchableOpacity>
+    ),
+    [handleSelectCar, selectedCarId],
+  );
+
+  const carListHeader = useMemo(
+    () => (
+      <TouchableOpacity
+        style={[
+          styles.carChip,
+          selectedCarId === null && styles.carChipSelected,
+        ]}
+        onPress={() => handleSelectCar(null)}
+        activeOpacity={0.8}
+      >
+        <Text
+          style={[
+            styles.carChipText,
+            selectedCarId === null && styles.carChipTextSelected,
+          ]}
+        >
+          Yok
+        </Text>
+      </TouchableOpacity>
+    ),
+    [handleSelectCar, selectedCarId],
+  );
 
   return (
     <>
@@ -417,7 +480,9 @@ export default function ScanScreen() {
             <View style={styles.metaRow}>
               <View style={styles.metaBadge}>
                 <MaterialIcons name="bolt" size={16} color={tokens.primary} />
-                <Text style={styles.metaBadgeText}>{creditBalance.remainingCredits} kredi</Text>
+                <Text style={styles.metaBadgeText}>
+                  {creditBalance?.remainingCredits ?? 0} kredi
+                </Text>
               </View>
               {isPremiumActive ? (
                 <View style={[styles.metaBadge, styles.metaBadgeSecondary]}>
@@ -546,45 +611,20 @@ export default function ScanScreen() {
           {isAuthenticated && cars.length > 0 ? (
             <View style={styles.carSection}>
               <Text style={styles.carSectionTitle}>Aracla Iliskilendir</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carScroll}>
-                <TouchableOpacity
-                  style={[
-                    styles.carChip,
-                    selectedCarId === null && styles.carChipSelected,
-                  ]}
-                  onPress={() => setSelectedCarId(null)}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.carChipText,
-                      selectedCarId === null && styles.carChipTextSelected,
-                    ]}
-                  >
-                    Yok
-                  </Text>
-                </TouchableOpacity>
-                {cars.map((car) => (
-                  <TouchableOpacity
-                    key={car.id}
-                    style={[
-                      styles.carChip,
-                      selectedCarId === car.id && styles.carChipSelected,
-                    ]}
-                    onPress={() => setSelectedCarId(car.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={[
-                        styles.carChipText,
-                        selectedCarId === car.id && styles.carChipTextSelected,
-                      ]}
-                    >
-                      {car.brand} {car.model} ({car.year})
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <LegendList
+                horizontal
+                data={cars}
+                renderItem={renderCarChip}
+                keyExtractor={carKeyExtractor}
+                estimatedItemSize={120}
+                recycleItems
+                style={styles.carScroll}
+                contentContainerStyle={styles.carScrollContent}
+                ListHeaderComponent={carListHeader}
+                ListHeaderComponentStyle={styles.carChipHeaderSpacing}
+                ItemSeparatorComponent={CarChipSeparator}
+                showsHorizontalScrollIndicator={false}
+              />
             </View>
           ) : null}
 
@@ -647,6 +687,10 @@ export default function ScanScreen() {
       </BottomSheetModal>
     </>
   );
+}
+
+function CarChipSeparator() {
+  return <View style={styles.carChipSeparator} />;
 }
 
 const styles = StyleSheet.create({
@@ -765,7 +809,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   carScroll: {
-    flexDirection: 'row',
+    maxHeight: 44,
+  },
+  carScrollContent: {
+    paddingRight: 4,
+  },
+  carChipHeaderSpacing: {
+    marginRight: 8,
+  },
+  carChipSeparator: {
+    width: 8,
   },
   carChip: {
     paddingHorizontal: 14,

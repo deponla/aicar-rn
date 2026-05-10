@@ -1,3 +1,4 @@
+import { LegendList } from "@legendapp/list";
 import { Colors, tokens } from "@/constants/theme";
 import LoginRequired from "@/components/LoginRequired";
 import ScreenContainer from "@/components/ScreenContainer";
@@ -12,12 +13,12 @@ import {
 } from "@/query-hooks/useCars";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Modal,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,7 +26,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
 
 const FUEL_LABELS: Record<FuelTypeEnum, string> = {
   [FuelTypeEnum.GASOLINE]: "Benzin",
@@ -40,17 +40,24 @@ const TRANSMISSION_LABELS: Record<TransmissionEnum, string> = {
   [TransmissionEnum.AUTOMATIC]: "Otomatik",
 };
 
-function CarCard({
+const FUEL_OPTIONS = Object.values(FuelTypeEnum);
+const TRANSMISSION_OPTIONS = Object.values(TransmissionEnum);
+
+const CarCard = React.memo(function CarCard({
   item,
   onPress,
   onDelete,
 }: {
   item: Car;
-  onPress: () => void;
+  onPress: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(item.id)}
+      activeOpacity={0.85}
+    >
       <View style={styles.cardHeader}>
         <View style={styles.cardTitleRow}>
           <MaterialIcons
@@ -79,7 +86,7 @@ function CarCard({
           />
           <Text style={styles.detailText}>{item.year}</Text>
         </View>
-        {item.fuelType && (
+        {item.fuelType ? (
           <View style={styles.detailChip}>
             <MaterialIcons
               name="local-gas-station"
@@ -90,8 +97,8 @@ function CarCard({
               {FUEL_LABELS[item.fuelType] ?? item.fuelType}
             </Text>
           </View>
-        )}
-        {item.transmission && (
+        ) : null}
+        {item.transmission ? (
           <View style={styles.detailChip}>
             <MaterialIcons
               name="settings"
@@ -102,8 +109,8 @@ function CarCard({
               {TRANSMISSION_LABELS[item.transmission] ?? item.transmission}
             </Text>
           </View>
-        )}
-        {item.engineCC != null && (
+        ) : null}
+        {item.engineCC != null ? (
           <View style={styles.detailChip}>
             <MaterialIcons
               name="speed"
@@ -112,7 +119,7 @@ function CarCard({
             />
             <Text style={styles.detailText}>{item.engineCC} cc</Text>
           </View>
-        )}
+        ) : null}
       </View>
 
       <Text style={styles.dateText}>
@@ -120,9 +127,9 @@ function CarCard({
       </Text>
     </TouchableOpacity>
   );
-}
+});
 
-function AddCarModal({
+const AddCarModal = React.memo(function AddCarModal({
   visible,
   onClose,
   onSubmit,
@@ -149,27 +156,30 @@ function AddCarModal({
   >();
   const [engineCC, setEngineCC] = useState("");
 
-  const handleSubmit = () => {
-    const y = parseInt(year, 10);
-    if (!brand.trim() || !model.trim() || isNaN(y)) return;
+  const handleSubmit = useCallback(() => {
+    const parsedYear = parseInt(year, 10);
+    if (!brand.trim() || !model.trim() || Number.isNaN(parsedYear)) {
+      return;
+    }
+
     onSubmit({
       brand: brand.trim(),
       model: model.trim(),
-      year: y,
+      year: parsedYear,
       fuelType,
       transmission,
       engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
     });
-  };
+  }, [brand, engineCC, fuelType, model, onSubmit, transmission, year]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setBrand("");
     setModel("");
     setYear("");
     setFuelType(undefined);
     setTransmission(undefined);
     setEngineCC("");
-  };
+  }, []);
 
   return (
     <Modal
@@ -222,22 +232,24 @@ function AddCarModal({
 
           <Text style={styles.inputLabel}>Yakıt Tipi</Text>
           <View style={styles.chipRow}>
-            {Object.values(FuelTypeEnum).map((ft) => (
+            {FUEL_OPTIONS.map((fuelValue) => (
               <TouchableOpacity
-                key={ft}
+                key={fuelValue}
                 style={[
                   styles.selectChip,
-                  fuelType === ft && styles.selectChipActive,
+                  fuelType === fuelValue && styles.selectChipActive,
                 ]}
-                onPress={() => setFuelType(fuelType === ft ? undefined : ft)}
+                onPress={() =>
+                  setFuelType(fuelType === fuelValue ? undefined : fuelValue)
+                }
               >
                 <Text
                   style={[
                     styles.selectChipText,
-                    fuelType === ft && styles.selectChipTextActive,
+                    fuelType === fuelValue && styles.selectChipTextActive,
                   ]}
                 >
-                  {FUEL_LABELS[ft]}
+                  {FUEL_LABELS[fuelValue]}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -245,24 +257,27 @@ function AddCarModal({
 
           <Text style={styles.inputLabel}>Vites</Text>
           <View style={styles.chipRow}>
-            {Object.values(TransmissionEnum).map((tr) => (
+            {TRANSMISSION_OPTIONS.map((transmissionValue) => (
               <TouchableOpacity
-                key={tr}
+                key={transmissionValue}
                 style={[
                   styles.selectChip,
-                  transmission === tr && styles.selectChipActive,
+                  transmission === transmissionValue && styles.selectChipActive,
                 ]}
                 onPress={() =>
-                  setTransmission(transmission === tr ? undefined : tr)
+                  setTransmission(
+                    transmission === transmissionValue ? undefined : transmissionValue,
+                  )
                 }
               >
                 <Text
                   style={[
                     styles.selectChipText,
-                    transmission === tr && styles.selectChipTextActive,
+                    transmission === transmissionValue &&
+                      styles.selectChipTextActive,
                   ]}
                 >
-                  {TRANSMISSION_LABELS[tr]}
+                  {TRANSMISSION_LABELS[transmissionValue]}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -284,7 +299,7 @@ function AddCarModal({
             style={[
               styles.submitButton,
               (!brand.trim() || !model.trim() || !year.trim()) &&
-              styles.submitButtonDisabled,
+                styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
             disabled={
@@ -302,6 +317,10 @@ function AddCarModal({
       </View>
     </Modal>
   );
+});
+
+function ListSeparator() {
+  return <View style={styles.listSeparator} />;
 }
 
 export default function GarageScreen() {
@@ -315,6 +334,102 @@ export default function GarageScreen() {
   const createCar = useCreateCar();
   const removeCar = useDeleteCar();
 
+  const cars = useMemo(() => data?.results ?? [], [data?.results]);
+
+  const openModal = useCallback(() => {
+    setModalVisible(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setModalVisible(false);
+  }, []);
+
+  const handleOpenCar = useCallback(
+    (id: string) => {
+      router.push(`/car/${id}`);
+    },
+    [router],
+  );
+
+  const handleCreate = useCallback(
+    (payload: Parameters<typeof createCar.mutate>[0]) => {
+      createCar.mutate(payload, {
+        onSuccess: () => {
+          setModalVisible(false);
+          notify({ type: "success", title: "Araç başarıyla eklendi" });
+        },
+        onError: (error) => {
+          notify({
+            type: "error",
+            title: "Araç eklenemedi",
+            message: error instanceof Error ? error.message : undefined,
+          });
+        },
+      });
+    },
+    [createCar, notify],
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      Alert.alert("Aracı Sil", "Bu aracı silmek istediğinize emin misiniz?", [
+        { text: "İptal", style: "cancel" },
+        {
+          text: "Sil",
+          style: "destructive",
+          onPress: () => {
+            removeCar.mutate(id, {
+              onSuccess: () => {
+                notify({ type: "success", title: "Araç silindi" });
+              },
+              onError: (error) => {
+                notify({
+                  type: "error",
+                  title: "Araç silinemedi",
+                  message: error instanceof Error ? error.message : undefined,
+                });
+              },
+            });
+          },
+        },
+      ]);
+    },
+    [notify, removeCar],
+  );
+
+  const keyExtractor = useCallback((item: Car) => item.id, []);
+  const renderItem = useCallback(
+    ({ item }: { item: Car }) => (
+      <CarCard item={item} onPress={handleOpenCar} onDelete={handleDelete} />
+    ),
+    [handleDelete, handleOpenCar],
+  );
+
+  const emptyState = useMemo(
+    () => (
+      <View style={styles.emptyContainer}>
+        <MaterialIcons
+          name="directions-car"
+          size={64}
+          color={tokens.textTertiary}
+        />
+        <Text style={styles.emptyTitle}>Henüz araç eklemediniz</Text>
+        <Text style={styles.emptySubtitle}>
+          Garajınıza araç ekleyerek analiz sonuçlarını takip edebilirsiniz.
+        </Text>
+        <TouchableOpacity
+          style={styles.emptyAction}
+          onPress={openModal}
+          activeOpacity={0.85}
+        >
+          <MaterialIcons name="add" size={18} color="#FFFFFF" />
+          <Text style={styles.emptyActionText}>Araç Ekle</Text>
+        </TouchableOpacity>
+      </View>
+    ),
+    [openModal],
+  );
+
   if (!isLoggedIn) {
     return (
       <LoginRequired
@@ -325,57 +440,14 @@ export default function GarageScreen() {
     );
   }
 
-  const cars = data?.results ?? [];
-
-  const handleCreate = (payload: Parameters<typeof createCar.mutate>[0]) => {
-    createCar.mutate(payload, {
-      onSuccess: () => {
-        setModalVisible(false);
-        notify({ type: "success", title: "Araç başarıyla eklendi" });
-      },
-      onError: (err) => {
-        notify({
-          type: "error",
-          title: "Araç eklenemedi",
-          message: err instanceof Error ? err.message : undefined,
-        });
-      },
-    });
-  };
-
-  const handleDelete = (id: string) => {
-    Alert.alert("Aracı Sil", "Bu aracı silmek istediğinize emin misiniz?", [
-      { text: "İptal", style: "cancel" },
-      {
-        text: "Sil",
-        style: "destructive",
-        onPress: () => {
-          removeCar.mutate(id, {
-            onSuccess: () => {
-              notify({ type: "success", title: "Araç silindi" });
-            },
-            onError: (err) => {
-              notify({
-                type: "error",
-                title: "Araç silinemedi",
-                message: err instanceof Error ? err.message : undefined,
-              });
-            },
-          });
-        },
-      },
-    ]);
-  };
-
   return (
     <ScreenContainer
       title="Garajım"
-      refreshControl={
-        <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-      }
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
       headerRight={
         <TouchableOpacity
-          onPress={() => setModalVisible(true)}
+          onPress={openModal}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <MaterialIcons name="add" size={24} color={Colors.primary} />
@@ -386,37 +458,26 @@ export default function GarageScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-      ) : cars.length > 0 ? (
-        <View style={styles.list}>
-          {cars.map((car) => (
-            <CarCard key={car.id} item={car} onPress={() => router.push(`/car/${car.id}`)} onDelete={handleDelete} />
-          ))}
-        </View>
       ) : (
-        <View style={styles.emptyContainer}>
-          <MaterialIcons
-            name="directions-car"
-            size={64}
-            color={tokens.textTertiary}
-          />
-          <Text style={styles.emptyTitle}>Henüz araç eklemediniz</Text>
-          <Text style={styles.emptySubtitle}>
-            Garajınıza araç ekleyerek analiz sonuçlarını takip edebilirsiniz.
-          </Text>
-          <TouchableOpacity
-            style={styles.emptyAction}
-            onPress={() => setModalVisible(true)}
-            activeOpacity={0.85}
-          >
-            <MaterialIcons name="add" size={18} color="#FFFFFF" />
-            <Text style={styles.emptyActionText}>Araç Ekle</Text>
-          </TouchableOpacity>
-        </View>
+        <LegendList
+          data={cars}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={130}
+          recycleItems
+          refreshing={isLoading}
+          onRefresh={refetch}
+          style={styles.listView}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={ListSeparator}
+          ListEmptyComponent={emptyState}
+          showsVerticalScrollIndicator={false}
+        />
       )}
 
       <AddCarModal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={closeModal}
         onSubmit={handleCreate}
         isLoading={createCar.isPending}
       />
@@ -425,15 +486,25 @@ export default function GarageScreen() {
 }
 
 const styles = StyleSheet.create({
+  screenContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingTop: 80,
   },
-  list: {
-    gap: 12,
+  listView: {
+    flex: 1,
+  },
+  listContent: {
     paddingTop: 12,
+    paddingBottom: 8,
+  },
+  listSeparator: {
+    height: 12,
   },
   card: {
     backgroundColor: tokens.bgSurface,
@@ -515,7 +586,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
   },
-  // Modal
   modalContainer: {
     flex: 1,
     backgroundColor: tokens.bgSurface,

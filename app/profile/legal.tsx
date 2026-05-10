@@ -1,26 +1,22 @@
+import { LegendList } from "@legendapp/list";
 import ScreenContainer from "@/components/ScreenContainer";
 import { Colors, tokens } from "@/constants/theme";
 import { useGetLegalDocuments } from "@/query-hooks/useLegal";
 import { LegalDocument, LegalDocumentTypeEnum } from "@/types/legal";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const ICON_MAP: Record<
-  string,
-  keyof typeof MaterialIcons.glyphMap
-> = {
+const ICON_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   [LegalDocumentTypeEnum.TERMS_OF_USE]: "description",
   [LegalDocumentTypeEnum.PRIVACY_POLICY]: "privacy-tip",
   [LegalDocumentTypeEnum.COOKIE_POLICY]: "cookie",
@@ -29,15 +25,13 @@ const ICON_MAP: Record<
   [LegalDocumentTypeEnum.HELP_GUIDE]: "help-outline",
 };
 
-function LegalDocumentViewer({
+const LegalDocumentViewer = React.memo(function LegalDocumentViewer({
   document,
   onClose,
 }: {
   document: LegalDocument;
   onClose: () => void;
 }) {
-  const { width: _width } = useWindowDimensions();
-
   return (
     <Modal
       visible
@@ -61,79 +55,100 @@ function LegalDocumentViewer({
           style={styles.contentScroll}
           contentContainerStyle={styles.contentContainer}
         >
-          <Text style={{ color: tokens.textPrimary, fontSize: 15, lineHeight: 22 }}>
-            {document.content.replace(/<[^>]*>/g, '')}
+          <Text style={styles.documentText}>
+            {document.content.replace(/<[^>]*>/g, "")}
           </Text>
-          <Text style={styles.versionText}>
-            Versiyon {document.version}
-          </Text>
+          <Text style={styles.versionText}>Versiyon {document.version}</Text>
         </ScrollView>
       </SafeAreaView>
     </Modal>
   );
+});
+
+const LegalDocumentRow = React.memo(function LegalDocumentRow({
+  item,
+  onPress,
+}: {
+  item: LegalDocument;
+  onPress: (document: LegalDocument) => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={styles.menuItem}
+      activeOpacity={0.6}
+      onPress={() => onPress(item)}
+    >
+      <View style={styles.menuItemLeft}>
+        <View style={styles.iconCircle}>
+          <MaterialIcons
+            name={ICON_MAP[item.type] ?? "article"}
+            size={20}
+            color={Colors.primary}
+          />
+        </View>
+        <View>
+          <Text style={styles.menuItemTitle}>{item.title}</Text>
+          {item.excerpt ? (
+            <Text style={styles.menuItemSubtitle} numberOfLines={1}>
+              {item.excerpt}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+      <MaterialIcons size={20} name="chevron-right" color="#C7C7CC" />
+    </TouchableOpacity>
+  );
+});
+
+function Divider() {
+  return <View style={styles.divider} />;
 }
 
 export default function LegalScreen() {
   const { data, isLoading, refetch } = useGetLegalDocuments();
   const [selected, setSelected] = useState<LegalDocument | null>(null);
 
-  const documents = Array.isArray(data) ? data : [];
+  const documents = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+  const keyExtractor = useCallback((item: LegalDocument) => item.id, []);
+  const handlePress = useCallback((document: LegalDocument) => {
+    setSelected(document);
+  }, []);
+  const renderItem = useCallback(
+    ({ item }: { item: LegalDocument }) => (
+      <LegalDocumentRow item={item} onPress={handlePress} />
+    ),
+    [handlePress],
+  );
 
   return (
     <ScreenContainer
       title="Yasal"
       showBackButton
-      refreshControl={
-        <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-      }
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
     >
-      {selected && (
-        <LegalDocumentViewer
-          document={selected}
-          onClose={() => setSelected(null)}
-        />
-      )}
+      {selected ? (
+        <LegalDocumentViewer document={selected} onClose={() => setSelected(null)} />
+      ) : null}
 
       {isLoading && !data ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       ) : documents.length > 0 ? (
-        <View style={styles.card}>
-          {documents.map((doc, index) => (
-            <View key={doc.id}>
-              {index > 0 && <View style={styles.divider} />}
-              <TouchableOpacity
-                style={styles.menuItem}
-                activeOpacity={0.6}
-                onPress={() => setSelected(doc)}
-              >
-                <View style={styles.menuItemLeft}>
-                  <View style={styles.iconCircle}>
-                    <MaterialIcons
-                      name={ICON_MAP[doc.type] ?? "article"}
-                      size={20}
-                      color={Colors.primary}
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.menuItemTitle}>{doc.title}</Text>
-                    {doc.excerpt && (
-                      <Text style={styles.menuItemSubtitle} numberOfLines={1}>
-                        {doc.excerpt}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-                <MaterialIcons
-                  size={20}
-                  name="chevron-right"
-                  color="#C7C7CC"
-                />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
+        <LegendList
+          data={documents}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={72}
+          recycleItems
+          refreshing={isLoading}
+          onRefresh={refetch}
+          style={styles.listView}
+          contentContainerStyle={styles.card}
+          ItemSeparatorComponent={Divider}
+          showsVerticalScrollIndicator={false}
+        />
       ) : (
         <View style={styles.emptyContainer}>
           <MaterialIcons name="article" size={48} color={tokens.textTertiary} />
@@ -145,11 +160,19 @@ export default function LegalScreen() {
 }
 
 const styles = StyleSheet.create({
+  screenContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingTop: 80,
+  },
+  listView: {
+    flex: 1,
+    marginTop: 10,
   },
   modalContainer: {
     flex: 1,
@@ -192,6 +215,11 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
+  documentText: {
+    color: tokens.textPrimary,
+    fontSize: 15,
+    lineHeight: 22,
+  },
   versionText: {
     fontSize: 12,
     color: tokens.textTertiary,
@@ -209,7 +237,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#E5E5EA",
-    marginTop: 10,
+    paddingBottom: 4,
   },
   menuItem: {
     flexDirection: "row",
@@ -227,7 +255,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: Colors.primary + "14",
+    backgroundColor: `${Colors.primary}14`,
     justifyContent: "center",
     alignItems: "center",
   },

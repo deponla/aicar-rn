@@ -3,7 +3,7 @@ import { Colors, tokens } from "@/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
     Linking,
     Platform,
@@ -28,6 +28,16 @@ const DEFAULT_PREFS: NotificationPrefs = {
     system: true,
 };
 
+const MASTER_CARD_ENABLED_STYLE = { borderColor: tokens.success + "40" };
+const MASTER_CARD_DISABLED_STYLE = { borderColor: tokens.borderDefault };
+const MASTER_ICON_ENABLED_STYLE = { backgroundColor: tokens.successBg };
+const MASTER_ICON_DISABLED_STYLE = { backgroundColor: tokens.bgSubtle };
+const MANAGE_BUTTON_STYLE = { borderColor: tokens.borderDefault };
+const PREFERENCE_TRACK_COLOR = {
+    false: "#E5E5EA",
+    true: Colors.primary + "60",
+};
+
 function openAppSettings() {
     if (Platform.OS === "ios") {
         Linking.openURL("app-settings:");
@@ -36,7 +46,7 @@ function openAppSettings() {
     }
 }
 
-function PreferenceRow({
+const PreferenceRow = memo(function PreferenceRow({
     icon,
     iconColor,
     label,
@@ -53,49 +63,38 @@ function PreferenceRow({
     onToggle: (val: boolean) => void;
     disabled?: boolean;
 }) {
-    const t = tokens;
+    const iconCircleStyle = useMemo(
+        () => [styles.prefIconCircle, { backgroundColor: iconColor + "15" }],
+        [iconColor],
+    );
 
     return (
-        <View
-            style={[
-                styles.prefRow,
-                { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
-            ]}
-        >
-            <View
-                style={[
-                    styles.prefIconCircle,
-                    { backgroundColor: iconColor + "15" },
-                ]}
-            >
+        <View style={[styles.prefRow, styles.prefRowSurface]}>
+            <View style={iconCircleStyle}>
                 <MaterialIcons name={icon} size={20} color={iconColor} />
             </View>
             <View style={styles.prefContent}>
                 <Text
                     style={[
                         styles.prefLabel,
-                        {
-                            color: disabled ? t.textPlaceholder : t.textPrimary,
-                        },
+                        disabled ? styles.prefLabelDisabled : styles.prefLabelEnabled,
                     ]}
                 >
                     {label}
                 </Text>
-                <Text style={[styles.prefDesc, { color: t.textTertiary }]}>
-                    {description}
-                </Text>
+                <Text style={[styles.prefDesc, styles.prefDescMuted]}>{description}</Text>
             </View>
             <Switch
                 value={value && !disabled}
                 onValueChange={onToggle}
                 disabled={disabled}
-                trackColor={{ false: "#E5E5EA", true: Colors.primary + "60" }}
+                trackColor={PREFERENCE_TRACK_COLOR}
                 thumbColor={value && !disabled ? Colors.primary : "#FFFFFF"}
                 ios_backgroundColor="#E5E5EA"
             />
         </View>
     );
-}
+});
 
 export default function NotificationPreferencesScreen() {
     const t = tokens;
@@ -104,7 +103,7 @@ export default function NotificationPreferencesScreen() {
 
     const checkPushPermission = useCallback(async () => {
         const perms = await Notifications.getPermissionsAsync() as unknown as { status: string };
-        setPushEnabled(perms.status === 'granted');
+        setPushEnabled(perms.status === "granted");
     }, []);
 
     const loadPrefs = useCallback(async () => {
@@ -118,56 +117,71 @@ export default function NotificationPreferencesScreen() {
         }
     }, []);
 
+    const handleOpenAppSettings = useCallback(() => {
+        openAppSettings();
+    }, []);
+
+    const persistPrefs = useCallback(async (nextPrefs: NotificationPrefs) => {
+        await SecureStore.setItemAsync(PREFS_KEY, JSON.stringify(nextPrefs));
+    }, []);
+
+    const updatePref = useCallback((key: keyof NotificationPrefs, value: boolean) => {
+        setPrefs((current) => {
+            const nextPrefs = { ...current, [key]: value };
+            void persistPrefs(nextPrefs);
+            return nextPrefs;
+        });
+    }, [persistPrefs]);
+
+    const toggleMessages = useCallback((value: boolean) => {
+        updatePref("messages", value);
+    }, [updatePref]);
+
+    const togglePromotions = useCallback((value: boolean) => {
+        updatePref("promotions", value);
+    }, [updatePref]);
+
+    const toggleSystem = useCallback((value: boolean) => {
+        updatePref("system", value);
+    }, [updatePref]);
+
     useEffect(() => {
-        checkPushPermission();
-        loadPrefs();
+        void checkPushPermission();
+        void loadPrefs();
     }, [checkPushPermission, loadPrefs]);
 
-    const savePrefs = async (newPrefs: NotificationPrefs) => {
-        setPrefs(newPrefs);
-        await SecureStore.setItemAsync(PREFS_KEY, JSON.stringify(newPrefs));
-    };
-
-    const handleTogglePush = async () => {
+    const handleTogglePush = useCallback(async () => {
         if (pushEnabled) {
             openAppSettings();
-        } else {
-            const perms = await Notifications.requestPermissionsAsync() as unknown as { status: string };
-            const granted = perms.status === 'granted';
-            setPushEnabled(granted);
-            if (!granted) {
-                openAppSettings();
-            }
+            return;
         }
-    };
+
+        const perms = await Notifications.requestPermissionsAsync() as unknown as { status: string };
+        const granted = perms.status === "granted";
+        setPushEnabled(granted);
+        if (!granted) {
+            openAppSettings();
+        }
+    }, [pushEnabled]);
 
     return (
         <ScreenContainer title="Bildirim Tercihleri" showBackButton>
-            {/* Master Toggle */}
             <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
+                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}> 
                     PUSH BİLDİRİMLERİ
                 </Text>
                 <View
                     style={[
                         styles.masterCard,
-                        {
-                            backgroundColor: t.bgSurface,
-                            borderColor: pushEnabled
-                                ? t.success + "40"
-                                : t.borderDefault,
-                        },
+                        styles.masterCardSurface,
+                        pushEnabled ? MASTER_CARD_ENABLED_STYLE : MASTER_CARD_DISABLED_STYLE,
                     ]}
                 >
                     <View style={styles.masterRow}>
                         <View
                             style={[
                                 styles.masterIconCircle,
-                                {
-                                    backgroundColor: pushEnabled
-                                        ? t.successBg
-                                        : t.bgSubtle,
-                                },
+                                pushEnabled ? MASTER_ICON_ENABLED_STYLE : MASTER_ICON_DISABLED_STYLE,
                             ]}
                         >
                             <MaterialIcons
@@ -177,10 +191,10 @@ export default function NotificationPreferencesScreen() {
                             />
                         </View>
                         <View style={styles.masterContent}>
-                            <Text style={[styles.masterTitle, { color: t.textPrimary }]}>
+                            <Text style={[styles.masterTitle, { color: t.textPrimary }]}> 
                                 Bildirimler
                             </Text>
-                            <Text style={[styles.masterDesc, { color: t.textTertiary }]}>
+                            <Text style={[styles.masterDesc, { color: t.textTertiary }]}> 
                                 {pushEnabled
                                     ? "Bildirimler açık"
                                     : "Bildirimler kapalı — ayarlardan açabilirsiniz"}
@@ -189,10 +203,7 @@ export default function NotificationPreferencesScreen() {
                     </View>
                     {!pushEnabled && (
                         <TouchableOpacity
-                            style={[
-                                styles.enableButton,
-                                { backgroundColor: Colors.primary },
-                            ]}
+                            style={styles.enableButton}
                             onPress={handleTogglePush}
                             activeOpacity={0.8}
                         >
@@ -203,11 +214,8 @@ export default function NotificationPreferencesScreen() {
                     )}
                     {pushEnabled && (
                         <TouchableOpacity
-                            style={[
-                                styles.manageButton,
-                                { borderColor: t.borderDefault },
-                            ]}
-                            onPress={openAppSettings}
+                            style={[styles.manageButton, MANAGE_BUTTON_STYLE]}
+                            onPress={handleOpenAppSettings}
                             activeOpacity={0.8}
                         >
                             <Text
@@ -220,9 +228,8 @@ export default function NotificationPreferencesScreen() {
                 </View>
             </View>
 
-            {/* Category Preferences */}
             <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
+                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}> 
                     BİLDİRİM KATEGORİLERİ
                 </Text>
                 <View style={styles.prefList}>
@@ -232,7 +239,7 @@ export default function NotificationPreferencesScreen() {
                         label="Mesajlar"
                         description="Sohbet mesajları ve yanıtlar"
                         value={prefs.messages}
-                        onToggle={(val) => savePrefs({ ...prefs, messages: val })}
+                        onToggle={toggleMessages}
                         disabled={!pushEnabled}
                     />
                     <PreferenceRow
@@ -241,7 +248,7 @@ export default function NotificationPreferencesScreen() {
                         label="Kampanyalar"
                         description="Fırsatlar, indirimler ve yenilikler"
                         value={prefs.promotions}
-                        onToggle={(val) => savePrefs({ ...prefs, promotions: val })}
+                        onToggle={togglePromotions}
                         disabled={!pushEnabled}
                     />
                     <PreferenceRow
@@ -250,7 +257,7 @@ export default function NotificationPreferencesScreen() {
                         label="Sistem Bildirimleri"
                         description="Hesap güvenliği ve sistem güncellemeleri"
                         value={prefs.system}
-                        onToggle={(val) => savePrefs({ ...prefs, system: val })}
+                        onToggle={toggleSystem}
                         disabled={!pushEnabled}
                     />
                 </View>
@@ -263,7 +270,7 @@ export default function NotificationPreferencesScreen() {
                         size={16}
                         color={t.warningText}
                     />
-                    <Text style={[styles.disabledNoteText, { color: t.warningText }]}>
+                    <Text style={[styles.disabledNoteText, { color: t.warningText }]}> 
                         Kategori tercihlerini yönetebilmek için bildirimleri açın.
                     </Text>
                 </View>
@@ -290,6 +297,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         padding: 16,
         gap: 14,
+    },
+    masterCardSurface: {
+        backgroundColor: tokens.bgSurface,
     },
     masterRow: {
         flexDirection: "row",
@@ -319,6 +329,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         minHeight: 44,
+        backgroundColor: Colors.primary,
     },
     enableButtonText: {
         color: "#FFFFFF",
@@ -348,6 +359,10 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         gap: 12,
     },
+    prefRowSurface: {
+        backgroundColor: tokens.bgSurface,
+        borderColor: tokens.borderDefault,
+    },
     prefIconCircle: {
         width: 36,
         height: 36,
@@ -363,8 +378,17 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "600",
     },
+    prefLabelEnabled: {
+        color: tokens.textPrimary,
+    },
+    prefLabelDisabled: {
+        color: tokens.textPlaceholder,
+    },
     prefDesc: {
         fontSize: 12,
+    },
+    prefDescMuted: {
+        color: tokens.textTertiary,
     },
     disabledNote: {
         flexDirection: "row",

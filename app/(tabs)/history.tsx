@@ -1,3 +1,4 @@
+import { LegendList } from "@legendapp/list";
 import { Colors, tokens } from "@/constants/theme";
 import LoginRequired from "@/components/LoginRequired";
 import ScreenContainer from "@/components/ScreenContainer";
@@ -6,17 +7,16 @@ import { AuthStatusEnum } from "@/types/auth";
 import { AnalyzeMediaLog, AiAnalysisType, AiUrgency } from "@/types/ai";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
-import { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  RefreshControl,
+  Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Modal,
-  ScrollView,
 } from "react-native";
 import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
 
@@ -64,12 +64,12 @@ function analysisTypeIcon(
   return ANALYSIS_TYPE_ICONS[analysisType as AiAnalysisType] ?? "search";
 }
 
-function AnalysisCard({
+const AnalysisCard = React.memo(function AnalysisCard({
   item,
   onPress,
 }: {
   item: AnalyzeMediaLog;
-  onPress: () => void;
+  onPress: (item: AnalyzeMediaLog) => void;
 }) {
   const { t } = useTranslation();
   const urgency = item.aiResponse?.urgency;
@@ -77,7 +77,11 @@ function AnalysisCard({
   const icon = analysisTypeIcon(item.analysisType);
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(item)}
+      activeOpacity={0.8}
+    >
       <View style={styles.cardHeader}>
         <View style={styles.cardTitleRow}>
           <View style={styles.iconBadge}>
@@ -87,33 +91,38 @@ function AnalysisCard({
             {item.aiResponse?.title ?? item.analysisType}
           </Text>
         </View>
-        {urgency && uColors && (
+        {urgency && uColors ? (
           <View style={[styles.urgencyBadge, { backgroundColor: uColors.bg }]}>
             <Text style={[styles.urgencyText, { color: uColors.text }]}>
               {urgencyLabel(urgency, t)}
             </Text>
           </View>
-        )}
+        ) : null}
       </View>
 
-      {item.aiResponse?.summary && (
+      {item.aiResponse?.summary ? (
         <Text style={styles.summary} numberOfLines={2}>
           {item.aiResponse.summary}
         </Text>
-      )}
+      ) : null}
 
       <View style={styles.metaRow}>
         <Text style={styles.metaText}>
           {dayjs(item.createdAt).format("DD.MM.YYYY HH:mm")}
         </Text>
         <View style={styles.metaRight}>
-          {item.creditCost > 0 && (
+          {item.creditCost > 0 ? (
             <View style={styles.creditChip}>
               <MaterialIcons name="bolt" size={12} color={tokens.warning} />
               <Text style={styles.creditText}>{item.creditCost}</Text>
             </View>
-          )}
-          <View style={[styles.statusDot, { backgroundColor: statusColor(item.status) }]} />
+          ) : null}
+          <View
+            style={[
+              styles.statusDot,
+              { backgroundColor: statusColor(item.status) },
+            ]}
+          />
           <Text style={[styles.metaText, { color: statusColor(item.status) }]}>
             {statusLabel(item.status, t)}
           </Text>
@@ -121,7 +130,7 @@ function AnalysisCard({
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 function AnalysisDetailModal({
   item,
@@ -154,49 +163,57 @@ function AnalysisDetailModal({
           </TouchableOpacity>
         </View>
         <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-          {item.status === "failed" && item.errorMessage && (
+          {item.status === "failed" && item.errorMessage ? (
             <View style={styles.errorBox}>
               <MaterialIcons name="error-outline" size={16} color={tokens.danger} />
               <Text style={styles.errorText}>{item.errorMessage}</Text>
             </View>
-          )}
+          ) : null}
           {ai ? (
             <>
-              {ai.summary && (
+              {ai.summary ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t("history.sections.summary")}</Text>
+                  <Text style={styles.sectionTitle}>
+                    {t("history.sections.summary")}
+                  </Text>
                   <Text style={styles.sectionContent}>{ai.summary}</Text>
                 </View>
-              )}
-              {ai.description && (
+              ) : null}
+              {ai.description ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t("history.sections.description")}</Text>
+                  <Text style={styles.sectionTitle}>
+                    {t("history.sections.description")}
+                  </Text>
                   <Text style={styles.sectionContent}>{ai.description}</Text>
                 </View>
-              )}
-              {ai.recommendation && (
+              ) : null}
+              {ai.recommendation ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t("history.sections.recommendation")}</Text>
+                  <Text style={styles.sectionTitle}>
+                    {t("history.sections.recommendation")}
+                  </Text>
                   <Text style={styles.sectionContent}>{ai.recommendation}</Text>
                 </View>
-              )}
-              {ai.warnings && ai.warnings.length > 0 && (
+              ) : null}
+              {ai.warnings && ai.warnings.length > 0 ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>{t("history.sections.warnings")}</Text>
-                  {ai.warnings.map((w, i) => (
-                    <View key={i} style={styles.warningItem}>
-                      <Text style={styles.warningName}>{w.name}</Text>
-                      <Text style={styles.warningDesc}>{w.description}</Text>
-                      {w.recommendation && (
-                        <Text style={styles.warningRec}>{w.recommendation}</Text>
-                      )}
+                  <Text style={styles.sectionTitle}>
+                    {t("history.sections.warnings")}
+                  </Text>
+                  {ai.warnings.map((warning, index) => (
+                    <View key={`${warning.name}-${index}`} style={styles.warningItem}>
+                      <Text style={styles.warningName}>{warning.name}</Text>
+                      <Text style={styles.warningDesc}>{warning.description}</Text>
+                      {warning.recommendation ? (
+                        <Text style={styles.warningRec}>{warning.recommendation}</Text>
+                      ) : null}
                     </View>
                   ))}
                 </View>
-              )}
+              ) : null}
             </>
           ) : null}
-          <View style={{ height: 40 }} />
+          <View style={styles.modalFooterSpacing} />
         </ScrollView>
       </View>
     </Modal>
@@ -212,15 +229,87 @@ export default function HistoryScreen() {
   const [selected, setSelected] = useState<AnalyzeMediaLog | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
-
-  const filters: { key: UrgencyFilter; label: string }[] = [
-    { key: "all", label: t("history.filters.all") },
-    { key: "critical", label: t("history.urgency.critical") },
-    { key: "warning", label: t("history.urgency.warning") },
-    { key: "info", label: t("history.urgency.info") },
-  ];
-
   const { data, isLoading, refetch } = useGetAnalysisLogs();
+
+  const filters = useMemo(
+    () => [
+      { key: "all" as const, label: t("history.filters.all") },
+      { key: "critical" as const, label: t("history.urgency.critical") },
+      { key: "warning" as const, label: t("history.urgency.warning") },
+      { key: "info" as const, label: t("history.urgency.info") },
+    ],
+    [t],
+  );
+
+  const logs = useMemo(() => data?.results ?? [], [data?.results]);
+  const filtered = useMemo(
+    () =>
+      urgencyFilter === "all"
+        ? logs
+        : logs.filter((log) => log.aiResponse?.urgency === urgencyFilter),
+    [logs, urgencyFilter],
+  );
+
+  const handlePress = useCallback((item: AnalyzeMediaLog) => {
+    setSelected(item);
+    setModalVisible(true);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: AnalyzeMediaLog }) => (
+      <AnalysisCard item={item} onPress={handlePress} />
+    ),
+    [handlePress],
+  );
+
+  const keyExtractor = useCallback((item: AnalyzeMediaLog) => item.id, []);
+
+  const listHeader = useMemo(
+    () => (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterRow}
+        contentContainerStyle={styles.filterContent}
+      >
+        {filters.map((filter) => (
+          <TouchableOpacity
+            key={filter.key}
+            style={[
+              styles.filterChip,
+              urgencyFilter === filter.key && styles.filterChipActive,
+            ]}
+            onPress={() => setUrgencyFilter(filter.key)}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                urgencyFilter === filter.key && styles.filterChipTextActive,
+              ]}
+            >
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    ),
+    [filters, urgencyFilter],
+  );
+
+  const emptyState = useMemo(
+    () => (
+      <View style={styles.emptyContainer}>
+        <MaterialIcons name="history" size={64} color={tokens.textTertiary} />
+        <Text style={styles.emptyTitle}>{t("history.emptyTitle")}</Text>
+        <Text style={styles.emptySubtitle}>
+          {urgencyFilter === "all"
+            ? t("history.emptyAll")
+            : t("history.emptyFiltered")}
+        </Text>
+      </View>
+    ),
+    [t, urgencyFilter],
+  );
 
   if (!isLoggedIn) {
     return (
@@ -232,72 +321,32 @@ export default function HistoryScreen() {
     );
   }
 
-  const logs: AnalyzeMediaLog[] = data?.results ?? [];
-  const filtered: AnalyzeMediaLog[] =
-    urgencyFilter === "all"
-      ? logs
-      : logs.filter((l) => l.aiResponse?.urgency === urgencyFilter);
-
-  const handlePress = (item: AnalyzeMediaLog) => {
-    setSelected(item);
-    setModalVisible(true);
-  };
-
   return (
     <ScreenContainer
       title={t("history.title")}
-      refreshControl={
-        <RefreshControl refreshing={isLoading} onRefresh={refetch} />
-      }
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
     >
-      {/* Filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterRow}
-        contentContainerStyle={styles.filterContent}
-      >
-        {filters.map((f) => (
-          <TouchableOpacity
-            key={f.key}
-            style={[
-              styles.filterChip,
-              urgencyFilter === f.key && styles.filterChipActive,
-            ]}
-            onPress={() => setUrgencyFilter(f.key)}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                urgencyFilter === f.key && styles.filterChipTextActive,
-              ]}
-            >
-              {f.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
       {isLoading && data === undefined ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
-      ) : filtered.length > 0 ? (
-        <View style={styles.list}>
-          {filtered.map((item) => (
-            <AnalysisCard key={item.id} item={item} onPress={() => handlePress(item)} />
-          ))}
-        </View>
       ) : (
-        <View style={styles.emptyContainer}>
-          <MaterialIcons name="history" size={64} color={tokens.textTertiary} />
-          <Text style={styles.emptyTitle}>{t("history.emptyTitle")}</Text>
-          <Text style={styles.emptySubtitle}>
-            {urgencyFilter === "all"
-              ? t("history.emptyAll")
-              : t("history.emptyFiltered")}
-          </Text>
-        </View>
+        <LegendList
+          data={filtered}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={120}
+          recycleItems
+          refreshing={isLoading}
+          onRefresh={refetch}
+          contentContainerStyle={styles.listContent}
+          style={styles.listView}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={emptyState}
+          ItemSeparatorComponent={ListSeparator}
+          showsVerticalScrollIndicator={false}
+        />
       )}
 
       <AnalysisDetailModal
@@ -309,7 +358,15 @@ export default function HistoryScreen() {
   );
 }
 
+function ListSeparator() {
+  return <View style={styles.listSeparator} />;
+}
+
 const styles = StyleSheet.create({
+  screenContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
   filterRow: {
     marginBottom: 12,
   },
@@ -343,9 +400,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 80,
   },
-  list: {
-    gap: 12,
+  listView: {
+    flex: 1,
+  },
+  listContent: {
     paddingTop: 4,
+    paddingBottom: 8,
+  },
+  listSeparator: {
+    height: 12,
   },
   card: {
     backgroundColor: tokens.bgSurface,
@@ -420,18 +483,16 @@ const styles = StyleSheet.create({
   },
   creditText: {
     fontSize: 11,
-    color: tokens.warning,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: tokens.warningText,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   emptyContainer: {
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
     paddingTop: 80,
     gap: 8,
   },
@@ -447,82 +508,85 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: 32,
   },
-  // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.bgBase,
   },
   modalHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: tokens.borderDefault,
+    borderBottomColor: tokens.borderSubtle,
+    backgroundColor: tokens.bgSurface,
   },
   modalTitle: {
+    flex: 1,
+    marginRight: 12,
     fontSize: 18,
     fontWeight: "700",
     color: tokens.textPrimary,
-    flex: 1,
-    marginRight: 16,
   },
   modalBody: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 16,
   },
+  modalFooterSpacing: {
+    height: 40,
+  },
   errorBox: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 8,
     backgroundColor: tokens.dangerBg,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
     flex: 1,
     color: tokens.dangerText,
-    fontSize: 14,
+    fontSize: 13,
+    lineHeight: 18,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 16,
+    gap: 6,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
-    color: tokens.textTertiary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    color: tokens.textPrimary,
   },
   sectionContent: {
-    fontSize: 15,
-    color: tokens.textPrimary,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 21,
+    color: tokens.textSecondary,
   },
   warningItem: {
-    backgroundColor: tokens.warningBg,
-    borderRadius: 10,
+    backgroundColor: tokens.bgSurface,
+    borderRadius: 12,
     padding: 12,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: tokens.borderSubtle,
     gap: 4,
   },
   warningName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
-    color: tokens.warningText,
+    color: tokens.textPrimary,
   },
   warningDesc: {
     fontSize: 13,
+    lineHeight: 19,
     color: tokens.textSecondary,
-    lineHeight: 18,
   },
   warningRec: {
-    fontSize: 13,
-    color: tokens.textTertiary,
-    fontStyle: "italic",
+    fontSize: 12,
     lineHeight: 18,
+    color: tokens.primary,
   },
 });
