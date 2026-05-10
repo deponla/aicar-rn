@@ -398,7 +398,14 @@ export default function ScanScreen() {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        automaticallyAdjustContentInsets={false}
+        contentInsetAdjustmentBehavior="never"
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: Math.max(insets.top, 12) },
+        ]}
+      >
         <View style={styles.heroCard}>
           <MaterialIcons name="camera-alt" size={72} color={tokens.primary} />
           <Text style={styles.title}>Aracini Tara</Text>
@@ -644,7 +651,8 @@ export default function ScanScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     backgroundColor: tokens.bgBase,
     gap: 16,
   },
