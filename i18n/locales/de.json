@@ -1,0 +1,121 @@
+{
+    "common": {
+        "loading": "Wird geladen...",
+        "requestFailed": "Anfrage fehlgeschlagen",
+        "retry": "Erneut versuchen",
+        "languages": {
+            "de": "Deutsch",
+            "en": "Englisch",
+            "tr": "Tuerkisch"
+        },
+        "status": {
+            "verified": "Bestaetigt",
+            "unverified": "Nicht bestaetigt"
+        }
+    },
+    "auth": {
+        "loading": "Wird geladen...",
+        "callback": {
+            "unreadableSession": "Die an die App zurueckgesendete Sitzung konnte nicht gelesen werden. Bitte melden Sie sich erneut an.",
+            "invalidSessionData": "Die Sitzungsdaten wirken unvollstaendig oder beschaedigt. Bitte versuchen Sie es erneut.",
+            "noPendingSession": "Es gibt keine offene Anmeldung zum Abschliessen. Bitte versuchen Sie es erneut ueber Ihr Profil.",
+            "failedTitle": "Anmeldung konnte nicht abgeschlossen werden",
+            "backToProfile": "Zurueck zum Profil",
+            "signingIn": "Anmeldung laeuft...",
+            "pleaseWait": "Bitte warten"
+        }
+    },
+    "tabs": {
+        "scan": "Scan",
+        "garage": "Garage",
+        "history": "Verlauf",
+        "guide": "Leitfaden",
+        "profile": "Profil",
+        "signIn": "Anmelden"
+    },
+    "settings": {
+        "title": "Kontoeinstellungen",
+        "noUser": "Benutzerinformationen konnten nicht gefunden werden.",
+        "sections": {
+            "personal": "PERSOENLICHE DATEN",
+            "security": "SICHERHEIT",
+            "preferences": "EINSTELLUNGEN",
+            "account": "KONTO"
+        },
+        "editProfile": "Profil bearbeiten",
+        "phoneNumber": "Telefonnummer",
+        "emailAddress": "E-Mail-Adresse",
+        "changePassword": "Passwort aendern",
+        "activeSessions": "Aktive Sitzungen",
+        "language": "Sprache",
+        "notificationPreferences": "Benachrichtigungseinstellungen",
+        "freezeAccount": "Konto einfrieren",
+        "deleteAccount": "Konto schliessen"
+    },
+    "language": {
+        "title": "Sprache",
+        "noUser": "Benutzerinformationen konnten nicht gefunden werden.",
+        "description": "Waehlen Sie eine Sprache fuer die App- und Benachrichtigungssprache.",
+        "save": "Speichern",
+        "saved": "Spracheinstellung gespeichert",
+        "saveFailed": "Sprache konnte nicht geaendert werden",
+        "retryLater": "Bitte versuchen Sie es erneut."
+    },
+    "credits": {
+        "title": "Credits",
+        "balanceUnit": "Credits",
+        "premium": "Premium",
+        "usedTotal": "Insgesamt verwendet: {{count}} Credits",
+        "unavailable": "Informationen konnten nicht geladen werden.",
+        "packagesTitle": "Pakete",
+        "popular": "Beliebt",
+        "packageCredits": "{{count}} Credits",
+        "purchaseTitle": "Kaufen",
+        "purchasePrompt": "Moechten Sie das Paket {{name}} fuer {{price}} {{currency}} kaufen?",
+        "purchaseConfirm": "Kaufen",
+        "purchaseSuccess": "Credits erfolgreich hinzugefuegt",
+        "purchaseFailed": "Kauf fehlgeschlagen.",
+        "historyTitle": "Transaktionsverlauf",
+        "allHistory": "Gesamter Verlauf",
+        "emptyHistory": "Es gibt noch keinen Transaktionsverlauf.",
+        "transactionCredits": "+{{count}} Credits",
+        "status": {
+            "completed": "Abgeschlossen",
+            "failed": "Fehlgeschlagen",
+            "pending": "Ausstehend",
+            "refunded": "Erstattet"
+        }
+    },
+    "notifications": {
+        "title": "Benachrichtigungen",
+        "emptyTitle": "Sie haben noch keine Benachrichtigungen",
+        "emptyMessage": "Benachrichtigungen zu neuen Anzeigen, Nachrichten und Angeboten werden hier angezeigt."
+    },
+    "history": {
+        "title": "Analyseverlauf",
+        "loginRequiredTitle": "Sehen Sie Ihren Analyseverlauf an",
+        "loginRequiredDescription": "Melden Sie sich an, um Ihre bisherigen Analysen zu sehen.",
+        "emptyTitle": "Keine Analysen gefunden",
+        "emptyAll": "Sie haben noch keine Analysen durchgefuehrt.",
+        "emptyFiltered": "In dieser Kategorie gibt es keine Analysen.",
+        "filters": {
+            "all": "Alle"
+        },
+        "urgency": {
+            "critical": "Kritisch",
+            "warning": "Warnung",
+            "info": "Info"
+        },
+        "status": {
+            "completed": "Abgeschlossen",
+            "failed": "Fehlgeschlagen",
+            "pending": "Ausstehend"
+        },
+        "sections": {
+            "summary": "Zusammenfassung",
+            "description": "Beschreibung",
+            "recommendation": "Empfehlung",
+            "warnings": "Warnungen"
+        }
+    }
+}

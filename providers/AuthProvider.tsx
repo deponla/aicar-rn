@@ -6,6 +6,7 @@ import { registerDeviceAfterLogin } from "@/utils/deviceRegistration";
 import { AuthStatusEnum, UserResponseData } from "@/types/auth";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 export default function AuthProvider({
@@ -13,6 +14,7 @@ export default function AuthProvider({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { t } = useTranslation();
   const authStore = useAuthStore();
   const lastRegisteredAccessToken = useRef<string | null>(null);
 
@@ -123,7 +125,7 @@ export default function AuthProvider({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Yükleniyor...</Text>
+        <Text style={styles.loadingText}>{t("auth.loading")}</Text>
       </View>
     );
   }

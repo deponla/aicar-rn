@@ -3,6 +3,7 @@ import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -18,6 +19,7 @@ import {
 } from "../../utils/parseSessionFromUrl";
 
 export default function AuthCallback() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{
     session?: string;
     action?: string;
@@ -77,7 +79,7 @@ export default function AuthCallback() {
         }
 
         setErrorMessage(
-          "Uygulamaya dönen oturum bilgisi okunamadı. Lütfen yeniden giriş yapın.",
+          t("auth.callback.unreadableSession"),
         );
         return;
       }
@@ -105,31 +107,35 @@ export default function AuthCallback() {
           return;
         }
 
-        setErrorMessage(
-          "Oturum verisi eksik veya bozuk görünüyor. Lütfen tekrar deneyin.",
-        );
+        setErrorMessage(t("auth.callback.invalidSessionData"));
         return;
       }
 
-      setErrorMessage(
-        "Tamamlanacak bir giriş oturumu bulunamadı. Lütfen profilden tekrar deneyin.",
-      );
+      setErrorMessage(t("auth.callback.noPendingSession"));
     };
 
     handleDeepLink();
-  }, [params.action, params.email, params.reason, params.session, authStore, router]);
+  }, [
+    authStore,
+    params.action,
+    params.email,
+    params.reason,
+    params.session,
+    router,
+    t,
+  ]);
 
   if (errorMessage) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Giriş Tamamlanamadı</Text>
+        <Text style={styles.title}>{t("auth.callback.failedTitle")}</Text>
         <Text style={styles.subtitle}>{errorMessage}</Text>
         <TouchableOpacity
           style={styles.button}
           onPress={() => router.replace("/(tabs)/profile")}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonLabel}>Profile Dön</Text>
+          <Text style={styles.buttonLabel}>{t("auth.callback.backToProfile")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -138,8 +144,8 @@ export default function AuthCallback() {
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color={Colors.primary} />
-      <Text style={styles.title}>Giriş Yapılıyor...</Text>
-      <Text style={styles.subtitle}>Lütfen bekleyin</Text>
+      <Text style={styles.title}>{t("auth.callback.signingIn")}</Text>
+      <Text style={styles.subtitle}>{t("auth.callback.pleaseWait")}</Text>
     </View>
   );
 }

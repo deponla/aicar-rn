@@ -7,6 +7,7 @@ import { AnalyzeMediaLog, AiAnalysisType, AiUrgency } from "@/types/ai";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -26,12 +27,6 @@ const ANALYSIS_TYPE_ICONS: Record<AiAnalysisType, keyof typeof MaterialIcons.gly
   [AiAnalysisType.GENERAL]: "search",
 };
 
-const URGENCY_LABELS: Record<AiUrgency, string> = {
-  critical: "Kritik",
-  warning: "Uyarı",
-  info: "Bilgi",
-};
-
 function urgencyColors(urgency: AiUrgency) {
   switch (urgency) {
     case "critical":
@@ -49,11 +44,24 @@ function statusColor(status: string) {
   return tokens.warning;
 }
 
-function statusLabel(status: string) {
-  if (status === "completed") return "Tamamlandı";
-  if (status === "failed") return "Başarısız";
-  if (status === "pending") return "Bekliyor";
+function urgencyLabel(urgency: AiUrgency, t: (key: string) => string) {
+  if (urgency === "critical") return t("history.urgency.critical");
+  if (urgency === "warning") return t("history.urgency.warning");
+  if (urgency === "info") return t("history.urgency.info");
+  return urgency;
+}
+
+function statusLabel(status: string, t: (key: string) => string) {
+  if (status === "completed") return t("history.status.completed");
+  if (status === "failed") return t("history.status.failed");
+  if (status === "pending") return t("history.status.pending");
   return status;
+}
+
+function analysisTypeIcon(
+  analysisType: string
+): keyof typeof MaterialIcons.glyphMap {
+  return ANALYSIS_TYPE_ICONS[analysisType as AiAnalysisType] ?? "search";
 }
 
 function AnalysisCard({
@@ -63,9 +71,10 @@ function AnalysisCard({
   item: AnalyzeMediaLog;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
   const urgency = item.aiResponse?.urgency;
   const uColors = urgency ? urgencyColors(urgency) : null;
-  const icon = ANALYSIS_TYPE_ICONS[item.analysisType] ?? "search";
+  const icon = analysisTypeIcon(item.analysisType);
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
@@ -75,16 +84,13 @@ function AnalysisCard({
             <MaterialIcons name={icon} size={18} color={Colors.primary} />
           </View>
           <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.aiResponse?.title ??
-              item.name ??
-              ([item.brand, item.model, item.year].filter(Boolean).join(" ") ||
-                item.analysisType)}
+            {item.aiResponse?.title ?? item.analysisType}
           </Text>
         </View>
         {urgency && uColors && (
           <View style={[styles.urgencyBadge, { backgroundColor: uColors.bg }]}>
             <Text style={[styles.urgencyText, { color: uColors.text }]}>
-              {URGENCY_LABELS[urgency]}
+              {urgencyLabel(urgency, t)}
             </Text>
           </View>
         )}
@@ -109,7 +115,7 @@ function AnalysisCard({
           )}
           <View style={[styles.statusDot, { backgroundColor: statusColor(item.status) }]} />
           <Text style={[styles.metaText, { color: statusColor(item.status) }]}>
-            {statusLabel(item.status)}
+            {statusLabel(item.status, t)}
           </Text>
         </View>
       </View>
@@ -126,6 +132,8 @@ function AnalysisDetailModal({
   visible: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+
   if (!item) return null;
   const ai = item.aiResponse;
 
@@ -156,25 +164,25 @@ function AnalysisDetailModal({
             <>
               {ai.summary && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Özet</Text>
+                  <Text style={styles.sectionTitle}>{t("history.sections.summary")}</Text>
                   <Text style={styles.sectionContent}>{ai.summary}</Text>
                 </View>
               )}
               {ai.description && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Açıklama</Text>
+                  <Text style={styles.sectionTitle}>{t("history.sections.description")}</Text>
                   <Text style={styles.sectionContent}>{ai.description}</Text>
                 </View>
               )}
               {ai.recommendation && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Öneri</Text>
+                  <Text style={styles.sectionTitle}>{t("history.sections.recommendation")}</Text>
                   <Text style={styles.sectionContent}>{ai.recommendation}</Text>
                 </View>
               )}
               {ai.warnings && ai.warnings.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Uyarılar</Text>
+                  <Text style={styles.sectionTitle}>{t("history.sections.warnings")}</Text>
                   {ai.warnings.map((w, i) => (
                     <View key={i} style={styles.warningItem}>
                       <Text style={styles.warningName}>{w.name}</Text>
@@ -197,28 +205,29 @@ function AnalysisDetailModal({
 
 type UrgencyFilter = "all" | AiUrgency;
 
-const FILTERS: { key: UrgencyFilter; label: string }[] = [
-  { key: "all", label: "Tümü" },
-  { key: "critical", label: "Kritik" },
-  { key: "warning", label: "Uyarı" },
-  { key: "info", label: "Bilgi" },
-];
-
 export default function HistoryScreen() {
+  const { t } = useTranslation();
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const [selected, setSelected] = useState<AnalyzeMediaLog | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
 
+  const filters: { key: UrgencyFilter; label: string }[] = [
+    { key: "all", label: t("history.filters.all") },
+    { key: "critical", label: t("history.urgency.critical") },
+    { key: "warning", label: t("history.urgency.warning") },
+    { key: "info", label: t("history.urgency.info") },
+  ];
+
   const { data, isLoading, refetch } = useGetAnalysisLogs();
 
   if (!isLoggedIn) {
     return (
       <LoginRequired
-        pageTitle="Analiz Geçmişi"
-        title="Analiz geçmişinizi görün"
-        description="Daha önce yaptığınız analizleri görmek için giriş yapın."
+        pageTitle={t("history.title")}
+        title={t("history.loginRequiredTitle")}
+        description={t("history.loginRequiredDescription")}
       />
     );
   }
@@ -236,7 +245,7 @@ export default function HistoryScreen() {
 
   return (
     <ScreenContainer
-      title="Analiz Geçmişi"
+      title={t("history.title")}
       refreshControl={
         <RefreshControl refreshing={isLoading} onRefresh={refetch} />
       }
@@ -248,7 +257,7 @@ export default function HistoryScreen() {
         style={styles.filterRow}
         contentContainerStyle={styles.filterContent}
       >
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <TouchableOpacity
             key={f.key}
             style={[
@@ -282,11 +291,11 @@ export default function HistoryScreen() {
       ) : (
         <View style={styles.emptyContainer}>
           <MaterialIcons name="history" size={64} color={tokens.textTertiary} />
-          <Text style={styles.emptyTitle}>Analiz bulunamadı</Text>
+          <Text style={styles.emptyTitle}>{t("history.emptyTitle")}</Text>
           <Text style={styles.emptySubtitle}>
             {urgencyFilter === "all"
-              ? "Henüz analiz yapmadınız."
-              : "Bu kategoride analiz yok."}
+              ? t("history.emptyAll")
+              : t("history.emptyFiltered")}
           </Text>
         </View>
       )}

@@ -1,6 +1,7 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
 import { tokens } from "@/constants/theme";
+import { normalizeLanguage } from "@/i18n";
 import {
   useGetCreditPackages,
   useGetMyAccount,
@@ -8,8 +9,8 @@ import {
 } from "@/query-hooks/useCreditBalance";
 import { useGetTransactions } from "@/query-hooks/useTransactions";
 import { CreditPackage, TransactionPlatformEnum, TransactionStatusEnum } from "@/types/credit";
-import { useRouter } from "expo-router";
 import { Platform } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   ActivityIndicator,
@@ -19,29 +20,40 @@ import {
   View,
 } from "react-native";
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString(locale, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
-function StatusBadge({ status }: { status: TransactionStatusEnum }) {
-  const colors: Record<TransactionStatusEnum, { bg: string; text: string; label: string }> = {
-    [TransactionStatusEnum.COMPLETED]: { bg: "#D1FAE5", text: "#065F46", label: "Tamamlandı" },
-    [TransactionStatusEnum.FAILED]: { bg: "#FEE2E2", text: "#991B1B", label: "Başarısız" },
-    [TransactionStatusEnum.PENDING]: { bg: "#FEF9C3", text: "#854D0E", label: "Bekliyor" },
-    [TransactionStatusEnum.REFUNDED]: { bg: "#E0E7FF", text: "#3730A3", label: "İade" },
+function StatusBadge({
+  label,
+  status,
+}: {
+  label: string;
+  status: TransactionStatusEnum;
+}) {
+  const colors: Record<TransactionStatusEnum, { bg: string; text: string }> = {
+    [TransactionStatusEnum.COMPLETED]: { bg: "#D1FAE5", text: "#065F46" },
+    [TransactionStatusEnum.FAILED]: { bg: "#FEE2E2", text: "#991B1B" },
+    [TransactionStatusEnum.PENDING]: { bg: "#FEF9C3", text: "#854D0E" },
+    [TransactionStatusEnum.REFUNDED]: { bg: "#E0E7FF", text: "#3730A3" },
   };
   const cfg = colors[status] ?? colors[TransactionStatusEnum.PENDING];
   return (
     <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
-      <Text style={[styles.statusBadgeText, { color: cfg.text }]}>{cfg.label}</Text>
+      <Text style={[styles.statusBadgeText, { color: cfg.text }]}>{label}</Text>
     </View>
   );
 }
 
 export default function CreditsScreen() {
+  const { t, i18n } = useTranslation();
   const { notify } = useNotification();
-  const router = useRouter();
+  const locale = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
   const accountQuery = useGetMyAccount();
   const packagesQuery = useGetCreditPackages();
@@ -51,15 +63,25 @@ export default function CreditsScreen() {
   const account = accountQuery.data?.result;
   const packages = packagesQuery.data?.results ?? [];
   const transactions = transactionsQuery.data?.results ?? [];
+  const statusLabels: Record<TransactionStatusEnum, string> = {
+    [TransactionStatusEnum.COMPLETED]: t("credits.status.completed"),
+    [TransactionStatusEnum.FAILED]: t("credits.status.failed"),
+    [TransactionStatusEnum.PENDING]: t("credits.status.pending"),
+    [TransactionStatusEnum.REFUNDED]: t("credits.status.refunded"),
+  };
 
   const handlePurchase = (pkg: CreditPackage) => {
     Alert.alert(
-      "Satın Al",
-      `${pkg.name} paketini ${pkg.price} ${pkg.currency} karşılığında satın almak istiyor musunuz?`,
+      t("credits.purchaseTitle"),
+      t("credits.purchasePrompt", {
+        currency: pkg.currency,
+        name: pkg.name,
+        price: pkg.price,
+      }),
       [
-        { text: "İptal", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Satın Al",
+          text: t("credits.purchaseConfirm"),
           onPress: () => {
             const platform =
               Platform.OS === "ios"
@@ -69,12 +91,12 @@ export default function CreditsScreen() {
               { packageId: pkg.id, platform },
               {
                 onSuccess: () => {
-                  notify({ type: "success", title: "Kredi başarıyla eklendi" });
+                  notify({ type: "success", title: t("credits.purchaseSuccess") });
                 },
                 onError: (err: unknown) => {
                   const msg =
-                    err instanceof Error ? err.message : "Satın alma başarısız oldu.";
-                  notify({ type: "error", title: "Hata", message: msg });
+                    err instanceof Error ? err.message : t("credits.purchaseFailed");
+                  notify({ type: "error", title: t("common.error"), message: msg });
                 },
               },
             );
@@ -85,7 +107,7 @@ export default function CreditsScreen() {
   };
 
   return (
-    <ScreenContainer title="Krediler" showBackButton>
+    <ScreenContainer title={t("credits.title")} showBackButton>
       {/* Balance Card */}
       <View style={[styles.balanceCard, { backgroundColor: tokens.bgSurface }]}>
         {accountQuery.isLoading ? (
@@ -97,30 +119,30 @@ export default function CreditsScreen() {
                 {account.remainingCredits}
               </Text>
               <Text style={[styles.balanceLabel, { color: tokens.textSecondary }]}>
-                {" "}Kredi
+                {" "}{t("credits.balanceUnit")}
               </Text>
               {account.isPremium && (
                 <View style={[styles.premiumBadge, { backgroundColor: "#FEF3C7" }]}>
                   <Text style={[styles.premiumBadgeText, { color: "#92400E" }]}>
-                    Premium
+                    {t("credits.premium")}
                     {account.premiumExpiresAt
-                      ? ` · ${formatDate(account.premiumExpiresAt)}`
+                      ? ` · ${formatDate(account.premiumExpiresAt, locale)}`
                       : ""}
                   </Text>
                 </View>
               )}
             </View>
             <Text style={[styles.usedLabel, { color: tokens.textTertiary }]}>
-              Toplam kullanılan: {account.totalCreditsUsed} kredi
+              {t("credits.usedTotal", { count: account.totalCreditsUsed })}
             </Text>
           </>
         ) : (
-          <Text style={{ color: tokens.textTertiary }}>Bilgi alınamadı.</Text>
+          <Text style={{ color: tokens.textTertiary }}>{t("credits.unavailable")}</Text>
         )}
       </View>
 
       {/* Packages */}
-      <Text style={[styles.sectionTitle, { color: tokens.textPrimary }]}>Paketler</Text>
+      <Text style={[styles.sectionTitle, { color: tokens.textPrimary }]}>{t("credits.packagesTitle")}</Text>
       {packagesQuery.isLoading ? (
         <ActivityIndicator color={tokens.textPrimary} style={{ marginVertical: 16 }} />
       ) : (
@@ -136,12 +158,12 @@ export default function CreditsScreen() {
               <Text style={[styles.packageName, { color: tokens.textPrimary }]}>{pkg.name}</Text>
               {pkg.isPopular && (
                 <View style={[styles.popularBadge, { backgroundColor: "#DBEAFE" }]}>
-                  <Text style={[styles.popularBadgeText, { color: "#1D4ED8" }]}>Popüler</Text>
+                  <Text style={[styles.popularBadgeText, { color: "#1D4ED8" }]}>{t("credits.popular")}</Text>
                 </View>
               )}
             </View>
             <Text style={[styles.packageCredits, { color: tokens.textSecondary }]}>
-              {pkg.creditAmount} kredi
+              {t("credits.packageCredits", { count: pkg.creditAmount })}
             </Text>
             <Text style={[styles.packagePrice, { color: tokens.textPrimary }]}>
               {pkg.price} {pkg.currency}
@@ -152,10 +174,10 @@ export default function CreditsScreen() {
 
       {/* Transaction History */}
       <View style={styles.historyHeader}>
-        <Text style={[styles.sectionTitle, { color: tokens.textPrimary }]}>İşlem Geçmişi</Text>
+        <Text style={[styles.sectionTitle, { color: tokens.textPrimary }]}>{t("credits.historyTitle")}</Text>
         <TouchableOpacity>
           <Text style={[styles.allHistoryLink, { color: tokens.textSecondary }]}>
-            Tüm geçmiş
+            {t("credits.allHistory")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -163,7 +185,7 @@ export default function CreditsScreen() {
         <ActivityIndicator color={tokens.textPrimary} style={{ marginVertical: 16 }} />
       ) : transactions.length === 0 ? (
         <Text style={[styles.emptyText, { color: tokens.textTertiary }]}>
-          Henüz işlem geçmişi yok.
+          {t("credits.emptyHistory")}
         </Text>
       ) : (
         transactions.map((tx) => (
@@ -173,13 +195,16 @@ export default function CreditsScreen() {
           >
             <View style={styles.txLeft}>
               <Text style={[styles.txDate, { color: tokens.textTertiary }]}>
-                {formatDate(tx.createdAt)}
+                {formatDate(tx.createdAt, locale)}
               </Text>
               <Text style={[styles.txCredits, { color: tokens.textPrimary }]}>
-                +{tx.creditAmount} kredi
+                {t("credits.transactionCredits", { count: tx.creditAmount })}
               </Text>
             </View>
-            <StatusBadge status={tx.status} />
+            <StatusBadge
+              label={statusLabels[tx.status] ?? statusLabels[TransactionStatusEnum.PENDING]}
+              status={tx.status}
+            />
           </View>
         ))
       )}

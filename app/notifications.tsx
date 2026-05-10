@@ -1,13 +1,14 @@
 import ScreenContainer from "@/components/ScreenContainer";
 import { Colors, tokens } from "@/constants/theme";
+import { normalizeLanguage } from "@/i18n";
 import { useGetNotifications } from "@/query-hooks/useNotifications";
 import {
   Notification as AppNotification,
   NotificationType,
 } from "@/types/notification";
 import { MaterialIcons } from "@expo/vector-icons";
-import dayjs from "dayjs";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -34,7 +35,23 @@ const TYPE_ICONS: Record<
   },
 };
 
-function NotificationCard({ item }: { item: AppNotification }) {
+function formatNotificationDate(dateString: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(dateString));
+}
+
+function NotificationCard({
+  item,
+  locale,
+}: {
+  item: AppNotification;
+  locale: string;
+}) {
   const meta = TYPE_ICONS[item.type] ?? TYPE_ICONS[NotificationType.GENERAL];
 
   return (
@@ -50,7 +67,7 @@ function NotificationCard({ item }: { item: AppNotification }) {
           {item.body}
         </Text>
         <Text style={styles.cardDate}>
-          {dayjs(item.createdAt).format("DD.MM.YYYY HH:mm")}
+          {formatNotificationDate(item.createdAt, locale)}
         </Text>
       </View>
     </View>
@@ -58,6 +75,8 @@ function NotificationCard({ item }: { item: AppNotification }) {
 }
 
 export default function NotificationsScreen() {
+  const { t, i18n } = useTranslation();
+  const locale = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
   const { data, isLoading, refetch } = useGetNotifications({
     limit: 50,
     sort: "createdAt:desc",
@@ -67,7 +86,7 @@ export default function NotificationsScreen() {
 
   return (
     <ScreenContainer
-      title="Bildirimler"
+      title={t("notifications.title")}
       showBackButton
       refreshControl={
         <RefreshControl refreshing={isLoading} onRefresh={refetch} />
@@ -80,7 +99,7 @@ export default function NotificationsScreen() {
       ) : notifications.length > 0 ? (
         <View style={styles.list}>
           {notifications.map((item) => (
-            <NotificationCard key={item.id} item={item} />
+            <NotificationCard key={item.id} item={item} locale={locale} />
           ))}
         </View>
       ) : (
@@ -90,10 +109,9 @@ export default function NotificationsScreen() {
             size={64}
             color={tokens.textPlaceholder}
           />
-          <Text style={styles.emptyTitle}>Henüz bildiriminiz yok</Text>
+          <Text style={styles.emptyTitle}>{t("notifications.emptyTitle")}</Text>
           <Text style={styles.emptyMessage}>
-            Yeni ilanlar, mesajlar ve fırsatlar hakkında bildirimler burada
-            görünecek.
+            {t("notifications.emptyMessage")}
           </Text>
         </View>
       )}

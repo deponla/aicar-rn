@@ -1,8 +1,10 @@
 import ScreenContainer from "@/components/ScreenContainer";
 import { tokens } from "@/constants/theme";
+import { normalizeLanguage } from "@/i18n";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 function SectionLabel({ label }: { label: string }) {
@@ -93,6 +95,7 @@ function MenuCard({ children }: { children: React.ReactNode }) {
 }
 
 export default function SettingsScreen() {
+  const { t: translate } = useTranslation();
   const authStore = useAuthStore();
   const user = authStore.user?.user;
   const router = useRouter();
@@ -100,63 +103,70 @@ export default function SettingsScreen() {
 
   if (!user) {
     return (
-      <ScreenContainer title="Hesap Ayarları" showBackButton>
+      <ScreenContainer title={translate("settings.title")} showBackButton>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+          <Text style={styles.emptyText}>{translate("settings.noUser")}</Text>
         </View>
       </ScreenContainer>
     );
   }
 
-  const languageLabel =
-    (user.language?.toLowerCase() === "en" ? "English" : "Türkçe");
+  const languageLabel = translate(
+    `common.languages.${normalizeLanguage(user.language)}`,
+  );
 
   const isLocalAuth = user.authProvider === "local";
 
   return (
     <ScreenContainer
-      title="Hesap Ayarları"
+      title={translate("settings.title")}
       showBackButton
       contentContainerStyle={[
         styles.screenContent,
         { backgroundColor: t.bgBase },
       ]}
     >
-      {/* Kişisel Bilgiler */}
-      <SectionLabel label="KİŞİSEL BİLGİLER" />
+      <SectionLabel label={translate("settings.sections.personal")} />
       <MenuCard>
         <SettingsMenuItem
-          title="Profili Düzenle"
+          title={translate("settings.editProfile")}
           icon="person"
           onPress={() => router.push("/profile/edit-profile")}
         />
         <SettingsMenuItem
-          title="Telefon Numarası"
+          title={translate("settings.phoneNumber")}
           icon="phone"
-          subtitle={user.isPhoneVerified ? "Doğrulandı" : "Doğrulanmadı"}
+          subtitle={
+            user.isPhoneVerified
+              ? translate("common.status.verified")
+              : translate("common.status.unverified")
+          }
           onPress={() => router.push("/profile/phone-number")}
         />
         <SettingsMenuItem
-          title="E-posta Adresi"
+          title={translate("settings.emailAddress")}
           icon="email"
-          subtitle={user.emailVerified ? "Doğrulandı" : "Doğrulanmadı"}
+          subtitle={
+            user.emailVerified
+              ? translate("common.status.verified")
+              : translate("common.status.unverified")
+          }
           onPress={() => router.push("/profile/email-address")}
           showDivider={false}
         />
       </MenuCard>
 
-      {/* Güvenlik */}
-      <SectionLabel label="GÜVENLİK" />
+      <SectionLabel label={translate("settings.sections.security")} />
       <MenuCard>
         {isLocalAuth && (
           <SettingsMenuItem
-            title="Şifre Değiştir"
+            title={translate("settings.changePassword")}
             icon="lock"
             onPress={() => router.push("/profile/change-password")}
           />
         )}
         <SettingsMenuItem
-          title="Aktif Oturumlar"
+          title={translate("settings.activeSessions")}
           icon="devices"
           onPress={() => router.push("/profile/active-sessions")}
           showDivider={isLocalAuth}
@@ -164,34 +174,32 @@ export default function SettingsScreen() {
         {!isLocalAuth && null}
       </MenuCard>
 
-      {/* Tercihler */}
-      <SectionLabel label="TERCİHLER" />
+      <SectionLabel label={translate("settings.sections.preferences")} />
       <MenuCard>
         <SettingsMenuItem
-          title="Dil / Language"
+          title={translate("settings.language")}
           icon="translate"
           subtitle={languageLabel}
           onPress={() => router.push("/profile/language")}
         />
         <SettingsMenuItem
-          title="Bildirim Tercihleri"
+          title={translate("settings.notificationPreferences")}
           icon="notifications"
           onPress={() => router.push("/profile/notification-preferences")}
           showDivider={false}
         />
       </MenuCard>
 
-      {/* Hesap */}
-      <SectionLabel label="HESAP" />
+      <SectionLabel label={translate("settings.sections.account")} />
       <MenuCard>
         <SettingsMenuItem
-          title="Hesabı Dondur"
+          title={translate("settings.freezeAccount")}
           icon="pause-circle-outline"
           onPress={() => router.push("/profile/freeze-account")}
           destructive
         />
         <SettingsMenuItem
-          title="Hesabı Kapat"
+          title={translate("settings.deleteAccount")}
           icon="delete-outline"
           onPress={() => router.push("/profile/delete-account")}
           destructive

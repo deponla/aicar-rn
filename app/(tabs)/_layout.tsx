@@ -5,8 +5,10 @@ import { AuthStatusEnum } from "@/types/auth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
+  const { t: translate } = useTranslation();
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const t = tokens;
@@ -31,7 +33,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Tara",
+          title: translate("tabs.scan"),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="camera-alt" size={size} color={color} />
           ),
@@ -40,7 +42,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: "Garajım",
+          title: translate("tabs.garage"),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="directions-car" size={size} color={color} />
           ),
@@ -49,7 +51,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: "Geçmiş",
+          title: translate("tabs.history"),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="history" size={size} color={color} />
           ),
@@ -58,7 +60,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="guide"
         options={{
-          title: "Rehber",
+          title: translate("tabs.guide"),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="menu-book" size={size} color={color} />
           ),
@@ -67,7 +69,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: isLoggedIn ? "Profil" : "Giriş Yap",
+          title: isLoggedIn ? translate("tabs.profile") : translate("tabs.signIn"),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="person" size={size} color={color} />
           ),

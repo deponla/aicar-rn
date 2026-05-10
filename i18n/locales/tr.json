@@ -1,0 +1,121 @@
+{
+    "common": {
+        "loading": "Yukleniyor...",
+        "requestFailed": "Istek basarisiz oldu",
+        "retry": "Yeniden Dene",
+        "languages": {
+            "de": "Almanca",
+            "en": "Ingilizce",
+            "tr": "Turkce"
+        },
+        "status": {
+            "verified": "Dogrulandi",
+            "unverified": "Dogrulanmadi"
+        }
+    },
+    "auth": {
+        "loading": "Yukleniyor...",
+        "callback": {
+            "unreadableSession": "Uygulamaya donen oturum bilgisi okunamadi. Lutfen yeniden giris yapin.",
+            "invalidSessionData": "Oturum verisi eksik veya bozuk gorunuyor. Lutfen tekrar deneyin.",
+            "noPendingSession": "Tamamlanacak bir giris oturumu bulunamadi. Lutfen profilden tekrar deneyin.",
+            "failedTitle": "Giris Tamamlanamadi",
+            "backToProfile": "Profile Don",
+            "signingIn": "Giris Yapiliyor...",
+            "pleaseWait": "Lutfen bekleyin"
+        }
+    },
+    "tabs": {
+        "scan": "Tara",
+        "garage": "Garajim",
+        "history": "Gecmis",
+        "guide": "Rehber",
+        "profile": "Profil",
+        "signIn": "Giris Yap"
+    },
+    "settings": {
+        "title": "Hesap Ayarlari",
+        "noUser": "Kullanici bilgisi bulunamadi.",
+        "sections": {
+            "personal": "KISISEL BILGILER",
+            "security": "GUVENLIK",
+            "preferences": "TERCIHLER",
+            "account": "HESAP"
+        },
+        "editProfile": "Profili Duzenle",
+        "phoneNumber": "Telefon Numarasi",
+        "emailAddress": "E-posta Adresi",
+        "changePassword": "Sifre Degistir",
+        "activeSessions": "Aktif Oturumlar",
+        "language": "Dil",
+        "notificationPreferences": "Bildirim Tercihleri",
+        "freezeAccount": "Hesabi Dondur",
+        "deleteAccount": "Hesabi Kapat"
+    },
+    "language": {
+        "title": "Dil",
+        "noUser": "Kullanici bilgisi bulunamadi.",
+        "description": "Uygulama dili ve bildirim dili icin bir dil secin.",
+        "save": "Kaydet",
+        "saved": "Dil tercihi kaydedildi",
+        "saveFailed": "Dil degistirilemedi",
+        "retryLater": "Lutfen tekrar deneyin."
+    },
+    "credits": {
+        "title": "Krediler",
+        "balanceUnit": "Kredi",
+        "premium": "Premium",
+        "usedTotal": "Toplam kullanilan: {{count}} kredi",
+        "unavailable": "Bilgi alinamadi.",
+        "packagesTitle": "Paketler",
+        "popular": "Populer",
+        "packageCredits": "{{count}} kredi",
+        "purchaseTitle": "Satin Al",
+        "purchasePrompt": "{{name}} paketini {{price}} {{currency}} karsiliginda satin almak istiyor musunuz?",
+        "purchaseConfirm": "Satin Al",
+        "purchaseSuccess": "Kredi basariyla eklendi",
+        "purchaseFailed": "Satin alma basarisiz oldu.",
+        "historyTitle": "Islem Gecmisi",
+        "allHistory": "Tum gecmis",
+        "emptyHistory": "Henuz islem gecmisi yok.",
+        "transactionCredits": "+{{count}} kredi",
+        "status": {
+            "completed": "Tamamlandi",
+            "failed": "Basarisiz",
+            "pending": "Bekliyor",
+            "refunded": "Iade"
+        }
+    },
+    "notifications": {
+        "title": "Bildirimler",
+        "emptyTitle": "Henuz bildiriminiz yok",
+        "emptyMessage": "Yeni ilanlar, mesajlar ve firsatlar hakkinda bildirimler burada gorunecek."
+    },
+    "history": {
+        "title": "Analiz Gecmisi",
+        "loginRequiredTitle": "Analiz gecmisinizi gorun",
+        "loginRequiredDescription": "Daha once yaptiginiz analizleri gormek icin giris yapin.",
+        "emptyTitle": "Analiz bulunamadi",
+        "emptyAll": "Henuz analiz yapmadiniz.",
+        "emptyFiltered": "Bu kategoride analiz yok.",
+        "filters": {
+            "all": "Tumu"
+        },
+        "urgency": {
+            "critical": "Kritik",
+            "warning": "Uyari",
+            "info": "Bilgi"
+        },
+        "status": {
+            "completed": "Tamamlandi",
+            "failed": "Basarisiz",
+            "pending": "Bekliyor"
+        },
+        "sections": {
+            "summary": "Ozet",
+            "description": "Aciklama",
+            "recommendation": "Oneri",
+            "warnings": "Uyarilar"
+        }
+    }
+}

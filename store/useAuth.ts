@@ -1,4 +1,5 @@
 import { instance } from "@/api/config";
+import { changeAppLanguage } from "@/i18n";
 import { postLogout } from "@/api/post";
 import { queryClient } from "@/utils/queryClient";
 import * as SecureStore from "expo-secure-store";
@@ -18,6 +19,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
   user: null,
   status: AuthStatusEnum.LOADING,
   login: (user: UserResponseData) => {
+    void changeAppLanguage(user.user.language);
     set({ user, status: AuthStatusEnum.LOGGED_IN });
     instance.defaults.headers.common["Authorization"] =
       `Bearer ${user.accessToken.token}`;
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
     await SecureStore.deleteItemAsync(SECURE_STORE_KEY);
     set({ user: null, status: AuthStatusEnum.LOGGED_OUT });
     delete instance.defaults.headers.common["Authorization"];
+    void changeAppLanguage();
     queryClient.clear();
   },
 }));

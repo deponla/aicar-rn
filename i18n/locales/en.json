@@ -1,0 +1,121 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "requestFailed": "Request failed",
+        "retry": "Retry",
+        "languages": {
+            "de": "German",
+            "en": "English",
+            "tr": "Turkish"
+        },
+        "status": {
+            "verified": "Verified",
+            "unverified": "Not verified"
+        }
+    },
+    "auth": {
+        "loading": "Loading...",
+        "callback": {
+            "unreadableSession": "The session returned to the app could not be read. Please sign in again.",
+            "invalidSessionData": "The session data looks incomplete or corrupted. Please try again.",
+            "noPendingSession": "There is no pending sign-in session to complete. Please try again from your profile.",
+            "failedTitle": "Sign-in could not be completed",
+            "backToProfile": "Back to Profile",
+            "signingIn": "Signing in...",
+            "pleaseWait": "Please wait"
+        }
+    },
+    "tabs": {
+        "scan": "Scan",
+        "garage": "My Garage",
+        "history": "History",
+        "guide": "Guide",
+        "profile": "Profile",
+        "signIn": "Sign In"
+    },
+    "settings": {
+        "title": "Account Settings",
+        "noUser": "User information could not be found.",
+        "sections": {
+            "personal": "PERSONAL INFORMATION",
+            "security": "SECURITY",
+            "preferences": "PREFERENCES",
+            "account": "ACCOUNT"
+        },
+        "editProfile": "Edit Profile",
+        "phoneNumber": "Phone Number",
+        "emailAddress": "Email Address",
+        "changePassword": "Change Password",
+        "activeSessions": "Active Sessions",
+        "language": "Language",
+        "notificationPreferences": "Notification Preferences",
+        "freezeAccount": "Freeze Account",
+        "deleteAccount": "Delete Account"
+    },
+    "language": {
+        "title": "Language",
+        "noUser": "User information could not be found.",
+        "description": "Choose a language to change the app and notification language.",
+        "save": "Save",
+        "saved": "Language preference saved",
+        "saveFailed": "Language could not be changed",
+        "retryLater": "Please try again."
+    },
+    "credits": {
+        "title": "Credits",
+        "balanceUnit": "Credits",
+        "premium": "Premium",
+        "usedTotal": "Total used: {{count}} credits",
+        "unavailable": "Information could not be loaded.",
+        "packagesTitle": "Packages",
+        "popular": "Popular",
+        "packageCredits": "{{count}} credits",
+        "purchaseTitle": "Purchase",
+        "purchasePrompt": "Do you want to purchase the {{name}} package for {{price}} {{currency}}?",
+        "purchaseConfirm": "Purchase",
+        "purchaseSuccess": "Credits added successfully",
+        "purchaseFailed": "Purchase failed.",
+        "historyTitle": "Transaction History",
+        "allHistory": "All history",
+        "emptyHistory": "There is no transaction history yet.",
+        "transactionCredits": "+{{count}} credits",
+        "status": {
+            "completed": "Completed",
+            "failed": "Failed",
+            "pending": "Pending",
+            "refunded": "Refunded"
+        }
+    },
+    "notifications": {
+        "title": "Notifications",
+        "emptyTitle": "You have no notifications yet",
+        "emptyMessage": "Notifications about new listings, messages, and offers will appear here."
+    },
+    "history": {
+        "title": "Analysis History",
+        "loginRequiredTitle": "View your analysis history",
+        "loginRequiredDescription": "Sign in to see the analyses you ran before.",
+        "emptyTitle": "No analyses found",
+        "emptyAll": "You have not run any analyses yet.",
+        "emptyFiltered": "There are no analyses in this category.",
+        "filters": {
+            "all": "All"
+        },
+        "urgency": {
+            "critical": "Critical",
+            "warning": "Warning",
+            "info": "Info"
+        },
+        "status": {
+            "completed": "Completed",
+            "failed": "Failed",
+            "pending": "Pending"
+        },
+        "sections": {
+            "summary": "Summary",
+            "description": "Description",
+            "recommendation": "Recommendation",
+            "warnings": "Warnings"
+        }
+    }
+}

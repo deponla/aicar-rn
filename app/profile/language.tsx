@@ -1,10 +1,12 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
 import { Colors, tokens } from "@/constants/theme";
+import { changeAppLanguage, normalizeLanguage } from "@/i18n";
 import { usePatchUsers } from "@/query-hooks/useUser";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     StyleSheet,
@@ -14,11 +16,13 @@ import {
 } from "react-native";
 
 const LANGUAGES = [
-    { code: "tr", label: "Türkçe", flag: "🇹🇷" },
-    { code: "en", label: "English", flag: "🇬🇧" },
+    { code: "tr", flag: "🇹🇷" },
+    { code: "en", flag: "🇬🇧" },
+    { code: "de", flag: "🇩🇪" },
 ] as const;
 
 export default function LanguageScreen() {
+    const { t: translate } = useTranslation();
     const authStore = useAuthStore();
     const user = authStore.user?.user;
     const { notify } = useNotification();
@@ -26,22 +30,22 @@ export default function LanguageScreen() {
     const t = tokens;
 
     const [selectedLang, setSelectedLang] = useState(
-        user?.language?.toLowerCase() || "tr",
+        normalizeLanguage(user?.language),
     );
     const [isSaving, setIsSaving] = useState(false);
 
     if (!user) {
         return (
-            <ScreenContainer title="Dil / Language" showBackButton>
+            <ScreenContainer title={translate("language.title")} showBackButton>
                 <View style={styles.emptyState}>
                     <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
-                    <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+                    <Text style={styles.emptyText}>{translate("language.noUser")}</Text>
                 </View>
             </ScreenContainer>
         );
     }
 
-    const currentLang = user.language?.toLowerCase() || "tr";
+    const currentLang = normalizeLanguage(user.language);
     const hasChanged = selectedLang !== currentLang;
 
     const handleSave = async () => {
@@ -49,25 +53,26 @@ export default function LanguageScreen() {
 
         try {
             setIsSaving(true);
+            const nextLanguage = await changeAppLanguage(selectedLang);
             await patchUser.mutateAsync({
                 id: user.id,
-                d: { language: selectedLang },
+                d: { language: nextLanguage },
             });
 
             if (authStore.user) {
                 authStore.login({
                     ...authStore.user,
-                    user: { ...authStore.user.user, language: selectedLang },
+                    user: { ...authStore.user.user, language: nextLanguage },
                 });
             }
 
-            notify({ type: "success", title: "Dil tercihi kaydedildi" });
+            notify({ type: "success", title: translate("language.saved") });
         } catch (error: unknown) {
             const err = error as { response?: { data?: { message?: string } } };
             notify({
                 type: "error",
-                title: "Dil değiştirilemedi",
-                message: err?.response?.data?.message || "Lütfen tekrar deneyin.",
+                title: translate("language.saveFailed"),
+                message: err?.response?.data?.message || translate("language.retryLater"),
             });
         } finally {
             setIsSaving(false);
@@ -75,11 +80,11 @@ export default function LanguageScreen() {
     };
 
     return (
-        <ScreenContainer title="Dil / Language" showBackButton>
+        <ScreenContainer title={translate("language.title")} showBackButton>
             <View style={styles.infoCard}>
                 <MaterialIcons name="translate" size={20} color={t.infoText} />
                 <Text style={[styles.infoText, { color: t.infoText }]}>
-                    Uygulama dili ve bildirim dilini değiştirmek için bir dil seçin.
+                    {translate("language.description")}
                 </Text>
             </View>
 
@@ -112,7 +117,7 @@ export default function LanguageScreen() {
                                     },
                                 ]}
                             >
-                                {lang.label}
+                                {translate(`common.languages.${lang.code}`)}
                             </Text>
                             <View style={styles.radioOuter}>
                                 {isSelected && (
@@ -147,7 +152,7 @@ export default function LanguageScreen() {
                 {isSaving ? (
                     <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                    <Text style={styles.saveButtonText}>Kaydet</Text>
+                    <Text style={styles.saveButtonText}>{translate("language.save")}</Text>
                 )}
             </TouchableOpacity>
         </ScreenContainer>

@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { ErrorResponse } from "../types/utils";
+import i18n, { getCurrentLanguage } from "@/i18n";
 
 interface ApiErrorResponse extends Partial<ErrorResponse> {
   message?: string;
@@ -41,6 +42,13 @@ export const instance = axios.create({
   },
 });
 
+instance.interceptors.request.use((config) => {
+  config.headers = config.headers ?? {};
+  config.headers["Accept-Language"] = getCurrentLanguage();
+
+  return config;
+});
+
 instance.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiErrorResponse>) => {
@@ -55,7 +63,7 @@ instance.interceptors.response.use(
           ...responseData,
           message: responseData.errors.join(", "),
         },
-        error.message || "Request failed",
+        error.message || i18n.t("common.requestFailed"),
       );
     }
 
@@ -63,10 +71,13 @@ instance.interceptors.response.use(
       responseData
         ? {
             ...responseData,
-            message: responseData.message || error.message || "Request failed",
+            message:
+              responseData.message ||
+              error.message ||
+              i18n.t("common.requestFailed"),
           }
-        : { message: error.message || "Request failed" },
-      error.message || "Request failed",
+        : { message: error.message || i18n.t("common.requestFailed") },
+      error.message || i18n.t("common.requestFailed"),
     );
   },
 );
