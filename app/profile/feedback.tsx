@@ -6,6 +6,7 @@ import { FeedbackType } from "@/types/feedback";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     StyleSheet,
@@ -16,28 +17,39 @@ import {
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
-const FEEDBACK_OPTIONS = [
-    {
-        value: FeedbackType.COMPLAINT,
-        title: "Şikayet",
-        description: "Yaşadığınız sorunları ve memnuniyetsizlikleri iletin.",
-        icon: "report-problem",
-    },
-    {
-        value: FeedbackType.SUGGESTION,
-        title: "Öneri",
-        description: "Ürün veya deneyim için geliştirme fikirlerinizi paylaşın.",
-        icon: "lightbulb-outline",
-    },
-] as const;
+type FeedbackOption = {
+    value: FeedbackType;
+    title: string;
+    description: string;
+    icon: keyof typeof MaterialIcons.glyphMap;
+};
 
 export default function FeedbackScreen() {
     const router = useRouter();
+    const { t } = useTranslation();
     const { notify } = useNotification();
     const createFeedback = useCreateFeedback();
     const [type, setType] = useState<FeedbackType>(FeedbackType.COMPLAINT);
     const [subject, setSubject] = useState("");
     const [message, setMessage] = useState("");
+
+    const feedbackOptions = useMemo<FeedbackOption[]>(
+        () => [
+            {
+                value: FeedbackType.COMPLAINT,
+                title: t("feedbackScreen.types.complaint.title"),
+                description: t("feedbackScreen.types.complaint.description"),
+                icon: "report-problem",
+            },
+            {
+                value: FeedbackType.SUGGESTION,
+                title: t("feedbackScreen.types.suggestion.title"),
+                description: t("feedbackScreen.types.suggestion.description"),
+                icon: "lightbulb-outline",
+            },
+        ],
+        [t],
+    );
 
     const isValid = useMemo(() => {
         return subject.trim().length >= 4 && message.trim().length >= 10;
@@ -57,29 +69,32 @@ export default function FeedbackScreen() {
 
             notify({
                 type: "success",
-                title: type === FeedbackType.COMPLAINT ? "Şikayet gönderildi" : "Öneri gönderildi",
-                message: "Ekibimiz geri bildiriminizi inceleyecek.",
+                title:
+                    type === FeedbackType.COMPLAINT
+                        ? t("feedbackScreen.successComplaintTitle")
+                        : t("feedbackScreen.successSuggestionTitle"),
+                message: t("feedbackScreen.successMessage"),
             });
             router.replace("/profile/feedback-history");
         } catch (error: unknown) {
             const err = error as { response?: { data?: { message?: string } } };
             notify({
                 type: "error",
-                title: "Geri bildirim gönderilemedi",
+                title: t("feedbackScreen.submitErrorTitle"),
                 message:
                     err?.response?.data?.message ||
-                    "Lütfen daha sonra tekrar deneyin.",
+                    t("feedbackScreen.submitErrorMessage"),
             });
         }
     };
 
     return (
-        <ScreenContainer title="Şikayet ve Öneri" showBackButton>
+        <ScreenContainer title={t("feedbackScreen.title")} showBackButton>
             <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
                 <View style={styles.card}>
-                    <Text style={styles.title}>Geri bildiriminizi seçin</Text>
+                    <Text style={styles.title}>{t("feedbackScreen.heading")}</Text>
                     <Text style={styles.subtitle}>
-                        Ekibimize iletmek istediğiniz konuyu seçin ve ayrıntıları paylaşın.
+                        {t("feedbackScreen.description")}
                     </Text>
 
                     <View style={styles.optionList}>
@@ -89,10 +104,12 @@ export default function FeedbackScreen() {
                             activeOpacity={0.85}
                         >
                             <MaterialIcons name="history" size={16} color={Colors.primary} />
-                            <Text style={styles.historyButtonText}>Gönderilerim</Text>
+                            <Text style={styles.historyButtonText}>
+                                {t("feedbackScreen.historyButton")}
+                            </Text>
                         </TouchableOpacity>
 
-                        {FEEDBACK_OPTIONS.map((option) => {
+                        {feedbackOptions.map((option) => {
                             const isSelected = option.value === type;
 
                             return (
@@ -128,30 +145,34 @@ export default function FeedbackScreen() {
                 </View>
 
                 <View style={styles.card}>
-                    <Text style={styles.label}>Konu</Text>
+                    <Text style={styles.label}>{t("feedbackScreen.subjectLabel")}</Text>
                     <TextInput
                         style={styles.input}
                         value={subject}
                         onChangeText={setSubject}
-                        placeholder="Kısa bir başlık yazın"
+                        placeholder={t("feedbackScreen.subjectPlaceholder")}
                         placeholderTextColor="#C7C7CC"
                         maxLength={160}
                     />
-                    <Text style={styles.helperText}>En az 4 karakter</Text>
+                    <Text style={styles.helperText}>
+                        {t("feedbackScreen.subjectHelper")}
+                    </Text>
 
-                    <Text style={styles.label}>Mesaj</Text>
+                    <Text style={styles.label}>{t("feedbackScreen.messageLabel")}</Text>
                     <TextInput
                         style={[styles.input, styles.messageInput]}
                         value={message}
                         onChangeText={setMessage}
-                        placeholder="Lütfen ayrıntıları paylaşın"
+                        placeholder={t("feedbackScreen.messagePlaceholder")}
                         placeholderTextColor="#C7C7CC"
                         multiline
                         textAlignVertical="top"
                         maxLength={4000}
                     />
                     <View style={styles.messageFooter}>
-                        <Text style={styles.helperText}>En az 10 karakter</Text>
+                        <Text style={styles.helperText}>
+                            {t("feedbackScreen.messageHelper")}
+                        </Text>
                         <Text style={styles.counterText}>{message.length}/4000</Text>
                     </View>
 
@@ -167,7 +188,9 @@ export default function FeedbackScreen() {
                         {createFeedback.isPending ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.primaryButtonText}>Gönder</Text>
+                            <Text style={styles.primaryButtonText}>
+                                {t("feedbackScreen.submit")}
+                            </Text>
                         )}
                     </TouchableOpacity>
                 </View>

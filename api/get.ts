@@ -143,12 +143,24 @@ export async function getTransaction(
 }
 
 // Legal
-export async function getLegalDocuments(): Promise<LegalDocument[]> {
-  return instance.get("v1/legal").then((r) => r.data);
+export async function getLegalDocuments({
+  language,
+}: {
+  language?: string;
+} = {}): Promise<LegalDocument[]> {
+  return instance.get("v1/legal", { params: { language } }).then((r) => r.data);
 }
 
-export async function getLegalDocument(type: string): Promise<LegalDocument> {
-  return instance.get(`v1/legal/${type}`).then((r) => r.data);
+export async function getLegalDocument({
+  type,
+  language,
+}: {
+  type: string;
+  language?: string;
+}): Promise<LegalDocument> {
+  return instance
+    .get(`v1/legal/${type}`, { params: { language } })
+    .then((r) => r.data);
 }
 
 // Analysis Logs
@@ -157,8 +169,15 @@ export async function getAnalysisLogs(filters?: {
   page?: number;
   carId?: string;
   sort?: string;
-}): Promise<{ results: AnalyzeMediaLog[]; count: number; page: number; limit: number }> {
-  return instance.get("v1/analysis-logs", { params: filters }).then((r) => r.data);
+}): Promise<{
+  results: AnalyzeMediaLog[];
+  count: number;
+  page: number;
+  limit: number;
+}> {
+  return instance
+    .get("v1/analysis-logs", { params: filters })
+    .then((r) => r.data);
 }
 
 // Activities

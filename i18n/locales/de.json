@@ -117,5 +117,150 @@
             "recommendation": "Empfehlung",
             "warnings": "Warnungen"
         }
+    },
+    "legal": {
+        "title": "Rechtliches",
+        "version": "Version {{version}}",
+        "empty": "Es wurden keine rechtlichen Dokumente gefunden."
+    },
+    "carDetail": {
+        "title": "Fahrzeugdetails",
+        "notFound": "Fahrzeug wurde nicht gefunden.",
+        "back": "Zurueck",
+        "updated": "Fahrzeug aktualisiert",
+        "updateFailed": "Aktualisierung fehlgeschlagen",
+        "addedOn": "Hinzugefuegt: {{date}}",
+        "analyses": "Analysen",
+        "emptyAnalysis": "Fuer dieses Fahrzeug gibt es noch keine Analysen.",
+        "editTitle": "Fahrzeug bearbeiten",
+        "brandLabel": "Marke *",
+        "brandPlaceholder": "z. B. Toyota",
+        "modelLabel": "Modell *",
+        "modelPlaceholder": "z. B. Corolla",
+        "yearLabel": "Baujahr *",
+        "yearPlaceholder": "z. B. 2020",
+        "fuelTypeLabel": "Kraftstoffart",
+        "transmissionLabel": "Getriebe",
+        "engineCcLabel": "Hubraum (cc)",
+        "engineCcPlaceholder": "z. B. 1600",
+        "save": "Speichern",
+        "fuel": {
+            "gasoline": "Benzin",
+            "diesel": "Diesel",
+            "lpg": "LPG",
+            "electric": "Elektro",
+            "hybrid": "Hybrid"
+        },
+        "transmission": {
+            "manual": "Manuell",
+            "automatic": "Automatik"
+        }
+    },
+    "deleteAccount": {
+        "title": "Konto loeschen",
+        "noUser": "Benutzerinformationen konnten nicht gefunden werden.",
+        "confirmTitle": "Konto schliessen",
+        "confirmMessage": "Ihr Konto wird geschlossen und Ihre Sitzung beendet. Danach koennen Sie sich nicht erneut anmelden.",
+        "cancel": "Abbrechen",
+        "confirmAction": "Konto schliessen",
+        "deleted": "Konto geschlossen",
+        "deleteFailed": "Konto konnte nicht geschlossen werden",
+        "retryLater": "Bitte versuchen Sie es spaeter erneut.",
+        "warningTitle": "Diese Aktion kann nicht rueckgaengig gemacht werden",
+        "warningText": "Ihr Konto wird per Soft Delete geschlossen, alle Sitzungen werden beendet und der Zugriff auf geschuetzte Bereiche wird entzogen.",
+        "accountTitle": "Zu schliessendes Konto",
+        "emailTitle": "E-Mail-Bestaetigung",
+        "emailDescription": "Geben Sie zum Fortfahren Ihre Konto-E-Mail-Adresse erneut ein.",
+        "button": "Mein Konto schliessen"
+    },
+    "reactivateAccount": {
+        "title": "Konto reaktivieren",
+        "heroTitle": "Reaktivieren Sie Ihr Konto",
+        "description": "Wenn Sie Ihr Konto zuvor eingefroren haben, koennen Sie es mit Ihrer E-Mail-Adresse und Ihrem Passwort wieder aktivieren.",
+        "frozenDescription": "Wir haben waehrend der Anmeldung festgestellt, dass Ihr Konto eingefroren ist. Bestaetigen Sie Ihre E-Mail-Adresse und Ihr Passwort, um fortzufahren.",
+        "emailLabel": "E-Mail",
+        "emailPlaceholder": "beispiel@aicar.com",
+        "passwordLabel": "Passwort",
+        "passwordPlaceholder": "Ihr Passwort",
+        "button": "Mein Konto reaktivieren",
+        "successTitle": "Konto reaktiviert",
+        "successMessage": "Sie koennen wieder auf Ihr Profil zugreifen.",
+        "errorTitle": "Konto konnte nicht reaktiviert werden",
+        "errorMessage": "Pruefen Sie Ihre Angaben und versuchen Sie es erneut."
+    },
+    "about": {
+        "title": "Info",
+        "tagline": "KI-gestuetzte Fahrzeuganalyse",
+        "versionLabel": "Version",
+        "buildLabel": "Build",
+        "platformLabel": "Plattform",
+        "checkUpdates": "Nach Updates suchen",
+        "updateAvailableTitle": "Update verfuegbar",
+        "updateAvailableMessage": "Neue Version: {{version}}",
+        "upToDateTitle": "Ihre App ist aktuell",
+        "versionValue": "Version {{version}}",
+        "links": {
+            "terms": "Nutzungsbedingungen",
+            "privacy": "Datenschutzrichtlinie",
+            "openSource": "Open-Source-Lizenzen"
+        },
+        "copyright": "© {{year}} AiCar. Alle Rechte vorbehalten."
+    },
+    "feedbackScreen": {
+        "title": "Beschwerde & Vorschlag",
+        "heading": "Waehlen Sie Ihre Rueckmeldungsart",
+        "description": "Waehlen Sie das Thema aus, das Sie mit unserem Team teilen moechten, und schildern Sie die Details.",
+        "historyButton": "Meine Einsendungen",
+        "types": {
+            "complaint": {
+                "title": "Beschwerde",
+                "description": "Melden Sie Probleme und unzufriedene Erfahrungen, die Sie erlebt haben."
+            },
+            "suggestion": {
+                "title": "Vorschlag",
+                "description": "Teilen Sie Ihre Ideen zur Verbesserung des Produkts oder der Nutzungserfahrung."
+            }
+        },
+        "subjectLabel": "Betreff",
+        "subjectPlaceholder": "Schreiben Sie einen kurzen Titel",
+        "subjectHelper": "Mindestens 4 Zeichen",
+        "messageLabel": "Nachricht",
+        "messagePlaceholder": "Bitte teilen Sie die Details mit",
+        "messageHelper": "Mindestens 10 Zeichen",
+        "submit": "Senden",
+        "successComplaintTitle": "Beschwerde gesendet",
+        "successSuggestionTitle": "Vorschlag gesendet",
+        "successMessage": "Unser Team wird Ihr Feedback pruefen.",
+        "submitErrorTitle": "Feedback konnte nicht gesendet werden",
+        "submitErrorMessage": "Bitte versuchen Sie es spaeter erneut."
+    },
+    "profileScreen": {
+        "guestTitle": "Melden Sie sich in Ihrem Konto an",
+        "guestDescription": "Verwalten Sie Ihr Profil, greifen Sie auf Ihre Garage zu und nutzen Sie alle Funktionen.",
+        "register": "Registrieren",
+        "termsPrefix": "Wenn Sie fortfahren, stimmen Sie den",
+        "termsMiddle": "und der",
+        "termsSuffix": "zu.",
+        "emailChip": "E-Mail",
+        "phoneChip": "Telefon",
+        "permissions": "Berechtigungen",
+        "support": "Hilfe & Support",
+        "feedback": "Beschwerde & Vorschlag",
+        "feedbackHistory": "Mein Feedback",
+        "logout": "Abmelden",
+        "logoutConfirm": "Moechten Sie sich wirklich abmelden?",
+        "cancel": "Abbrechen",
+        "loginStartFailed": "Anmeldung konnte nicht gestartet werden",
+        "registerStartFailed": "Registrierung konnte nicht gestartet werden",
+        "authFailedTitle": "Anmeldung konnte nicht abgeschlossen werden",
+        "sections": {
+            "account": "MEIN KONTO",
+            "support": "SUPPORT"
+        },
+        "errors": {
+            "frontendUrlMissing": "Die Frontend-URL-Konfiguration fehlt.",
+            "additionalActionRequired": "Fuer Ihr Konto ist eine zusaetzliche Aktion erforderlich. Bitte versuchen Sie es erneut.",
+            "browserSessionFailed": "Beim Starten der Browser-Sitzung ist ein Problem aufgetreten."
+        }
     }
 }

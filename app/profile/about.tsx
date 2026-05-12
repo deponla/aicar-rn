@@ -6,6 +6,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Image,
@@ -74,6 +75,7 @@ function LinkRow({
 }
 
 export default function AboutScreen() {
+    const { t: translate } = useTranslation();
     const t = tokens;
     const { notify } = useNotification();
     const [isChecking, setIsChecking] = useState(false);
@@ -97,8 +99,10 @@ export default function AboutScreen() {
             if (result.updateAvailable) {
                 notify({
                     type: "info",
-                    title: "Güncelleme mevcut",
-                    message: `Yeni sürüm: ${result.latestVersion}`,
+                    title: translate("about.updateAvailableTitle"),
+                    message: translate("about.updateAvailableMessage", {
+                        version: result.latestVersion,
+                    }),
                 });
                 if (result.storeUrl) {
                     Linking.openURL(result.storeUrl);
@@ -106,15 +110,15 @@ export default function AboutScreen() {
             } else {
                 notify({
                     type: "success",
-                    title: "Uygulamanız güncel",
-                    message: `Sürüm ${appVersion}`,
+                    title: translate("about.upToDateTitle"),
+                    message: translate("about.versionValue", { version: appVersion }),
                 });
             }
         } catch {
             notify({
                 type: "success",
-                title: "Uygulamanız güncel",
-                message: `Sürüm ${appVersion}`,
+                title: translate("about.upToDateTitle"),
+                message: translate("about.versionValue", { version: appVersion }),
             });
         } finally {
             setIsChecking(false);
@@ -172,7 +176,7 @@ export default function AboutScreen() {
     );
 
     return (
-        <ScreenContainer title="Hakkında" showBackButton>
+        <ScreenContainer title={translate("about.title")} showBackButton>
             {webViewModal}
 
             {/* App Identity */}
@@ -191,7 +195,7 @@ export default function AboutScreen() {
                 </View>
                 <Text style={[styles.appName, { color: t.textPrimary }]}>AiCar</Text>
                 <Text style={[styles.appTagline, { color: t.textTertiary }]}>
-                    Yapay Zeka ile Araç Analizi
+                    {translate("about.tagline")}
                 </Text>
             </View>
 
@@ -202,10 +206,10 @@ export default function AboutScreen() {
                     { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
                 ]}
             >
-                <InfoRow label="Sürüm" value={appVersion} />
-                {buildNumber && <InfoRow label="Build" value={buildNumber} />}
+                <InfoRow label={translate("about.versionLabel")} value={appVersion} />
+                {buildNumber && <InfoRow label={translate("about.buildLabel")} value={buildNumber} />}
                 <InfoRow
-                    label="Platform"
+                    label={translate("about.platformLabel")}
                     value={Platform.OS === "ios" ? "iOS" : "Android"}
                 />
             </View>
@@ -227,7 +231,7 @@ export default function AboutScreen() {
                     <>
                         <MaterialIcons name="system-update" size={20} color="#fff" />
                         <Text style={styles.updateButtonText}>
-                            Güncellemeleri Kontrol Et
+                            {translate("about.checkUpdates")}
                         </Text>
                     </>
                 )}
@@ -242,24 +246,30 @@ export default function AboutScreen() {
             >
                 <LinkRow
                     icon="description"
-                    label="Kullanım Koşulları"
+                    label={translate("about.links.terms")}
                     onPress={() => {
-                        openInAppBrowser("Kullanım Koşulları", "https://deponla.com/terms");
+                        openInAppBrowser(
+                            translate("about.links.terms"),
+                            "https://deponla.com/terms"
+                        );
                     }}
                 />
                 <LinkRow
                     icon="privacy-tip"
-                    label="Gizlilik Politikası"
+                    label={translate("about.links.privacy")}
                     onPress={() => {
-                        openInAppBrowser("Gizlilik Politikası", "https://deponla.com/privacy");
+                        openInAppBrowser(
+                            translate("about.links.privacy"),
+                            "https://deponla.com/privacy"
+                        );
                     }}
                 />
                 <LinkRow
                     icon="article"
-                    label="Açık Kaynak Lisansları"
+                    label={translate("about.links.openSource")}
                     onPress={() => {
                         openInAppBrowser(
-                            "Açık Kaynak Lisansları",
+                            translate("about.links.openSource"),
                             "https://deponla.com/open-source-licenses"
                         );
                     }}
@@ -269,7 +279,9 @@ export default function AboutScreen() {
             {/* Footer */}
             <View style={styles.footer}>
                 <Text style={[styles.footerText, { color: t.textPlaceholder }]}>
-                    © {new Date().getFullYear()} AiCar. Tüm hakları saklıdır.
+                    {translate("about.copyright", {
+                        year: new Date().getFullYear(),
+                    })}
                 </Text>
             </View>
 

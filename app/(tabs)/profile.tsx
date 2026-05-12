@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import { memo, useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Image,
@@ -129,11 +130,14 @@ const SectionLabel = memo(function SectionLabel({
   );
 });
 
-function buildAuthSessionConfig(type: "login" | "register") {
+function buildAuthSessionConfig(
+  type: "login" | "register",
+  frontendUrlMissingMessage: string,
+) {
   const frontendUrl = process.env.EXPO_PUBLIC_FRONTEND_URL;
 
   if (!frontendUrl) {
-    throw new Error("Frontend URL yapılandırması eksik");
+    throw new Error(frontendUrlMissingMessage);
   }
 
   const redirectUrl = Linking.createURL("/auth/callback");
@@ -153,6 +157,7 @@ function buildAuthSessionConfig(type: "login" | "register") {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
+  const { t: translate } = useTranslation();
   const authStore = useAuthStore();
   const router = useRouter();
   const t = tokens;
@@ -170,7 +175,10 @@ export default function ProfileScreen() {
     async (type: "login" | "register") => {
       try {
         const { authUrl, redirectUrl, useExternalBrowser } =
-          buildAuthSessionConfig(type);
+          buildAuthSessionConfig(
+            type,
+            translate("profileScreen.errors.frontendUrlMissing"),
+          );
 
         if (useExternalBrowser) {
           await Linking.openURL(authUrl);
@@ -190,8 +198,8 @@ export default function ProfileScreen() {
 
         if (!authCallback) {
           Alert.alert(
-            "Giriş tamamlanamadı",
-            "Uygulamaya dönen oturum bilgisi okunamadı. Lütfen tekrar deneyin.",
+            translate("profileScreen.authFailedTitle"),
+            translate("auth.callback.unreadableSession"),
           );
           return;
         }
@@ -209,8 +217,8 @@ export default function ProfileScreen() {
           }
 
           Alert.alert(
-            "Giriş tamamlanamadı",
-            "Hesabınız için ek bir işlem gerekiyor. Lütfen tekrar deneyin.",
+            translate("profileScreen.authFailedTitle"),
+            translate("profileScreen.errors.additionalActionRequired"),
           );
           return;
         }
@@ -222,14 +230,16 @@ export default function ProfileScreen() {
         authStore.login(authCallback.session);
       } catch (error) {
         Alert.alert(
-          type === "login" ? "Giriş başlatılamadı" : "Kayıt başlatılamadı",
+          type === "login"
+            ? translate("profileScreen.loginStartFailed")
+            : translate("profileScreen.registerStartFailed"),
           error instanceof Error
             ? error.message
-            : "Tarayıcı oturumu başlatılırken bir sorun oluştu.",
+            : translate("profileScreen.errors.browserSessionFailed"),
         );
       }
     },
-    [authStore, router],
+    [authStore, router, translate],
   );
 
   const handleRegister = useCallback(() => {
@@ -241,27 +251,27 @@ export default function ProfileScreen() {
   }, [handleAuth]);
 
   const handleLogout = useCallback(() => {
-    Alert.alert("Çıkış Yap", "Çıkış yapmak istediğinize emin misiniz?", [
-      { text: "İptal", style: "cancel" },
+    Alert.alert(translate("profileScreen.logout"), translate("profileScreen.logoutConfirm"), [
+      { text: translate("profileScreen.cancel"), style: "cancel" },
       {
-        text: "Çıkış Yap",
+        text: translate("profileScreen.logout"),
         style: "destructive",
         onPress: async () => {
           await authStore.logout();
         },
       },
     ]);
-  }, [authStore]);
+  }, [authStore, translate]);
 
   const openTerms = useCallback(() => {
-    setWebViewTitle("Kullanım Koşulları");
+    setWebViewTitle(translate("about.links.terms"));
     setWebViewUrl("https://deponla.com/terms");
-  }, []);
+  }, [translate]);
 
   const openPrivacy = useCallback(() => {
-    setWebViewTitle("Gizlilik Politikası");
+    setWebViewTitle(translate("about.links.privacy"));
     setWebViewUrl("https://deponla.com/privacy");
-  }, []);
+  }, [translate]);
 
   const goToSettings = useCallback(() => {
     router.push("/profile/settings");
@@ -375,11 +385,10 @@ export default function ProfileScreen() {
               <MaterialIcons name="person" size={48} color={Colors.primary} />
             </View>
             <Text style={[styles.guestTitle, { color: t.textPrimary }]}>
-              Hesabınıza giriş yapın
+              {translate("profileScreen.guestTitle")}
             </Text>
             <Text style={[styles.guestDesc, { color: t.textSecondary }]}>
-              Profilinizi yönetin, depolarınıza erişin ve tüm özellikleri
-              kullanın.
+              {translate("profileScreen.guestDescription")}
             </Text>
           </View>
 
@@ -397,7 +406,7 @@ export default function ProfileScreen() {
               <Text
                 style={[styles.authBtnOutlineText, { color: t.textPrimary }]}
               >
-                Kayıt Ol
+                {translate("profileScreen.register")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -405,27 +414,27 @@ export default function ProfileScreen() {
               onPress={handleLogin}
               activeOpacity={0.8}
             >
-              <Text style={styles.authBtnFilledText}>Giriş Yap</Text>
+              <Text style={styles.authBtnFilledText}>{translate("tabs.signIn")}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Terms */}
           <Text style={[styles.termsText, { color: t.textTertiary }]}>
-            Devam ederek{" "}
+            {translate("profileScreen.termsPrefix")}{" "}
             <Text
               style={[styles.termsLink, { color: Colors.secondary }]}
               onPress={openTerms}
             >
-              Kullanım Koşulları
+              {translate("about.links.terms")}
             </Text>{" "}
-            ve{" "}
+            {translate("profileScreen.termsMiddle")}{" "}
             <Text
               style={[styles.termsLink, { color: Colors.secondary }]}
               onPress={openPrivacy}
             >
-              Gizlilik Politikası
+              {translate("about.links.privacy")}
             </Text>
-            {"'nı kabul etmiş olursunuz."}
+            {translate("profileScreen.termsSuffix")}
           </Text>
 
           {/* ── Keşfet ── */}
@@ -518,7 +527,7 @@ export default function ProfileScreen() {
                     color={Colors.primary}
                   />
                   <Text style={[styles.chipText, { color: t.textPrimary }]}>
-                    E-posta
+                    {translate("profileScreen.emailChip")}
                   </Text>
                 </View>
               ) : null}
@@ -538,7 +547,7 @@ export default function ProfileScreen() {
                     color={Colors.primary}
                   />
                   <Text style={[styles.chipText, { color: t.textPrimary }]}>
-                    Telefon
+                    {translate("profileScreen.phoneChip")}
                   </Text>
                 </View>
               ) : null}
@@ -547,25 +556,25 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Hesabım ── */}
-        <SectionLabel label="HESABIM" />
+        <SectionLabel label={translate("profileScreen.sections.account")} />
         <MenuSection>
           <MenuItem
             icon="manage-accounts"
-            label="Hesap Ayarları"
+            label={translate("settings.title")}
             onPress={goToSettings}
           />
           <MenuItem
             icon="security"
             iconBg="#ECFDF3"
             iconColor="#059669"
-            label="İzinler"
+            label={translate("profileScreen.permissions")}
             onPress={goToPermissions}
           />
           <MenuItem
             icon="monetization-on"
             iconBg="#EFF6FF"
             iconColor="#2563EB"
-            label="Krediler"
+            label={translate("credits.title")}
             onPress={goToCredits}
             showDivider={false}
           />
@@ -573,48 +582,48 @@ export default function ProfileScreen() {
 
         {/* ── Keşfet ── */}
         {/* ── Destek ── */}
-        <SectionLabel label="DESTEK" />
+        <SectionLabel label={translate("profileScreen.sections.support")} />
         <MenuSection>
           <MenuItem
             icon="help-outline"
             iconBg="#EFF6FF"
             iconColor="#3B82F6"
-            label="Yardım & Destek"
+            label={translate("profileScreen.support")}
             onPress={goToSupport}
           />
           <MenuItem
             icon="campaign"
             iconBg="#FFF7ED"
             iconColor="#C2410C"
-            label="Şikayet ve Öneri"
+            label={translate("profileScreen.feedback")}
             onPress={goToFeedback}
           />
           <MenuItem
             icon="history"
             iconBg="#EEF2FF"
             iconColor="#4338CA"
-            label="Geri Bildirimlerim"
+            label={translate("profileScreen.feedbackHistory")}
             onPress={goToFeedbackHistory}
           />
           <MenuItem
             icon="info-outline"
             iconBg="#EFF6FF"
             iconColor="#3B82F6"
-            label="Hakkında"
+            label={translate("about.title")}
             onPress={goToAbout}
           />
           <MenuItem
             icon="description"
             iconBg="#F5F3FF"
             iconColor="#7C3AED"
-            label="Kullanım Koşulları"
+            label={translate("about.links.terms")}
             onPress={openTerms}
           />
           <MenuItem
             icon="privacy-tip"
             iconBg="#F5F3FF"
             iconColor="#7C3AED"
-            label="Gizlilik Politikası"
+            label={translate("about.links.privacy")}
             onPress={openPrivacy}
             showDivider={false}
           />
@@ -625,7 +634,7 @@ export default function ProfileScreen() {
         <MenuSection>
           <MenuItem
             icon="logout"
-            label="Çıkış Yap"
+            label={translate("profileScreen.logout")}
             destructive
             onPress={handleLogout}
             showDivider={false}

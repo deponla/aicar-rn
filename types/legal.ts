@@ -3,6 +3,7 @@ export enum LegalDocumentTypeEnum {
   ACCOUNT_AGREEMENT = "account-agreement",
   TERMS_OF_USE = "terms-of-use",
   PRIVACY_POLICY = "privacy-policy",
+  KVKK_DISCLOSURE = "kvkk-disclosure",
   COOKIE_POLICY = "cookie-policy",
   HELP_GUIDE = "help-guide",
 }
@@ -10,6 +11,7 @@ export enum LegalDocumentTypeEnum {
 export interface LegalDocument {
   id: string;
   type: LegalDocumentTypeEnum;
+  language: string;
   title: string;
   content: string;
   version: string;

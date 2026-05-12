@@ -15,6 +15,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Modal,
@@ -26,17 +27,17 @@ import {
   View,
 } from "react-native";
 
-const FUEL_LABELS: Record<FuelTypeEnum, string> = {
-  [FuelTypeEnum.GASOLINE]: "Benzin",
-  [FuelTypeEnum.DIESEL]: "Dizel",
-  [FuelTypeEnum.LPG]: "LPG",
-  [FuelTypeEnum.ELECTRIC]: "Elektrik",
-  [FuelTypeEnum.HYBRID]: "Hibrit",
+const FUEL_LABEL_KEYS: Record<FuelTypeEnum, string> = {
+  [FuelTypeEnum.GASOLINE]: "carDetail.fuel.gasoline",
+  [FuelTypeEnum.DIESEL]: "carDetail.fuel.diesel",
+  [FuelTypeEnum.LPG]: "carDetail.fuel.lpg",
+  [FuelTypeEnum.ELECTRIC]: "carDetail.fuel.electric",
+  [FuelTypeEnum.HYBRID]: "carDetail.fuel.hybrid",
 };
 
-const TRANSMISSION_LABELS: Record<TransmissionEnum, string> = {
-  [TransmissionEnum.MANUAL]: "Manuel",
-  [TransmissionEnum.AUTOMATIC]: "Otomatik",
+const TRANSMISSION_LABEL_KEYS: Record<TransmissionEnum, string> = {
+  [TransmissionEnum.MANUAL]: "carDetail.transmission.manual",
+  [TransmissionEnum.AUTOMATIC]: "carDetail.transmission.automatic",
 };
 
 const FUEL_OPTIONS = Object.values(FuelTypeEnum);
@@ -66,14 +67,26 @@ function statusColor(status: string) {
   return tokens.warning;
 }
 
-function statusLabel(status: string) {
-  if (status === "completed") return "Tamamlandı";
-  if (status === "failed") return "Başarısız";
-  if (status === "pending") return "Bekliyor";
+function getFuelLabel(fuelType: FuelTypeEnum, t: (key: string) => string) {
+  return t(FUEL_LABEL_KEYS[fuelType]);
+}
+
+function getTransmissionLabel(
+  transmission: TransmissionEnum,
+  t: (key: string) => string,
+) {
+  return t(TRANSMISSION_LABEL_KEYS[transmission]);
+}
+
+function statusLabel(status: string, t: (key: string) => string) {
+  if (status === "completed") return t("history.status.completed");
+  if (status === "failed") return t("history.status.failed");
+  if (status === "pending") return t("history.status.pending");
   return status;
 }
 
 const AnalysisCard = React.memo(function AnalysisCard({ item }: { item: AnalyzeMediaLog }) {
+  const { t } = useTranslation();
   const urgency = item.aiResponse?.urgency;
   const colors = urgency ? urgencyColors(urgency) : null;
   const icon = ANALYSIS_TYPE_ICONS[item.analysisType] ?? "search";
@@ -92,11 +105,7 @@ const AnalysisCard = React.memo(function AnalysisCard({ item }: { item: AnalyzeM
         {urgency && colors ? (
           <View style={[styles.urgencyBadge, { backgroundColor: colors.bg }]}>
             <Text style={[styles.urgencyText, { color: colors.text }]}>
-              {urgency === "critical"
-                ? "Kritik"
-                : urgency === "warning"
-                  ? "Uyarı"
-                  : "Bilgi"}
+              {t(`history.urgency.${urgency}`)}
             </Text>
           </View>
         ) : null}
@@ -118,7 +127,7 @@ const AnalysisCard = React.memo(function AnalysisCard({ item }: { item: AnalyzeM
             ]}
           />
           <Text style={[styles.metaText, { color: statusColor(item.status) }]}>
-            {statusLabel(item.status)}
+            {statusLabel(item.status, t)}
           </Text>
         </View>
       </View>
@@ -139,6 +148,7 @@ const EditCarModal = React.memo(function EditCarModal({
   onSubmit: (data: UpdateCarRequest) => void;
   isLoading: boolean;
 }) {
+  const { t } = useTranslation();
   const [brand, setBrand] = useState(car.brand);
   const [model, setModel] = useState(car.model);
   const [year, setYear] = useState(String(car.year));
@@ -175,7 +185,7 @@ const EditCarModal = React.memo(function EditCarModal({
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Aracı Düzenle</Text>
+          <Text style={styles.modalTitle}>{t("carDetail.editTitle")}</Text>
           <TouchableOpacity onPress={onClose}>
             <MaterialIcons name="close" size={24} color={tokens.textPrimary} />
           </TouchableOpacity>
@@ -185,35 +195,35 @@ const EditCarModal = React.memo(function EditCarModal({
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.inputLabel}>Marka *</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.brandLabel")}</Text>
           <TextInput
             style={styles.input}
             value={brand}
             onChangeText={setBrand}
-            placeholder="ör. Toyota"
+            placeholder={t("carDetail.brandPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
           />
 
-          <Text style={styles.inputLabel}>Model *</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.modelLabel")}</Text>
           <TextInput
             style={styles.input}
             value={model}
             onChangeText={setModel}
-            placeholder="ör. Corolla"
+            placeholder={t("carDetail.modelPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
           />
 
-          <Text style={styles.inputLabel}>Yıl *</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
           <TextInput
             style={styles.input}
             value={year}
             onChangeText={setYear}
-            placeholder="ör. 2020"
+            placeholder={t("carDetail.yearPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
 
-          <Text style={styles.inputLabel}>Yakıt Tipi</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.fuelTypeLabel")}</Text>
           <View style={styles.chipRow}>
             {FUEL_OPTIONS.map((fuelValue) => (
               <TouchableOpacity
@@ -232,13 +242,13 @@ const EditCarModal = React.memo(function EditCarModal({
                     fuelType === fuelValue && styles.selectChipTextActive,
                   ]}
                 >
-                  {FUEL_LABELS[fuelValue]}
+                  {getFuelLabel(fuelValue, t)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>Vites</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.transmissionLabel")}</Text>
           <View style={styles.chipRow}>
             {TRANSMISSION_OPTIONS.map((transmissionValue) => (
               <TouchableOpacity
@@ -257,21 +267,21 @@ const EditCarModal = React.memo(function EditCarModal({
                   style={[
                     styles.selectChipText,
                     transmission === transmissionValue &&
-                      styles.selectChipTextActive,
+                    styles.selectChipTextActive,
                   ]}
                 >
-                  {TRANSMISSION_LABELS[transmissionValue]}
+                  {getTransmissionLabel(transmissionValue, t)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>Motor Hacmi (cc)</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.engineCcLabel")}</Text>
           <TextInput
             style={styles.input}
             value={engineCC}
             onChangeText={setEngineCC}
-            placeholder="ör. 1600"
+            placeholder={t("carDetail.engineCcPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
@@ -281,7 +291,7 @@ const EditCarModal = React.memo(function EditCarModal({
             style={[
               styles.submitButton,
               (!brand.trim() || !model.trim() || !year.trim()) &&
-                styles.submitButtonDisabled,
+              styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
             disabled={
@@ -292,7 +302,7 @@ const EditCarModal = React.memo(function EditCarModal({
             {isLoading ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.submitButtonText}>Kaydet</Text>
+              <Text style={styles.submitButtonText}>{t("carDetail.save")}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -306,6 +316,7 @@ function ListSeparator() {
 }
 
 export default function CarDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { notify } = useNotification();
@@ -346,20 +357,20 @@ export default function CarDetailScreen() {
         {
           onSuccess: () => {
             setEditVisible(false);
-            notify({ type: "success", title: "Araç güncellendi" });
+            notify({ type: "success", title: t("carDetail.updated") });
             refetchCar();
           },
           onError: (error) => {
             notify({
               type: "error",
-              title: "Güncelleme başarısız",
+              title: t("carDetail.updateFailed"),
               message: error instanceof Error ? error.message : undefined,
             });
           },
         },
       );
     },
-    [id, notify, refetchCar, updateCar],
+    [id, notify, refetchCar, t, updateCar],
   );
 
   const renderItem = useCallback(
@@ -401,7 +412,7 @@ export default function CarDetailScreen() {
                   color={tokens.textSecondary}
                 />
                 <Text style={styles.detailText}>
-                  {FUEL_LABELS[car.fuelType] ?? car.fuelType}
+                  {getFuelLabel(car.fuelType, t)}
                 </Text>
               </View>
             ) : null}
@@ -413,7 +424,7 @@ export default function CarDetailScreen() {
                   color={tokens.textSecondary}
                 />
                 <Text style={styles.detailText}>
-                  {TRANSMISSION_LABELS[car.transmission] ?? car.transmission}
+                  {getTransmissionLabel(car.transmission, t)}
                 </Text>
               </View>
             ) : null}
@@ -429,32 +440,34 @@ export default function CarDetailScreen() {
             ) : null}
           </View>
           <Text style={styles.dateText}>
-            Eklendi: {dayjs(car.createdAt).format("DD.MM.YYYY")}
+            {t("carDetail.addedOn", {
+              date: dayjs(car.createdAt).format("DD.MM.YYYY"),
+            })}
           </Text>
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Analizler</Text>
+          <Text style={styles.sectionTitle}>{t("carDetail.analyses")}</Text>
           <Text style={styles.sectionCount}>{logs.length}</Text>
         </View>
       </>
     );
-  }, [car, logs.length]);
+  }, [car, logs.length, t]);
 
   const emptyState = useMemo(
     () => (
       <View style={styles.emptyAnalysis}>
         <MaterialIcons name="history" size={40} color={tokens.textTertiary} />
-        <Text style={styles.emptyText}>Bu araç için analiz yok</Text>
+        <Text style={styles.emptyText}>{t("carDetail.emptyAnalysis")}</Text>
       </View>
     ),
-    [],
+    [t],
   );
 
   if (carLoading && !carData) {
     return (
       <ScreenContainer
-        title="Araç Detayı"
+        title={t("carDetail.title")}
         showBackButton
         scrollable={false}
         contentContainerStyle={styles.screenContent}
@@ -469,15 +482,15 @@ export default function CarDetailScreen() {
   if (!car) {
     return (
       <ScreenContainer
-        title="Araç Detayı"
+        title={t("carDetail.title")}
         showBackButton
         scrollable={false}
         contentContainerStyle={styles.screenContent}
       >
         <View style={styles.loadingContainer}>
-          <Text style={styles.errorText}>Araç bulunamadı</Text>
+          <Text style={styles.errorText}>{t("carDetail.notFound")}</Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backLink}>Geri dön</Text>
+            <Text style={styles.backLink}>{t("carDetail.back")}</Text>
           </TouchableOpacity>
         </View>
       </ScreenContainer>

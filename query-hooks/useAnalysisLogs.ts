@@ -1,6 +1,8 @@
 import { getAnalysisLogs } from "@/api/get";
+import { normalizeLanguage } from "@/i18n";
 import { AnalyzeMediaLog } from "@/types/ai";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export enum AnalysisLogQueryKeys {
   LOGS = "analysis-logs",
@@ -20,8 +22,11 @@ export interface AnalysisLogListResponse {
   limit: number;
 }
 export const useGetAnalysisLogs = (filters?: AnalysisLogQuery) => {
+  const { i18n } = useTranslation();
+  const language = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+
   return useQuery({
-    queryKey: [AnalysisLogQueryKeys.LOGS, filters],
+    queryKey: [AnalysisLogQueryKeys.LOGS, filters, language],
     queryFn: () => getAnalysisLogs(filters),
     staleTime: 30_000,
   });

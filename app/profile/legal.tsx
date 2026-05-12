@@ -5,6 +5,7 @@ import { useGetLegalDocuments } from "@/query-hooks/useLegal";
 import { LegalDocument, LegalDocumentTypeEnum } from "@/types/legal";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Modal,
@@ -19,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ICON_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   [LegalDocumentTypeEnum.TERMS_OF_USE]: "description",
   [LegalDocumentTypeEnum.PRIVACY_POLICY]: "privacy-tip",
+  [LegalDocumentTypeEnum.KVKK_DISCLOSURE]: "verified-user",
   [LegalDocumentTypeEnum.COOKIE_POLICY]: "cookie",
   [LegalDocumentTypeEnum.TERMS_AND_RULES]: "gavel",
   [LegalDocumentTypeEnum.ACCOUNT_AGREEMENT]: "assignment",
@@ -32,6 +34,8 @@ const LegalDocumentViewer = React.memo(function LegalDocumentViewer({
   document: LegalDocument;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Modal
       visible
@@ -58,7 +62,9 @@ const LegalDocumentViewer = React.memo(function LegalDocumentViewer({
           <Text style={styles.documentText}>
             {document.content.replace(/<[^>]*>/g, "")}
           </Text>
-          <Text style={styles.versionText}>Versiyon {document.version}</Text>
+          <Text style={styles.versionText}>
+            {t("legal.version", { version: document.version })}
+          </Text>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -105,6 +111,7 @@ function Divider() {
 }
 
 export default function LegalScreen() {
+  const { t } = useTranslation();
   const { data, isLoading, refetch } = useGetLegalDocuments();
   const [selected, setSelected] = useState<LegalDocument | null>(null);
 
@@ -122,7 +129,7 @@ export default function LegalScreen() {
 
   return (
     <ScreenContainer
-      title="Yasal"
+      title={t("legal.title")}
       showBackButton
       scrollable={false}
       contentContainerStyle={styles.screenContent}
@@ -152,7 +159,7 @@ export default function LegalScreen() {
       ) : (
         <View style={styles.emptyContainer}>
           <MaterialIcons name="article" size={48} color={tokens.textTertiary} />
-          <Text style={styles.emptyText}>Yasal belge bulunamadı</Text>
+          <Text style={styles.emptyText}>{t("legal.empty")}</Text>
         </View>
       )}
     </ScreenContainer>

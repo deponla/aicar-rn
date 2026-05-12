@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     StyleSheet,
@@ -18,6 +19,7 @@ import {
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function ReactivateAccountScreen() {
+    const { t } = useTranslation();
     const params = useLocalSearchParams<{ email?: string; reason?: string }>();
     const router = useRouter();
     const authStore = useAuthStore();
@@ -50,39 +52,39 @@ export default function ReactivateAccountScreen() {
 
             notify({
                 type: "success",
-                title: "Hesap yeniden etkinleştirildi",
-                message: "Profilinize tekrar erişebilirsiniz.",
+                title: t("reactivateAccount.successTitle"),
+                message: t("reactivateAccount.successMessage"),
             });
             router.replace("/(tabs)/profile");
         } catch (error: unknown) {
             notify({
                 type: "error",
-                title: "Hesap yeniden açılamadı",
+                title: t("reactivateAccount.errorTitle"),
                 message:
                     error instanceof Error
                         ? error.message
-                        : "Bilgilerinizi kontrol edip tekrar deneyin.",
+                        : t("reactivateAccount.errorMessage"),
             });
         }
     };
 
     return (
-        <ScreenContainer title="Hesabı yeniden aç" showBackButton>
+        <ScreenContainer title={t("reactivateAccount.title")} showBackButton>
             <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
                 <View style={styles.heroCard}>
                     <View style={styles.heroIconWrap}>
                         <MaterialIcons name="lock-reset" size={32} color={Colors.primary} />
                     </View>
-                    <Text style={styles.heroTitle}>Hesabınızı yeniden etkinleştirin</Text>
+                    <Text style={styles.heroTitle}>{t("reactivateAccount.heroTitle")}</Text>
                     <Text style={styles.heroText}>
                         {isFrozenLoginRecovery
-                            ? "Giriş sırasında hesabınızın dondurulduğunu fark ettik. Devam etmek için e-posta adresinizi ve şifrenizi doğrulayın."
-                            : "Hesabınızı daha önce dondurduysanız, e-posta adresiniz ve şifrenizle tekrar etkinleştirebilirsiniz."}
+                            ? t("reactivateAccount.frozenDescription")
+                            : t("reactivateAccount.description")}
                     </Text>
                 </View>
 
                 <View style={styles.formCard}>
-                    <Text style={styles.label}>E-posta</Text>
+                    <Text style={styles.label}>{t("reactivateAccount.emailLabel")}</Text>
                     <TextInput
                         style={styles.input}
                         value={email}
@@ -90,11 +92,11 @@ export default function ReactivateAccountScreen() {
                         autoCapitalize="none"
                         autoCorrect={false}
                         keyboardType="email-address"
-                        placeholder="ornek@aicar.com"
+                        placeholder={t("reactivateAccount.emailPlaceholder")}
                         placeholderTextColor="#C7C7CC"
                     />
 
-                    <Text style={styles.label}>Şifre</Text>
+                    <Text style={styles.label}>{t("reactivateAccount.passwordLabel")}</Text>
                     <View style={styles.passwordRow}>
                         <TextInput
                             style={styles.passwordInput}
@@ -103,7 +105,7 @@ export default function ReactivateAccountScreen() {
                             secureTextEntry={!showPassword}
                             autoCapitalize="none"
                             autoCorrect={false}
-                            placeholder="Şifreniz"
+                            placeholder={t("reactivateAccount.passwordPlaceholder")}
                             placeholderTextColor="#C7C7CC"
                         />
                         <TouchableOpacity
@@ -131,7 +133,7 @@ export default function ReactivateAccountScreen() {
                         {reactivateAccount.isPending ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.primaryButtonText}>Hesabımı yeniden aç</Text>
+                            <Text style={styles.primaryButtonText}>{t("reactivateAccount.button")}</Text>
                         )}
                     </TouchableOpacity>
                 </View>

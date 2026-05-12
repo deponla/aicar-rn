@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +17,7 @@ import {
 } from "react-native";
 
 export default function DeleteAccountScreen() {
+  const { t } = useTranslation();
   const authStore = useAuthStore();
   const user = authStore.user?.user;
   const router = useRouter();
@@ -33,12 +35,12 @@ export default function DeleteAccountScreen() {
     }
 
     Alert.alert(
-      "Hesabı kapat",
-      "Hesabınız kapatılacak ve oturumunuz sonlandırılacak. Bu işlemden sonra tekrar giriş yapamazsınız.",
+      t("deleteAccount.confirmTitle"),
+      t("deleteAccount.confirmMessage"),
       [
-        { text: "Vazgeç", style: "cancel" },
+        { text: t("deleteAccount.cancel"), style: "cancel" },
         {
-          text: "Hesabı kapat",
+          text: t("deleteAccount.confirmAction"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -48,16 +50,16 @@ export default function DeleteAccountScreen() {
               await authStore.logout();
               notify({
                 type: "success",
-                title: "Hesap kapatıldı",
+                title: t("deleteAccount.deleted"),
               });
               router.replace("/(tabs)/profile");
             } catch (error: any) {
               notify({
                 type: "error",
-                title: "Hesap kapatılamadı",
+                title: t("deleteAccount.deleteFailed"),
                 message:
                   error?.response?.data?.message ||
-                  "Lütfen daha sonra tekrar deneyin.",
+                  t("deleteAccount.retryLater"),
               });
             }
           },
@@ -68,28 +70,27 @@ export default function DeleteAccountScreen() {
 
   if (!user) {
     return (
-      <ScreenContainer title="Hesap iptali" showBackButton>
+      <ScreenContainer title={t("deleteAccount.title")} showBackButton>
         <View style={styles.emptyState}>
           <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
-          <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+          <Text style={styles.emptyText}>{t("deleteAccount.noUser")}</Text>
         </View>
       </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer title="Hesap iptali" showBackButton>
+    <ScreenContainer title={t("deleteAccount.title")} showBackButton>
       <View style={styles.warningCard}>
         <MaterialIcons name="warning-amber" size={36} color="#DC2626" />
-        <Text style={styles.warningTitle}>Bu işlem geri alınamaz</Text>
+        <Text style={styles.warningTitle}>{t("deleteAccount.warningTitle")}</Text>
         <Text style={styles.warningText}>
-          Hesabınız soft delete ile kapatılacak, tüm oturumlarınız
-          sonlandırılacak ve korumalı ekranlara erişiminiz kesilecek.
+          {t("deleteAccount.warningText")}
         </Text>
       </View>
 
       <View style={styles.detailCard}>
-        <Text style={styles.detailTitle}>Kapatılacak hesap</Text>
+        <Text style={styles.detailTitle}>{t("deleteAccount.accountTitle")}</Text>
         <Text style={styles.detailText}>{user.email}</Text>
         <Text style={styles.detailText}>
           {user.name} {user.surname}
@@ -97,9 +98,9 @@ export default function DeleteAccountScreen() {
       </View>
 
       <View style={styles.confirmationCard}>
-        <Text style={styles.confirmationTitle}>E-posta doğrulaması</Text>
+        <Text style={styles.confirmationTitle}>{t("deleteAccount.emailTitle")}</Text>
         <Text style={styles.confirmationText}>
-          Devam etmek için hesap e-posta adresinizi tekrar yazın.
+          {t("deleteAccount.emailDescription")}
         </Text>
         <TextInput
           style={styles.input}
@@ -127,7 +128,7 @@ export default function DeleteAccountScreen() {
         ) : (
           <>
             <MaterialIcons name="delete-forever" size={20} color="#FFFFFF" />
-            <Text style={styles.deleteButtonText}>Hesabımı kapat</Text>
+            <Text style={styles.deleteButtonText}>{t("deleteAccount.button")}</Text>
           </>
         )}
       </TouchableOpacity>

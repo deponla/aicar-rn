@@ -117,5 +117,150 @@
             "recommendation": "Recommendation",
             "warnings": "Warnings"
         }
+    },
+    "legal": {
+        "title": "Legal",
+        "version": "Version {{version}}",
+        "empty": "No legal documents were found."
+    },
+    "carDetail": {
+        "title": "Car Details",
+        "notFound": "Car not found.",
+        "back": "Go back",
+        "updated": "Car updated",
+        "updateFailed": "Update failed",
+        "addedOn": "Added: {{date}}",
+        "analyses": "Analyses",
+        "emptyAnalysis": "There are no analyses for this car yet.",
+        "editTitle": "Edit Car",
+        "brandLabel": "Brand *",
+        "brandPlaceholder": "e.g. Toyota",
+        "modelLabel": "Model *",
+        "modelPlaceholder": "e.g. Corolla",
+        "yearLabel": "Year *",
+        "yearPlaceholder": "e.g. 2020",
+        "fuelTypeLabel": "Fuel Type",
+        "transmissionLabel": "Transmission",
+        "engineCcLabel": "Engine Volume (cc)",
+        "engineCcPlaceholder": "e.g. 1600",
+        "save": "Save",
+        "fuel": {
+            "gasoline": "Gasoline",
+            "diesel": "Diesel",
+            "lpg": "LPG",
+            "electric": "Electric",
+            "hybrid": "Hybrid"
+        },
+        "transmission": {
+            "manual": "Manual",
+            "automatic": "Automatic"
+        }
+    },
+    "deleteAccount": {
+        "title": "Delete Account",
+        "noUser": "User information could not be found.",
+        "confirmTitle": "Delete account",
+        "confirmMessage": "Your account will be closed and your session will end. You will not be able to sign in again afterward.",
+        "cancel": "Cancel",
+        "confirmAction": "Delete account",
+        "deleted": "Account deleted",
+        "deleteFailed": "Account could not be deleted",
+        "retryLater": "Please try again later.",
+        "warningTitle": "This action cannot be undone",
+        "warningText": "Your account will be soft-deleted, all sessions will be terminated, and access to protected screens will be revoked.",
+        "accountTitle": "Account to be closed",
+        "emailTitle": "Email confirmation",
+        "emailDescription": "To continue, re-enter your account email address.",
+        "button": "Delete my account"
+    },
+    "reactivateAccount": {
+        "title": "Reactivate Account",
+        "heroTitle": "Reactivate your account",
+        "description": "If you previously froze your account, you can reactivate it with your email address and password.",
+        "frozenDescription": "We noticed that your account is frozen during sign-in. Verify your email address and password to continue.",
+        "emailLabel": "Email",
+        "emailPlaceholder": "example@aicar.com",
+        "passwordLabel": "Password",
+        "passwordPlaceholder": "Your password",
+        "button": "Reactivate my account",
+        "successTitle": "Account reactivated",
+        "successMessage": "You can access your profile again.",
+        "errorTitle": "Account could not be reactivated",
+        "errorMessage": "Check your credentials and try again."
+    },
+    "about": {
+        "title": "About",
+        "tagline": "AI-powered vehicle analysis",
+        "versionLabel": "Version",
+        "buildLabel": "Build",
+        "platformLabel": "Platform",
+        "checkUpdates": "Check for Updates",
+        "updateAvailableTitle": "Update available",
+        "updateAvailableMessage": "New version: {{version}}",
+        "upToDateTitle": "Your app is up to date",
+        "versionValue": "Version {{version}}",
+        "links": {
+            "terms": "Terms of Use",
+            "privacy": "Privacy Policy",
+            "openSource": "Open Source Licenses"
+        },
+        "copyright": "© {{year}} AiCar. All rights reserved."
+    },
+    "feedbackScreen": {
+        "title": "Complaint & Suggestion",
+        "heading": "Choose your feedback type",
+        "description": "Select the topic you want to share with our team and provide the details.",
+        "historyButton": "My submissions",
+        "types": {
+            "complaint": {
+                "title": "Complaint",
+                "description": "Report the problems and negative experiences you encountered."
+            },
+            "suggestion": {
+                "title": "Suggestion",
+                "description": "Share your ideas to improve the product or experience."
+            }
+        },
+        "subjectLabel": "Subject",
+        "subjectPlaceholder": "Write a short title",
+        "subjectHelper": "Minimum 4 characters",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Please share the details",
+        "messageHelper": "Minimum 10 characters",
+        "submit": "Send",
+        "successComplaintTitle": "Complaint sent",
+        "successSuggestionTitle": "Suggestion sent",
+        "successMessage": "Our team will review your feedback.",
+        "submitErrorTitle": "Feedback could not be sent",
+        "submitErrorMessage": "Please try again later."
+    },
+    "profileScreen": {
+        "guestTitle": "Sign in to your account",
+        "guestDescription": "Manage your profile, access your garage, and use all features.",
+        "register": "Register",
+        "termsPrefix": "By continuing, you agree to the",
+        "termsMiddle": "and",
+        "termsSuffix": ".",
+        "emailChip": "Email",
+        "phoneChip": "Phone",
+        "permissions": "Permissions",
+        "support": "Help & Support",
+        "feedback": "Complaint & Suggestion",
+        "feedbackHistory": "My Feedback",
+        "logout": "Log Out",
+        "logoutConfirm": "Are you sure you want to log out?",
+        "cancel": "Cancel",
+        "loginStartFailed": "Sign-in could not be started",
+        "registerStartFailed": "Registration could not be started",
+        "authFailedTitle": "Sign-in could not be completed",
+        "sections": {
+            "account": "MY ACCOUNT",
+            "support": "SUPPORT"
+        },
+        "errors": {
+            "frontendUrlMissing": "Frontend URL configuration is missing.",
+            "additionalActionRequired": "An additional action is required for your account. Please try again.",
+            "browserSessionFailed": "A problem occurred while starting the browser session."
+        }
     }
 }

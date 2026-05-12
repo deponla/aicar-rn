@@ -117,5 +117,150 @@
             "recommendation": "Oneri",
             "warnings": "Uyarilar"
         }
+    },
+    "legal": {
+        "title": "Yasal",
+        "version": "Versiyon {{version}}",
+        "empty": "Yasal belge bulunamadi."
+    },
+    "carDetail": {
+        "title": "Arac Detayi",
+        "notFound": "Arac bulunamadi.",
+        "back": "Geri don",
+        "updated": "Arac guncellendi",
+        "updateFailed": "Guncelleme basarisiz",
+        "addedOn": "Eklendi: {{date}}",
+        "analyses": "Analizler",
+        "emptyAnalysis": "Bu arac icin henuz analiz yok.",
+        "editTitle": "Araci Duzenle",
+        "brandLabel": "Marka *",
+        "brandPlaceholder": "Orn. Toyota",
+        "modelLabel": "Model *",
+        "modelPlaceholder": "Orn. Corolla",
+        "yearLabel": "Yil *",
+        "yearPlaceholder": "Orn. 2020",
+        "fuelTypeLabel": "Yakit Tipi",
+        "transmissionLabel": "Vites",
+        "engineCcLabel": "Motor Hacmi (cc)",
+        "engineCcPlaceholder": "Orn. 1600",
+        "save": "Kaydet",
+        "fuel": {
+            "gasoline": "Benzin",
+            "diesel": "Dizel",
+            "lpg": "LPG",
+            "electric": "Elektrik",
+            "hybrid": "Hibrit"
+        },
+        "transmission": {
+            "manual": "Manuel",
+            "automatic": "Otomatik"
+        }
+    },
+    "deleteAccount": {
+        "title": "Hesap iptali",
+        "noUser": "Kullanici bilgisi bulunamadi.",
+        "confirmTitle": "Hesabi kapat",
+        "confirmMessage": "Hesabiniz kapatilacak ve oturumunuz sonlandirilacak. Bu islemden sonra tekrar giris yapamazsiniz.",
+        "cancel": "Vazgec",
+        "confirmAction": "Hesabi kapat",
+        "deleted": "Hesap kapatildi",
+        "deleteFailed": "Hesap kapatilamadi",
+        "retryLater": "Lutfen daha sonra tekrar deneyin.",
+        "warningTitle": "Bu islem geri alinamaz",
+        "warningText": "Hesabiniz soft delete ile kapatilacak, tum oturumlariniz sonlandirilacak ve korumali ekranlara erisiminiz kesilecek.",
+        "accountTitle": "Kapatilacak hesap",
+        "emailTitle": "E-posta dogrulamasi",
+        "emailDescription": "Devam etmek icin hesap e-posta adresinizi tekrar yazin.",
+        "button": "Hesabimi kapat"
+    },
+    "reactivateAccount": {
+        "title": "Hesabi yeniden ac",
+        "heroTitle": "Hesabinizi yeniden etkinlestirin",
+        "description": "Hesabinizi daha once dondurduysaniz, e-posta adresiniz ve sifrenizle tekrar etkinlestirebilirsiniz.",
+        "frozenDescription": "Giris sirasinda hesabinizin donduruldugunu fark ettik. Devam etmek icin e-posta adresinizi ve sifrenizi dogrulayin.",
+        "emailLabel": "E-posta",
+        "emailPlaceholder": "ornek@aicar.com",
+        "passwordLabel": "Sifre",
+        "passwordPlaceholder": "Sifreniz",
+        "button": "Hesabimi yeniden ac",
+        "successTitle": "Hesap yeniden etkinlestirildi",
+        "successMessage": "Profilinize tekrar erisebilirsiniz.",
+        "errorTitle": "Hesap yeniden acilamadi",
+        "errorMessage": "Bilgilerinizi kontrol edip tekrar deneyin."
+    },
+    "about": {
+        "title": "Hakkinda",
+        "tagline": "Yapay zeka ile arac analizi",
+        "versionLabel": "Surum",
+        "buildLabel": "Build",
+        "platformLabel": "Platform",
+        "checkUpdates": "Guncellemeleri Kontrol Et",
+        "updateAvailableTitle": "Guncelleme mevcut",
+        "updateAvailableMessage": "Yeni surum: {{version}}",
+        "upToDateTitle": "Uygulamaniz guncel",
+        "versionValue": "Surum {{version}}",
+        "links": {
+            "terms": "Kullanim Kosullari",
+            "privacy": "Gizlilik Politikasi",
+            "openSource": "Acik Kaynak Lisanslari"
+        },
+        "copyright": "© {{year}} AiCar. Tum haklari saklidir."
+    },
+    "feedbackScreen": {
+        "title": "Sikayet ve Oneri",
+        "heading": "Geri bildirim turunu secin",
+        "description": "Ekibimizle paylasmak istediginiz konuyu secin ve ayrintilari ekleyin.",
+        "historyButton": "Gonderilerim",
+        "types": {
+            "complaint": {
+                "title": "Sikayet",
+                "description": "Yasadiginiz sorunlari ve memnuniyetsizlikleri iletin."
+            },
+            "suggestion": {
+                "title": "Oneri",
+                "description": "Urunu veya deneyimi gelistirecek fikirlerinizi paylasin."
+            }
+        },
+        "subjectLabel": "Konu",
+        "subjectPlaceholder": "Kisa bir baslik yazin",
+        "subjectHelper": "En az 4 karakter",
+        "messageLabel": "Mesaj",
+        "messagePlaceholder": "Lutfen ayrintilari paylasin",
+        "messageHelper": "En az 10 karakter",
+        "submit": "Gonder",
+        "successComplaintTitle": "Sikayet gonderildi",
+        "successSuggestionTitle": "Oneri gonderildi",
+        "successMessage": "Ekibimiz geri bildiriminizi inceleyecek.",
+        "submitErrorTitle": "Geri bildirim gonderilemedi",
+        "submitErrorMessage": "Lutfen daha sonra tekrar deneyin."
+    },
+    "profileScreen": {
+        "guestTitle": "Hesabiniza giris yapin",
+        "guestDescription": "Profilinizi yonetin, garajiniza erisin ve tum ozellikleri kullanin.",
+        "register": "Kayit Ol",
+        "termsPrefix": "Devam ederek",
+        "termsMiddle": "ve",
+        "termsSuffix": "'ni kabul etmis olursunuz.",
+        "emailChip": "E-posta",
+        "phoneChip": "Telefon",
+        "permissions": "Izinler",
+        "support": "Yardim & Destek",
+        "feedback": "Sikayet ve Oneri",
+        "feedbackHistory": "Geri Bildirimlerim",
+        "logout": "Cikis Yap",
+        "logoutConfirm": "Cikis yapmak istediginize emin misiniz?",
+        "cancel": "Iptal",
+        "loginStartFailed": "Giris baslatilamadi",
+        "registerStartFailed": "Kayit baslatilamadi",
+        "authFailedTitle": "Giris tamamlanamadi",
+        "sections": {
+            "account": "HESABIM",
+            "support": "DESTEK"
+        },
+        "errors": {
+            "frontendUrlMissing": "Frontend URL yapilandirmasi eksik.",
+            "additionalActionRequired": "Hesabiniz icin ek bir islem gerekiyor. Lutfen tekrar deneyin.",
+            "browserSessionFailed": "Tarayici oturumu baslatilirken bir sorun olustu."
+        }
     }
 }
