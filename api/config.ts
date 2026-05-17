@@ -1,6 +1,10 @@
 import axios, { AxiosError } from "axios";
 import { ErrorResponse } from "../types/utils";
 import i18n, { getCurrentLanguage } from "@/i18n";
+import {
+  isUnauthorizedStatus,
+  triggerUnauthorizedHandler,
+} from "@/api/auth-session";
 
 interface ApiErrorResponse extends Partial<ErrorResponse> {
   message?: string;
@@ -60,6 +64,12 @@ instance.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiErrorResponse>) => {
     const responseData = error.response?.data;
+    const statusCode = error.response?.status ?? responseData?.statusCode;
+
+    if (isUnauthorizedStatus(statusCode)) {
+      void triggerUnauthorizedHandler();
+    }
+
     if (
       responseData?.errors &&
       Array.isArray(responseData.errors) &&
@@ -68,6 +78,7 @@ instance.interceptors.response.use(
       throw new ApiRequestError(
         {
           ...responseData,
+          statusCode,
           message: responseData.errors.join(", "),
         },
         error.message || getRequestFailedMessage(),
@@ -78,6 +89,7 @@ instance.interceptors.response.use(
       responseData
         ? {
             ...responseData,
+            statusCode,
             message:
               responseData.message ||
               error.message ||
