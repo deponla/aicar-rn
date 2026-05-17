@@ -7,6 +7,28 @@ import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+type TabIconName = React.ComponentProps<typeof MaterialIcons>["name"];
+
+function TabBarIcon({
+  color,
+  focused,
+  name,
+}: {
+  color: string;
+  focused: boolean;
+  name: TabIconName;
+}) {
+  return (
+    <View style={[tabStyles.iconSlot, focused && tabStyles.iconSlotActive]}>
+      <MaterialIcons
+        name={name}
+        size={24}
+        color={focused ? tokens.textInverse : color}
+      />
+    </View>
+  );
+}
+
 export default function TabLayout() {
   const { t: translate } = useTranslation();
 
@@ -61,56 +83,44 @@ export default function TabLayout() {
         name="index"
         options={{
           title: translate("tabs.scanner"),
-          tabBarIcon: ({ color, focused }) =>
-            focused ? (
-              <View style={tabStyles.activeTab}>
-                <MaterialIcons name="center-focus-strong" size={22} color={tokens.textInverse} />
-              </View>
-            ) : (
-              <MaterialIcons name="center-focus-strong" size={24} color={color} />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              color={color}
+              focused={focused}
+              name="center-focus-strong"
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: translate("tabs.garage"),
-          tabBarIcon: ({ color, focused }) =>
-            focused ? (
-              <View style={tabStyles.activeTab}>
-                <MaterialIcons name="directions-car" size={22} color={tokens.textInverse} />
-              </View>
-            ) : (
-              <MaterialIcons name="directions-car" size={24} color={color} />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              color={color}
+              focused={focused}
+              name="directions-car"
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
           title: translate("tabs.insights"),
-          tabBarIcon: ({ color, focused }) =>
-            focused ? (
-              <View style={tabStyles.activeTab}>
-                <MaterialIcons name="bar-chart" size={22} color={tokens.textInverse} />
-              </View>
-            ) : (
-              <MaterialIcons name="bar-chart" size={24} color={color} />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon color={color} focused={focused} name="bar-chart" />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: translate("tabs.settings"),
-          tabBarIcon: ({ color, focused }) =>
-            focused ? (
-              <View style={tabStyles.activeTab}>
-                <MaterialIcons name="settings" size={22} color={tokens.textInverse} />
-              </View>
-            ) : (
-              <MaterialIcons name="settings" size={24} color={color} />
-            ),
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon color={color} focused={focused} name="settings" />
+          ),
         }}
       />
     </Tabs>
@@ -118,14 +128,15 @@ export default function TabLayout() {
 }
 
 const tabStyles = StyleSheet.create({
-  activeTab: {
-    minWidth: 56,
+  iconSlot: {
+    width: 52,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.primary,
     borderRadius: 9999,
-    paddingHorizontal: 20,
-    paddingVertical: 6,
+  },
+  iconSlotActive: {
+    backgroundColor: Colors.primary,
     ...ambientShadow,
   },
 });
