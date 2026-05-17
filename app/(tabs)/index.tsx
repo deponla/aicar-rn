@@ -475,6 +475,8 @@ export default function ScanScreen() {
 
   return (
     <>
+      <HomeHeader />
+
       <ScrollView
         automaticallyAdjustContentInsets={false}
         contentInsetAdjustmentBehavior="never"
@@ -483,13 +485,11 @@ export default function ScanScreen() {
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop: 12,
+            paddingTop: 16,
             paddingBottom: Math.max(insets.bottom + 112, 124),
           },
         ]}
       >
-        <HomeHeader />
-
         <View style={styles.heroCard}>
           <MaterialIcons name="center-focus-strong" size={72} color={Colors.secondaryContainer} />
           <Text style={styles.title}>{translate('scanScreen.title')}</Text>

@@ -27,7 +27,7 @@ export default function HomeHeader({
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top + 4 },
+        { paddingTop: insets.top },
       ]}
     >
       <View style={styles.left}>
@@ -59,6 +59,7 @@ export default function HomeHeader({
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => router.push("/(tabs)/profile")}
+          style={styles.avatarButton}
         >
           {userPhoto ? (
             <Image source={{ uri: userPhoto }} style={styles.avatar} />
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 8,
     minHeight: 48,
   },
   left: {
@@ -113,7 +114,10 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     borderRadius: 9999,
-    padding: 8,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   brandTitle: {
     fontFamily: FontFamily.bold,
@@ -125,6 +129,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  avatarButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   creditBadge: {
     flexDirection: "row",
