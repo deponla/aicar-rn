@@ -1,12 +1,15 @@
 import { instance } from "@/api/config";
 import { changeAppLanguage } from "@/i18n";
 import { postLogout } from "@/api/post";
+import { useCreditsStore } from "@/store/useCredits";
 import { queryClient } from "@/utils/queryClient";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 import { AuthStatusEnum, UserResponseData } from "../types/auth";
 
 export const SECURE_STORE_KEY = "auth";
+
+let clearLocalAuthStatePromise: Promise<void> | null = null;
 
 type AuthStore = {
   user: UserResponseData | null;
@@ -33,13 +36,26 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
         // Proceed with local logout even if API call fails
       }
     }
-    await SecureStore.deleteItemAsync(SECURE_STORE_KEY);
-    set({ user: null, status: AuthStatusEnum.LOGGED_OUT });
-    delete instance.defaults.headers.common["Authorization"];
-    void changeAppLanguage();
-    queryClient.clear();
+    await clearLocalAuthState();
   },
 }));
+
+export function clearLocalAuthState() {
+  if (!clearLocalAuthStatePromise) {
+    clearLocalAuthStatePromise = (async () => {
+      await SecureStore.deleteItemAsync(SECURE_STORE_KEY);
+      useCreditsStore.getState().reset();
+      useAuthStore.setState({ user: null, status: AuthStatusEnum.LOGGED_OUT });
+      delete instance.defaults.headers.common["Authorization"];
+      void changeAppLanguage();
+      queryClient.clear();
+    })().finally(() => {
+      clearLocalAuthStatePromise = null;
+    });
+  }
+
+  return clearLocalAuthStatePromise;
+}
 
 export function mergeAuthenticatedUser(
   userPatch: Partial<UserResponseData["user"]>,

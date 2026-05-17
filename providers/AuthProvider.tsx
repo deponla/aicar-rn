@@ -1,7 +1,15 @@
 import { getMe } from "@/api/get";
 import { postRefreshToken } from "@/api/post";
+import {
+  clearUnauthorizedHandler,
+  registerUnauthorizedHandler,
+} from "@/api/auth-session";
 import { Colors } from "@/constants/theme";
-import { SECURE_STORE_KEY, useAuthStore } from "@/store/useAuth";
+import {
+  clearLocalAuthState,
+  SECURE_STORE_KEY,
+  useAuthStore,
+} from "@/store/useAuth";
 import { registerDeviceAfterLogin } from "@/utils/deviceRegistration";
 import { AuthStatusEnum, UserResponseData } from "@/types/auth";
 import * as SecureStore from "expo-secure-store";
@@ -17,6 +25,14 @@ export default function AuthProvider({
   const { t } = useTranslation();
   const authStore = useAuthStore();
   const lastRegisteredAccessToken = useRef<string | null>(null);
+
+  useEffect(() => {
+    registerUnauthorizedHandler(() => clearLocalAuthState());
+
+    return () => {
+      clearUnauthorizedHandler();
+    };
+  }, []);
 
   useEffect(() => {
     async function loadAuthStore() {
@@ -48,10 +64,10 @@ export default function AuthProvider({
               authStore.login(data);
             })
             .catch(() => {
-              authStore.logout();
+              clearLocalAuthState();
             });
         } else if (accessTokenExpires < nowTime) {
-          authStore.logout();
+          clearLocalAuthState();
         } else {
           getMe({ token: parsedResult.accessToken.token })
             .then((response) => {
@@ -61,11 +77,11 @@ export default function AuthProvider({
               });
             })
             .catch(() => {
-              authStore.logout();
+              clearLocalAuthState();
             });
         }
       } else {
-        authStore.logout();
+        clearLocalAuthState();
       }
     }
     loadAuthStore();
@@ -112,7 +128,7 @@ export default function AuthProvider({
               authStore.login(data);
             })
             .catch(() => {
-              authStore.logout();
+              clearLocalAuthState();
             });
         }
       }

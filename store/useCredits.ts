@@ -1,10 +1,11 @@
-import { create } from 'zustand';
-import { UserCredits } from '@/types/credit';
+import { create } from "zustand";
+import { UserCredits } from "@/types/credit";
 
 type CreditsStore = {
   credits: UserCredits | null;
   setCredits: (credits: UserCredits) => void;
   decrementCredit: () => void;
+  reset: () => void;
 };
 
 export const useCreditsStore = create<CreditsStore>()((set, get) => ({
@@ -16,4 +17,5 @@ export const useCreditsStore = create<CreditsStore>()((set, get) => ({
       set({ credits: { ...current, remaining: current.remaining - 1 } });
     }
   },
+  reset: () => set({ credits: null }),
 }));
