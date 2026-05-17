@@ -1,10 +1,13 @@
 import { LegendList } from "@legendapp/list";
-import { Colors, tokens } from "@/constants/theme";
+import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
+import LoginRequired from "@/components/LoginRequired";
 import ScreenContainer from "@/components/ScreenContainer";
 import { useNotification } from "@/components/Notification";
 import { useGetCar, useUpdateCar } from "@/query-hooks/useCars";
 import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
+import { useAuthStore } from "@/store/useAuth";
 import { AnalyzeMediaLog, AiAnalysisType, AiUrgency } from "@/types/ai";
+import { AuthStatusEnum } from "@/types/auth";
 import {
   Car,
   FuelTypeEnum,
@@ -159,6 +162,9 @@ const EditCarModal = React.memo(function EditCarModal({
   const [engineCC, setEngineCC] = useState(
     car.engineCC != null ? String(car.engineCC) : "",
   );
+  const [currentMileage, setCurrentMileage] = useState(
+    car.currentMileage != null ? String(car.currentMileage) : "",
+  );
 
   const handleSubmit = useCallback(() => {
     const parsedYear = parseInt(year, 10);
@@ -173,8 +179,18 @@ const EditCarModal = React.memo(function EditCarModal({
       fuelType,
       transmission,
       engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
+      currentMileage: currentMileage ? parseInt(currentMileage, 10) : undefined,
     });
-  }, [brand, engineCC, fuelType, model, onSubmit, transmission, year]);
+  }, [
+    brand,
+    currentMileage,
+    engineCC,
+    fuelType,
+    model,
+    onSubmit,
+    transmission,
+    year,
+  ]);
 
   return (
     <Modal
@@ -285,6 +301,16 @@ const EditCarModal = React.memo(function EditCarModal({
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
+
+          <Text style={styles.inputLabel}>{t("carDetail.mileageLabel")}</Text>
+          <TextInput
+            style={styles.input}
+            value={currentMileage}
+            onChangeText={setCurrentMileage}
+            placeholder={t("carDetail.mileagePlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+            keyboardType="number-pad"
+          />
         </ScrollView>
         <View style={styles.modalFooter}>
           <TouchableOpacity
@@ -318,18 +344,24 @@ function ListSeparator() {
 export default function CarDetailScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const authStore = useAuthStore();
+  const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const router = useRouter();
   const { notify } = useNotification();
   const [editVisible, setEditVisible] = useState(false);
 
   const { data: carData, isLoading: carLoading, refetch: refetchCar } = useGetCar(
     id ?? "",
+    { enabled: isLoggedIn && !!id },
   );
   const {
     data: logsData,
     isLoading: logsLoading,
     refetch: refetchLogs,
-  } = useGetAnalysisLogs({ carId: id ?? "" });
+  } = useGetAnalysisLogs(
+    { carId: id ?? "" },
+    { enabled: isLoggedIn && !!id },
+  );
   const updateCar = useUpdateCar();
 
   const isLoading = carLoading || logsLoading;
@@ -438,6 +470,18 @@ export default function CarDetailScreen() {
                 <Text style={styles.detailText}>{car.engineCC} cc</Text>
               </View>
             ) : null}
+            {car.currentMileage != null ? (
+              <View style={styles.detailChip}>
+                <MaterialIcons
+                  name="timeline"
+                  size={14}
+                  color={tokens.textSecondary}
+                />
+                <Text style={styles.detailText}>
+                  {car.currentMileage.toLocaleString()} km
+                </Text>
+              </View>
+            ) : null}
           </View>
           <Text style={styles.dateText}>
             {t("carDetail.addedOn", {
@@ -463,6 +507,16 @@ export default function CarDetailScreen() {
     ),
     [t],
   );
+
+  if (!isLoggedIn) {
+    return (
+      <LoginRequired
+        pageTitle={t("carDetail.title")}
+        title={t("tabs.signIn")}
+        description={t("history.loginRequiredDescription")}
+      />
+    );
+  }
 
   if (carLoading && !carData) {
     return (
@@ -575,16 +629,15 @@ const styles = StyleSheet.create({
   backLink: {
     fontSize: 15,
     color: Colors.primary,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
   },
   carCard: {
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderRadius: 16,
     padding: 16,
     gap: 10,
-    borderWidth: 1,
-    borderColor: tokens.borderSubtle,
     marginBottom: 24,
+    ...ambientShadow,
   },
   carCardHeader: {
     flexDirection: "row",
@@ -593,7 +646,7 @@ const styles = StyleSheet.create({
   },
   carCardTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
     color: tokens.textPrimary,
   },
   detailsRow: {
@@ -613,7 +666,7 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 12,
     color: tokens.textSecondary,
-    fontWeight: "500",
+    fontFamily: FontFamily.medium,
   },
   dateText: {
     fontSize: 12,
@@ -627,21 +680,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
     color: tokens.textPrimary,
   },
   sectionCount: {
     fontSize: 13,
     color: tokens.textTertiary,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
   },
   analysisCard: {
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderRadius: 14,
     padding: 14,
     gap: 8,
-    borderWidth: 1,
-    borderColor: tokens.borderSubtle,
+    ...ambientShadow,
   },
   cardHeader: {
     flexDirection: "row",
@@ -665,7 +717,7 @@ const styles = StyleSheet.create({
   },
   analysisTitle: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
     color: tokens.textPrimary,
     flex: 1,
   },
@@ -676,7 +728,7 @@ const styles = StyleSheet.create({
   },
   urgencyText: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
   },
   analysisSummary: {
     fontSize: 13,
@@ -725,7 +777,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
     color: tokens.textPrimary,
   },
   modalBody: {
@@ -740,7 +792,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
     color: tokens.textPrimary,
     marginBottom: 6,
     marginTop: 14,
@@ -775,15 +827,15 @@ const styles = StyleSheet.create({
   selectChipText: {
     fontSize: 13,
     color: tokens.textSecondary,
-    fontWeight: "500",
+    fontFamily: FontFamily.medium,
   },
   selectChipTextActive: {
     color: "#FFFFFF",
   },
   submitButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: tokens.primary,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 9999,
     alignItems: "center",
   },
   submitButtonDisabled: {
@@ -792,6 +844,6 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
   },
 });

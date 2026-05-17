@@ -1,6 +1,6 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { postCheckAppVersion } from "@/api/post";
 import { MaterialIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
@@ -190,7 +190,7 @@ export default function AboutScreen() {
                             style={styles.appIcon}
                         />
                     ) : (
-                        <MaterialIcons name="directions-car" size={40} color="#fff" />
+                        <MaterialIcons name="directions-car" size={40} color={tokens.textInverse} />
                     )}
                 </View>
                 <Text style={[styles.appName, { color: t.textPrimary }]}>AiCar</Text>
@@ -226,10 +226,10 @@ export default function AboutScreen() {
                 activeOpacity={0.8}
             >
                 {isChecking ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color={tokens.textInverse} />
                 ) : (
                     <>
-                        <MaterialIcons name="system-update" size={20} color="#fff" />
+                        <MaterialIcons name="system-update" size={20} color={tokens.textInverse} />
                         <Text style={styles.updateButtonText}>
                             {translate("about.checkUpdates")}
                         </Text>
@@ -306,10 +306,10 @@ const styles = StyleSheet.create({
         width: 30,
     },
     modalTitle: {
+        fontFamily: FontFamily.semiBold,
         flex: 1,
         textAlign: "center",
         fontSize: 17,
-        fontWeight: "600",
     },
     closeButton: {
         padding: 4,
@@ -337,6 +337,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 8,
+        ...ambientShadow,
     },
     appIcon: {
         width: 80,
@@ -344,19 +345,21 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     appName: {
+        fontFamily: FontFamily.bold,
         fontSize: 24,
-        fontWeight: "800",
         letterSpacing: -0.5,
     },
     appTagline: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
     },
     versionCard: {
-        borderRadius: 16,
+        borderRadius: 20,
         borderWidth: 1,
         paddingHorizontal: 18,
         paddingVertical: 8,
         gap: 0,
+        ...ambientShadow,
     },
     infoRow: {
         flexDirection: "row",
@@ -365,34 +368,36 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     infoLabel: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
     },
     infoValue: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 14,
-        fontWeight: "600",
     },
     updateButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        borderRadius: 14,
+        borderRadius: 9999,
         minHeight: 48,
         marginTop: 16,
     },
     updateButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.semiBold,
+        color: tokens.textInverse,
         fontSize: 15,
-        fontWeight: "600",
     },
     disabledButton: {
         opacity: 0.6,
     },
     linksCard: {
-        borderRadius: 16,
+        borderRadius: 20,
         borderWidth: 1,
         marginTop: 24,
         overflow: "hidden",
+        ...ambientShadow,
     },
     linkRow: {
         flexDirection: "row",
@@ -402,8 +407,8 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
     },
     linkLabel: {
+        fontFamily: FontFamily.medium,
         fontSize: 15,
-        fontWeight: "500",
         flex: 1,
     },
     linkDivider: {
@@ -415,6 +420,7 @@ const styles = StyleSheet.create({
         paddingTop: 32,
     },
     footerText: {
+        fontFamily: FontFamily.regular,
         fontSize: 12,
     },
 });

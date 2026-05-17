@@ -1,5 +1,5 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import * as ImagePicker from "expo-image-picker";
 import * as Notifications from "expo-notifications";
 import React, { useCallback, useEffect, useState } from "react";
@@ -32,7 +32,7 @@ function PermissionCard({
       style={[
         styles.card,
         {
-          backgroundColor: tokens.bgSurface,
+          backgroundColor: tokens.surfaceContainerLowest,
           borderColor: granted ? tokens.success + "30" : tokens.borderDefault,
         },
       ]}
@@ -93,7 +93,7 @@ function PermissionCard({
         <Text
           style={[
             styles.cardButtonText,
-            { color: granted ? tokens.textSecondary : "#fff" },
+            { color: granted ? tokens.textSecondary : tokens.textInverse },
           ]}
         >
           {granted ? "Ayarları Yönet" : "İzin Ver"}
@@ -221,12 +221,13 @@ export default function PermissionsScreen() {
 
 const styles = StyleSheet.create({
   summaryText: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
     marginHorizontal: 16,
     marginBottom: 16,
   },
   summaryCount: {
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
     fontSize: 15,
   },
   cardsContainer: {
@@ -235,9 +236,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 20,
+    ...ambientShadow,
   },
   cardHeader: {
     flexDirection: "row",
@@ -246,8 +248,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardLabel: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 16,
-    fontWeight: "600",
   },
   statusBadge: {
     flexDirection: "row",
@@ -263,10 +265,11 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
   },
   statusText: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 12,
-    fontWeight: "600",
   },
   cardDesc: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 16,
@@ -275,11 +278,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 9999,
   },
   cardButtonText: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 14,
-    fontWeight: "600",
   },
   footer: {
     alignItems: "center",
@@ -288,12 +291,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   footerText: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     textAlign: "center",
     lineHeight: 18,
   },
   footerLink: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 14,
-    fontWeight: "600",
   },
 });

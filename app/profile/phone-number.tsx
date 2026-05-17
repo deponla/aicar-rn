@@ -1,13 +1,14 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import {
   usePatchUsers,
   useSendSmsOtp,
   useVerifySmsOtp,
 } from "@/query-hooks/useUser";
-import { useAuthStore } from "@/store/useAuth";
+import { mergeAuthenticatedUser, useAuthStore } from "@/store/useAuth";
 import { SmsOtpType } from "@/types/user";
+import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -42,7 +43,7 @@ export default function PhoneNumberScreen() {
     return (
       <ScreenContainer title="Cep telefonu numaram" showBackButton>
         <View style={styles.emptyState}>
-          <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
+          <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
           <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
         </View>
       </ScreenContainer>
@@ -50,18 +51,6 @@ export default function PhoneNumberScreen() {
   }
 
   const isDirty = phone.trim() !== savedPhone;
-
-  const syncUser = (nextPhone: string, isPhoneVerified: boolean) => {
-    if (!authStore.user) return;
-    authStore.login({
-      ...authStore.user,
-      user: {
-        ...authStore.user.user,
-        phone: nextPhone,
-        isPhoneVerified,
-      },
-    });
-  };
 
   const handleSavePhone = async () => {
     try {
@@ -74,19 +63,22 @@ export default function PhoneNumberScreen() {
 
       const nextPhone = phone.trim();
       setSavedPhone(nextPhone);
-      syncUser(nextPhone, false);
+      mergeAuthenticatedUser({
+        phone: nextPhone,
+        isPhoneVerified: false,
+      });
 
       notify({
         type: "success",
         title: "Telefon numarası güncellendi",
         message: "Yeni numaranızı doğrulamanız gerekiyor.",
       });
-    } catch (error: any) {
-      notify({
-        type: "error",
+    } catch (error: unknown) {
+      notifyApiError({
+        error,
+        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        notify,
         title: "Telefon güncellenemedi",
-        message:
-          error?.response?.data?.message || "Lütfen daha sonra tekrar deneyin.",
       });
     }
   };
@@ -102,12 +94,12 @@ export default function PhoneNumberScreen() {
         title: "Doğrulama kodu gönderildi",
         message: response.message,
       });
-    } catch (error: any) {
-      notify({
-        type: "error",
+    } catch (error: unknown) {
+      notifyApiError({
+        error,
+        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        notify,
         title: "Kod gönderilemedi",
-        message:
-          error?.response?.data?.message || "Lütfen daha sonra tekrar deneyin.",
       });
     }
   };
@@ -119,19 +111,22 @@ export default function PhoneNumberScreen() {
         type: SmsOtpType.PHONE_VERIFICATION,
       });
 
-      syncUser(savedPhone, true);
+      mergeAuthenticatedUser({
+        phone: savedPhone,
+        isPhoneVerified: true,
+      });
       setOtpCode("");
 
       notify({
         type: "success",
         title: "Telefon doğrulandı",
       });
-    } catch (error: any) {
-      notify({
-        type: "error",
+    } catch (error: unknown) {
+      notifyApiError({
+        error,
+        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        notify,
         title: "Kod doğrulanamadı",
-        message:
-          error?.response?.data?.message || "Lütfen daha sonra tekrar deneyin.",
       });
     }
   };
@@ -151,7 +146,7 @@ export default function PhoneNumberScreen() {
           onChangeText={setPhone}
           keyboardType="phone-pad"
           placeholder="05XX XXX XX XX"
-          placeholderTextColor="#C7C7CC"
+          placeholderTextColor={tokens.textPlaceholder}
         />
 
         <Text style={styles.statusText}>
@@ -166,7 +161,7 @@ export default function PhoneNumberScreen() {
           activeOpacity={0.8}
         >
           {patchUser.isPending ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={tokens.textInverse} />
           ) : (
             <Text style={styles.primaryButtonText}>Numarayı kaydet</Text>
           )}
@@ -194,7 +189,7 @@ export default function PhoneNumberScreen() {
           onChangeText={setOtpCode}
           keyboardType="number-pad"
           placeholder="6 haneli kod"
-          placeholderTextColor="#C7C7CC"
+          placeholderTextColor={tokens.textPlaceholder}
           maxLength={6}
         />
         <TouchableOpacity
@@ -209,7 +204,7 @@ export default function PhoneNumberScreen() {
           activeOpacity={0.8}
         >
           {verifySmsOtp.isPending ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={tokens.textInverse} />
           ) : (
             <Text style={styles.primaryButtonText}>Kodu doğrula</Text>
           )}
@@ -230,75 +225,78 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 15,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#ECECEC",
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 24,
     padding: 18,
     gap: 12,
     marginBottom: 18,
     marginTop: 12,
+    ...ambientShadow,
   },
   title: {
+    fontFamily: FontFamily.bold,
     fontSize: 18,
-    fontWeight: "700",
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   subtitle: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
     lineHeight: 20,
-    color: "#6B7280",
+    color: tokens.textSecondary,
   },
   label: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 14,
-    fontWeight: "600",
-    color: "#3C3C43",
+    color: tokens.textPrimary,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#E5E5EA",
+    borderColor: tokens.borderSubtle,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
+    fontFamily: FontFamily.regular,
     fontSize: 16,
-    color: "#1C1C1E",
-    backgroundColor: "#FFFFFF",
+    color: tokens.textPrimary,
+    backgroundColor: tokens.surfaceContainerLow,
   },
   statusText: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
-    color: "#4B5563",
+    color: tokens.textSecondary,
   },
   primaryButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 48,
     paddingHorizontal: 16,
   },
   primaryButtonText: {
-    color: "#FFFFFF",
+    fontFamily: FontFamily.semiBold,
+    color: tokens.textInverse,
     fontSize: 15,
-    fontWeight: "600",
   },
   secondaryButton: {
     borderWidth: 1,
     borderColor: Colors.primary,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 48,
     paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: tokens.surfaceContainerLowest,
   },
   secondaryButtonText: {
+    fontFamily: FontFamily.semiBold,
     color: Colors.primary,
     fontSize: 15,
-    fontWeight: "600",
   },
   disabledButton: {
     opacity: 0.45,
@@ -308,8 +306,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   linkText: {
+    fontFamily: FontFamily.semiBold,
     color: Colors.primary,
     fontSize: 14,
-    fontWeight: "600",
   },
 });

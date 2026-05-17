@@ -14,10 +14,14 @@ export enum AicarQueryKeys {
   PUBLIC_AICAR = "public-aicar",
 }
 
-export const useGetMyAicars = (filters?: AicarQuery) => {
+export const useGetMyAicars = (
+  filters?: AicarQuery,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   return useQuery({
     queryKey: [AicarQueryKeys.MY_AICARS, filters],
     queryFn: () => getMyAicars(filters),
+    enabled,
   });
 };
 

@@ -35,6 +35,13 @@ export class ApiRequestError extends Error {
   }
 }
 
+function getRequestFailedMessage() {
+  return i18n.t("common.requestFailed", {
+    lng: getCurrentLanguage(),
+    defaultValue: "Request failed",
+  });
+}
+
 export const instance = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/",
   headers: {
@@ -63,7 +70,7 @@ instance.interceptors.response.use(
           ...responseData,
           message: responseData.errors.join(", "),
         },
-        error.message || i18n.t("common.requestFailed"),
+        error.message || getRequestFailedMessage(),
       );
     }
 
@@ -74,10 +81,10 @@ instance.interceptors.response.use(
             message:
               responseData.message ||
               error.message ||
-              i18n.t("common.requestFailed"),
+              getRequestFailedMessage(),
           }
-        : { message: error.message || i18n.t("common.requestFailed") },
-      error.message || i18n.t("common.requestFailed"),
+        : { message: error.message || getRequestFailedMessage() },
+      error.message || getRequestFailedMessage(),
     );
   },
 );

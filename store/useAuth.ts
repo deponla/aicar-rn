@@ -40,3 +40,21 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
     queryClient.clear();
   },
 }));
+
+export function mergeAuthenticatedUser(
+  userPatch: Partial<UserResponseData["user"]>,
+) {
+  const authState = useAuthStore.getState();
+
+  if (!authState.user) {
+    return;
+  }
+
+  authState.login({
+    ...authState.user,
+    user: {
+      ...authState.user.user,
+      ...userPatch,
+    },
+  });
+}

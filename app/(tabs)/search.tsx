@@ -1,19 +1,20 @@
-import { LegendList } from "@legendapp/list";
-import { Colors, tokens } from "@/constants/theme";
+import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
+import HomeHeader from "@/components/HomeHeader";
 import LoginRequired from "@/components/LoginRequired";
-import ScreenContainer from "@/components/ScreenContainer";
 import { useNotification } from "@/components/Notification";
 import { useAuthStore } from "@/store/useAuth";
 import { AuthStatusEnum } from "@/types/auth";
-import { Car, FuelTypeEnum, TransmissionEnum } from "@/types/car";
+import { Car, CreateCarRequest, FuelTypeEnum, TransmissionEnum } from "@/types/car";
+import { AnalyzeMediaLog, AiUrgency } from "@/types/ai";
 import {
   useGetCars,
   useCreateCar,
   useDeleteCar,
 } from "@/query-hooks/useCars";
+import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -43,7 +44,64 @@ const TRANSMISSION_LABELS: Record<TransmissionEnum, string> = {
 const FUEL_OPTIONS = Object.values(FuelTypeEnum);
 const TRANSMISSION_OPTIONS = Object.values(TransmissionEnum);
 
-const CarCard = React.memo(function CarCard({
+function urgencyIcon(urgency?: AiUrgency): { name: keyof typeof MaterialIcons.glyphMap; bg: string; color: string } {
+  switch (urgency) {
+    case "critical":
+      return { name: "warning", bg: tokens.dangerBg, color: tokens.danger };
+    case "warning":
+      return { name: "error-outline", bg: tokens.warningBg, color: tokens.warning };
+    default:
+      return { name: "check-circle", bg: tokens.primaryLight, color: Colors.primary };
+  }
+}
+
+function urgencyBadgeIcon(urgency?: AiUrgency): { name: keyof typeof MaterialIcons.glyphMap; bg: string; color: string } {
+  switch (urgency) {
+    case "critical":
+      return { name: "error", bg: tokens.dangerBg, color: tokens.danger };
+    case "warning":
+      return { name: "flash-on", bg: tokens.warningBg, color: tokens.warning };
+    default:
+      return { name: "check", bg: tokens.primaryLight, color: Colors.primary };
+  }
+}
+
+const ScanHistoryItem = React.memo(function ScanHistoryItem({
+  item,
+  onPress,
+}: {
+  item: AnalyzeMediaLog;
+  onPress: (item: AnalyzeMediaLog) => void;
+}) {
+  const urgency = item.aiResponse?.urgency;
+  const iconInfo = urgencyIcon(urgency);
+  const badgeInfo = urgencyBadgeIcon(urgency);
+
+  return (
+    <TouchableOpacity
+      style={styles.scanItem}
+      onPress={() => onPress(item)}
+      activeOpacity={0.8}
+    >
+      <View style={[styles.scanItemIcon, { backgroundColor: iconInfo.bg }]}>
+        <MaterialIcons name={iconInfo.name} size={20} color={iconInfo.color} />
+      </View>
+      <View style={styles.scanItemContent}>
+        <Text style={styles.scanItemTitle} numberOfLines={1}>
+          {item.aiResponse?.title ?? item.analysisType}
+        </Text>
+        <Text style={styles.scanItemDate}>
+          {dayjs(item.createdAt).format("DD MMM YYYY • HH:mm")}
+        </Text>
+      </View>
+      <View style={[styles.scanItemBadge, { backgroundColor: badgeInfo.bg }]}>
+        <MaterialIcons name={badgeInfo.name} size={16} color={badgeInfo.color} />
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+const CarHeroCard = React.memo(function CarHeroCard({
   item,
   onPress,
   onDelete,
@@ -54,77 +112,38 @@ const CarCard = React.memo(function CarCard({
 }) {
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={styles.heroCard}
       onPress={() => onPress(item.id)}
-      activeOpacity={0.85}
+      activeOpacity={0.9}
     >
-      <View style={styles.cardHeader}>
-        <View style={styles.cardTitleRow}>
-          <MaterialIcons
-            name="directions-car"
-            size={20}
-            color={Colors.primary}
-          />
-          <Text style={styles.cardTitle}>
-            {item.brand} {item.model}
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => onDelete(item.id)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <MaterialIcons name="delete-outline" size={20} color={tokens.danger} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.detailsRow}>
-        <View style={styles.detailChip}>
-          <MaterialIcons
-            name="calendar-today"
-            size={14}
-            color={tokens.textSecondary}
-          />
-          <Text style={styles.detailText}>{item.year}</Text>
-        </View>
-        {item.fuelType ? (
-          <View style={styles.detailChip}>
-            <MaterialIcons
-              name="local-gas-station"
-              size={14}
-              color={tokens.textSecondary}
-            />
-            <Text style={styles.detailText}>
-              {FUEL_LABELS[item.fuelType] ?? item.fuelType}
+      <View style={styles.heroCardInner}>
+        <View style={styles.heroOverlay}>
+          <View style={styles.heroTextBlock}>
+            <Text style={styles.heroTitle}>
+              {item.year} {item.brand} {item.model}
+            </Text>
+            <Text style={styles.heroSubtitle}>
+              {item.fuelType ? FUEL_LABELS[item.fuelType] : ""}{item.transmission ? ` • ${TRANSMISSION_LABELS[item.transmission]}` : ""}
+              {item.engineCC ? ` • ${item.engineCC} cc` : ""}
             </Text>
           </View>
-        ) : null}
-        {item.transmission ? (
-          <View style={styles.detailChip}>
-            <MaterialIcons
-              name="settings"
-              size={14}
-              color={tokens.textSecondary}
-            />
-            <Text style={styles.detailText}>
-              {TRANSMISSION_LABELS[item.transmission] ?? item.transmission}
-            </Text>
-          </View>
-        ) : null}
-        {item.engineCC != null ? (
-          <View style={styles.detailChip}>
-            <MaterialIcons
-              name="speed"
-              size={14}
-              color={tokens.textSecondary}
-            />
-            <Text style={styles.detailText}>{item.engineCC} cc</Text>
-          </View>
-        ) : null}
+          <TouchableOpacity
+            onPress={() => onDelete(item.id)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.heroDeleteBtn}
+          >
+            <MaterialIcons name="delete-outline" size={20} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <Text style={styles.dateText}>
-        Eklendi: {dayjs(item.createdAt).format("DD.MM.YYYY")}
-      </Text>
+      {item.currentMileage != null ? (
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>ODOMETER</Text>
+            <Text style={styles.statValue}>{item.currentMileage.toLocaleString()} km</Text>
+          </View>
+        </View>
+      ) : null}
     </TouchableOpacity>
   );
 });
@@ -137,14 +156,7 @@ const AddCarModal = React.memo(function AddCarModal({
 }: {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: {
-    brand: string;
-    model: string;
-    year: number;
-    fuelType?: FuelTypeEnum;
-    transmission?: TransmissionEnum;
-    engineCC?: number;
-  }) => void;
+  onSubmit: (data: CreateCarRequest) => void;
   isLoading: boolean;
 }) {
   const [brand, setBrand] = useState("");
@@ -155,6 +167,7 @@ const AddCarModal = React.memo(function AddCarModal({
     TransmissionEnum | undefined
   >();
   const [engineCC, setEngineCC] = useState("");
+  const [currentMileage, setCurrentMileage] = useState("");
 
   const handleSubmit = useCallback(() => {
     const parsedYear = parseInt(year, 10);
@@ -169,8 +182,18 @@ const AddCarModal = React.memo(function AddCarModal({
       fuelType,
       transmission,
       engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
+      currentMileage: currentMileage ? parseInt(currentMileage, 10) : undefined,
     });
-  }, [brand, engineCC, fuelType, model, onSubmit, transmission, year]);
+  }, [
+    brand,
+    currentMileage,
+    engineCC,
+    fuelType,
+    model,
+    onSubmit,
+    transmission,
+    year,
+  ]);
 
   const reset = useCallback(() => {
     setBrand("");
@@ -179,6 +202,7 @@ const AddCarModal = React.memo(function AddCarModal({
     setFuelType(undefined);
     setTransmission(undefined);
     setEngineCC("");
+    setCurrentMileage("");
   }, []);
 
   return (
@@ -274,7 +298,7 @@ const AddCarModal = React.memo(function AddCarModal({
                   style={[
                     styles.selectChipText,
                     transmission === transmissionValue &&
-                      styles.selectChipTextActive,
+                    styles.selectChipTextActive,
                   ]}
                 >
                   {TRANSMISSION_LABELS[transmissionValue]}
@@ -292,6 +316,16 @@ const AddCarModal = React.memo(function AddCarModal({
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
+
+          <Text style={styles.inputLabel}>Kilometre (km)</Text>
+          <TextInput
+            style={styles.input}
+            value={currentMileage}
+            onChangeText={setCurrentMileage}
+            placeholder="ör. 128500"
+            placeholderTextColor={tokens.textPlaceholder}
+            keyboardType="number-pad"
+          />
         </ScrollView>
 
         <View style={styles.modalFooter}>
@@ -299,7 +333,7 @@ const AddCarModal = React.memo(function AddCarModal({
             style={[
               styles.submitButton,
               (!brand.trim() || !model.trim() || !year.trim()) &&
-                styles.submitButtonDisabled,
+              styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
             disabled={
@@ -319,10 +353,6 @@ const AddCarModal = React.memo(function AddCarModal({
   );
 });
 
-function ListSeparator() {
-  return <View style={styles.listSeparator} />;
-}
-
 export default function GarageScreen() {
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
@@ -330,11 +360,16 @@ export default function GarageScreen() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const { data, isLoading, refetch } = useGetCars();
+  const { data, isLoading } = useGetCars(undefined, { enabled: isLoggedIn });
+  const analysisLogsQuery = useGetAnalysisLogs(undefined, {
+    enabled: isLoggedIn,
+  });
   const createCar = useCreateCar();
   const removeCar = useDeleteCar();
 
   const cars = useMemo(() => data?.results ?? [], [data?.results]);
+  const primaryCar = cars[0] ?? null;
+  const scanLogs = useMemo(() => (analysisLogsQuery.data?.results ?? []).slice(0, 4), [analysisLogsQuery.data?.results]);
 
   const openModal = useCallback(() => {
     setModalVisible(true);
@@ -397,38 +432,10 @@ export default function GarageScreen() {
     [notify, removeCar],
   );
 
-  const keyExtractor = useCallback((item: Car) => item.id, []);
-  const renderItem = useCallback(
-    ({ item }: { item: Car }) => (
-      <CarCard item={item} onPress={handleOpenCar} onDelete={handleDelete} />
-    ),
-    [handleDelete, handleOpenCar],
-  );
-
-  const emptyState = useMemo(
-    () => (
-      <View style={styles.emptyContainer}>
-        <MaterialIcons
-          name="directions-car"
-          size={64}
-          color={tokens.textTertiary}
-        />
-        <Text style={styles.emptyTitle}>Henüz araç eklemediniz</Text>
-        <Text style={styles.emptySubtitle}>
-          Garajınıza araç ekleyerek analiz sonuçlarını takip edebilirsiniz.
-        </Text>
-        <TouchableOpacity
-          style={styles.emptyAction}
-          onPress={openModal}
-          activeOpacity={0.85}
-        >
-          <MaterialIcons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.emptyActionText}>Araç Ekle</Text>
-        </TouchableOpacity>
-      </View>
-    ),
-    [openModal],
-  );
+  const handleOpenLog = useCallback((_item: AnalyzeMediaLog) => {
+    // Navigate to insights tab
+    router.push("/insights" as Href);
+  }, [router]);
 
   if (!isLoggedIn) {
     return (
@@ -441,39 +448,98 @@ export default function GarageScreen() {
   }
 
   return (
-    <ScreenContainer
-      title="Garajım"
-      scrollable={false}
-      contentContainerStyle={styles.screenContent}
-      headerRight={
+    <View style={styles.screen}>
+      <HomeHeader />
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {isLoading && data === undefined ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : primaryCar ? (
+          <>
+            <CarHeroCard
+              item={primaryCar}
+              onPress={handleOpenCar}
+              onDelete={handleDelete}
+            />
+
+            {/* Other cars */}
+            {cars.length > 1 ? (
+              <View style={styles.otherCarsSection}>
+                {cars.slice(1).map((car) => (
+                  <TouchableOpacity
+                    key={car.id}
+                    style={styles.otherCarChip}
+                    onPress={() => handleOpenCar(car.id)}
+                    activeOpacity={0.8}
+                  >
+                    <MaterialIcons name="directions-car" size={16} color={Colors.primary} />
+                    <Text style={styles.otherCarText}>
+                      {car.brand} {car.model} ({car.year})
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Past Scans Section */}
+            <View style={styles.scansSectionHeader}>
+              <Text style={styles.scansSectionTitle}>Gecmis Taramalar</Text>
+              <TouchableOpacity onPress={() => router.push("/insights" as Href)}>
+                <Text style={styles.scansSeeAll}>Tumunu Gor</Text>
+              </TouchableOpacity>
+            </View>
+
+            {scanLogs.length > 0 ? (
+              <View style={styles.scansList}>
+                {scanLogs.map((log) => (
+                  <ScanHistoryItem key={log.id} item={log} onPress={handleOpenLog} />
+                ))}
+              </View>
+            ) : (
+              <View style={styles.noScansBox}>
+                <Text style={styles.noScansText}>Henuz tarama yapilmadi</Text>
+              </View>
+            )}
+          </>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <MaterialIcons
+              name="directions-car"
+              size={64}
+              color={tokens.textTertiary}
+            />
+            <Text style={styles.emptyTitle}>Henüz araç eklemediniz</Text>
+            <Text style={styles.emptySubtitle}>
+              Garajınıza araç ekleyerek analiz sonuçlarını takip edebilirsiniz.
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyAction}
+              onPress={openModal}
+              activeOpacity={0.85}
+            >
+              <MaterialIcons name="add" size={18} color="#FFFFFF" />
+              <Text style={styles.emptyActionText}>Araç Ekle</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* FAB for adding cars */}
+      {primaryCar ? (
         <TouchableOpacity
+          style={[styles.fab, { bottom: 20 }]}
           onPress={openModal}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          activeOpacity={0.85}
         >
-          <MaterialIcons name="add" size={24} color={Colors.primary} />
+          <MaterialIcons name="add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-      }
-    >
-      {isLoading && data === undefined ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
-      ) : (
-        <LegendList
-          data={cars}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          estimatedItemSize={130}
-          recycleItems
-          refreshing={isLoading}
-          onRefresh={refetch}
-          style={styles.listView}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={ListSeparator}
-          ListEmptyComponent={emptyState}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      ) : null}
 
       <AddCarModal
         visible={modalVisible}
@@ -481,14 +547,22 @@ export default function GarageScreen() {
         onSubmit={handleCreate}
         isLoading={createCar.isPending}
       />
-    </ScreenContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screenContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+  screen: {
+    flex: 1,
+    backgroundColor: tokens.bgBase,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
@@ -496,62 +570,183 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 80,
   },
-  listView: {
-    flex: 1,
-  },
-  listContent: {
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  listSeparator: {
-    height: 12,
-  },
-  card: {
-    backgroundColor: tokens.bgSurface,
+  // ── Hero Car Card ──
+  heroCard: {
     borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: tokens.surfaceContainerLowest,
+    marginBottom: 16,
+    ...ambientShadow,
+  },
+  heroCardInner: {
+    height: 200,
+    justifyContent: "flex-end",
+  },
+  heroOverlay: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
     padding: 16,
-    gap: 10,
+    paddingTop: 40,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  heroTextBlock: {
+    flex: 1,
+    gap: 4,
+  },
+  heroTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.22,
+    color: "#FFFFFF",
+  },
+  heroSubtitle: {
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    lineHeight: 16,
+    color: "rgba(255,255,255,0.8)",
+  },
+  heroDeleteBtn: {
+    padding: 8,
+  },
+  statsRow: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
     borderWidth: 1,
+    borderTopWidth: 0,
     borderColor: tokens.borderSubtle,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  statItem: {
+    flex: 1,
     alignItems: "center",
   },
-  cardTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  statLabel: {
+    fontFamily: FontFamily.bold,
+    fontSize: 10,
+    color: tokens.textTertiary,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "700",
+  statValue: {
+    fontFamily: FontFamily.bold,
+    fontSize: 14,
     color: tokens.textPrimary,
+    marginTop: 2,
   },
-  detailsRow: {
+  // ── Other cars ──
+  otherCarsSection: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+    marginBottom: 24,
   },
-  detailChip: {
+  otherCarChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: tokens.bgSubtle,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    gap: 6,
+    backgroundColor: tokens.surfaceContainerLowest,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    ...ambientShadow,
   },
-  detailText: {
-    fontSize: 12,
-    color: tokens.textSecondary,
-    fontWeight: "500",
+  otherCarText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 13,
+    color: tokens.textPrimary,
   },
-  dateText: {
+  // ── Past Scans Section ──
+  scansSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  scansSectionTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.22,
+    color: tokens.textPrimary,
+  },
+  scansSeeAll: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    color: tokens.secondary,
+    letterSpacing: 0.7,
+  },
+  scansList: {
+    gap: 12,
+  },
+  scanItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 16,
+    ...ambientShadow,
+  },
+  scanItemIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scanItemContent: {
+    flex: 1,
+    gap: 2,
+  },
+  scanItemTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 16,
+    color: tokens.textPrimary,
+  },
+  scanItemDate: {
+    fontFamily: FontFamily.medium,
     fontSize: 12,
     color: tokens.textTertiary,
   },
+  scanItemBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noScansBox: {
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    ...ambientShadow,
+  },
+  noScansText: {
+    fontFamily: FontFamily.medium,
+    fontSize: 14,
+    color: tokens.textTertiary,
+  },
+  // ── FAB ──
+  fab: {
+    position: "absolute",
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: tokens.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    ...ambientShadow,
+    shadowOpacity: 0.15,
+    elevation: 6,
+  },
+  // ── Empty ──
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -560,13 +755,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
     color: tokens.textPrimary,
     marginTop: 16,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
     color: tokens.textSecondary,
     textAlign: "center",
     paddingHorizontal: 32,
@@ -575,16 +772,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    backgroundColor: tokens.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 9999,
     marginTop: 16,
   },
   emptyActionText: {
+    fontFamily: FontFamily.semiBold,
     color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 14,
+    letterSpacing: 0.7,
+  },
+  listSeparator: {
+    height: 12,
   },
   modalContainer: {
     flex: 1,
@@ -596,11 +797,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: tokens.borderDefault,
+    borderBottomColor: tokens.borderSubtle,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
+    lineHeight: 28,
     color: tokens.textPrimary,
   },
   modalBody: {
@@ -611,24 +813,25 @@ const styles = StyleSheet.create({
   modalFooter: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: tokens.borderDefault,
+    borderTopColor: tokens.borderSubtle,
   },
   inputLabel: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 14,
-    fontWeight: "600",
     color: tokens.textPrimary,
     marginBottom: 6,
     marginTop: 14,
   },
   input: {
-    backgroundColor: tokens.bgSubtle,
-    borderRadius: 10,
+    fontFamily: FontFamily.regular,
+    backgroundColor: tokens.surfaceContainerLow,
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 15,
+    fontSize: 16,
     color: tokens.textPrimary,
     borderWidth: 1,
-    borderColor: tokens.borderDefault,
+    borderColor: tokens.borderSubtle,
   },
   chipRow: {
     flexDirection: "row",
@@ -638,35 +841,36 @@ const styles = StyleSheet.create({
   selectChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: tokens.bgSubtle,
+    borderRadius: 9999,
+    backgroundColor: tokens.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: tokens.borderDefault,
+    borderColor: tokens.borderSubtle,
   },
   selectChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: tokens.primary,
+    borderColor: tokens.primary,
   },
   selectChipText: {
+    fontFamily: FontFamily.medium,
     fontSize: 13,
     color: tokens.textSecondary,
-    fontWeight: "500",
   },
   selectChipTextActive: {
     color: "#FFFFFF",
   },
   submitButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: tokens.primary,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 9999,
     alignItems: "center",
   },
   submitButtonDisabled: {
     opacity: 0.5,
   },
   submitButtonText: {
+    fontFamily: FontFamily.semiBold,
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 14,
+    letterSpacing: 0.7,
   },
 });

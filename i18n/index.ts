@@ -8,6 +8,7 @@ import tr from "@/i18n/locales/tr.json";
 export const SUPPORTED_LANGUAGES = ["de", "en", "tr"] as const;
 export type AppLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 export const DEFAULT_LANGUAGE: AppLanguage = "en";
+export const DEFAULT_NAMESPACE = "translation" as const;
 
 export function normalizeLanguage(language?: string | null): AppLanguage {
   const baseLanguage = language?.toLowerCase().split("-")[0];
@@ -31,15 +32,17 @@ function getDeviceLanguage(): AppLanguage {
 if (!i18n.isInitialized) {
   void i18n.use(initReactI18next).init({
     compatibilityJSON: "v4",
+    defaultNS: DEFAULT_NAMESPACE,
     fallbackLng: DEFAULT_LANGUAGE,
     interpolation: {
       escapeValue: false,
     },
     lng: getDeviceLanguage(),
+    ns: [DEFAULT_NAMESPACE],
     resources: {
-      de: { translation: de },
-      en: { translation: en },
-      tr: { translation: tr },
+      de: { [DEFAULT_NAMESPACE]: de },
+      en: { [DEFAULT_NAMESPACE]: en },
+      tr: { [DEFAULT_NAMESPACE]: tr },
     },
     supportedLngs: [...SUPPORTED_LANGUAGES],
   });

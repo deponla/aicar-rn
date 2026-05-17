@@ -1,6 +1,6 @@
 import { LegendList } from "@legendapp/list";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useGetFeedbacks } from "@/query-hooks/useFeedback";
 import { Feedback, FeedbackStatus, FeedbackType } from "@/types/feedback";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -139,7 +139,7 @@ export default function FeedbackHistoryScreen() {
           onPress={openCreate}
           activeOpacity={0.85}
         >
-          <MaterialIcons name="add" size={16} color="#FFFFFF" />
+          <MaterialIcons name="add" size={16} color={tokens.textInverse} />
           <Text style={styles.createButtonText}>Yeni Geri Bildirim</Text>
         </TouchableOpacity>
       </View>
@@ -150,7 +150,7 @@ export default function FeedbackHistoryScreen() {
   const emptyState = useMemo(
     () => (
       <View style={styles.emptyState}>
-        <MaterialIcons name="inbox" size={48} color="#C7C7CC" />
+        <MaterialIcons name="inbox" size={48} color={tokens.textPlaceholder} />
         <Text style={styles.emptyTitle}>Henüz geri bildirim yok</Text>
         <Text style={styles.emptyText}>
           İlk şikayet veya önerinizi göndererek ekiple doğrudan iletişime
@@ -236,11 +236,12 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     backgroundColor: tokens.infoBg,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     gap: 14,
     marginTop: 10,
     marginBottom: 16,
+    ...ambientShadow,
   },
   infoContent: {
     flexDirection: "row",
@@ -249,13 +250,14 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     lineHeight: 19,
     color: tokens.infoText,
   },
   createButton: {
     minHeight: 42,
-    borderRadius: 12,
+    borderRadius: 9999,
     backgroundColor: Colors.primary,
     flexDirection: "row",
     alignItems: "center",
@@ -263,9 +265,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   createButtonText: {
-    color: "#FFFFFF",
+    fontFamily: FontFamily.bold,
+    color: tokens.textInverse,
     fontSize: 14,
-    fontWeight: "700",
   },
   loadingContainer: {
     paddingTop: 80,
@@ -281,12 +283,11 @@ const styles = StyleSheet.create({
     height: 12,
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#ECECEC",
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 24,
     padding: 16,
     gap: 12,
+    ...ambientShadow,
   },
   headerRow: {
     gap: 10,
@@ -307,8 +308,8 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.primaryLight,
   },
   typeBadgeText: {
+    fontFamily: FontFamily.bold,
     fontSize: 12,
-    fontWeight: "700",
     color: Colors.primary,
   },
   statusBadge: {
@@ -317,19 +318,21 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   statusBadgeText: {
+    fontFamily: FontFamily.bold,
     fontSize: 12,
-    fontWeight: "700",
   },
   dateText: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
     color: tokens.textTertiary,
   },
   subjectText: {
+    fontFamily: FontFamily.bold,
     fontSize: 16,
-    fontWeight: "700",
     color: tokens.textPrimary,
   },
   messageText: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
     lineHeight: 21,
     color: tokens.textSecondary,
@@ -341,20 +344,23 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   noteLabel: {
+    fontFamily: FontFamily.bold,
     fontSize: 12,
-    fontWeight: "700",
     color: tokens.textPrimary,
   },
   noteText: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     lineHeight: 19,
     color: tokens.textSecondary,
   },
   resolvedText: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
     color: tokens.textTertiary,
   },
   helperText: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
     textAlign: "center",
     color: tokens.textTertiary,
@@ -369,12 +375,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   emptyTitle: {
+    fontFamily: FontFamily.bold,
     fontSize: 18,
-    fontWeight: "700",
     color: tokens.textPrimary,
     textAlign: "center",
   },
   emptyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
@@ -385,14 +392,14 @@ const styles = StyleSheet.create({
     marginTop: 6,
     minHeight: 44,
     paddingHorizontal: 18,
-    borderRadius: 12,
+    borderRadius: 9999,
     backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
   emptyActionText: {
-    color: "#FFFFFF",
+    fontFamily: FontFamily.bold,
+    color: tokens.textInverse,
     fontSize: 14,
-    fontWeight: "700",
   },
 });

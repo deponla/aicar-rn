@@ -1,54 +1,140 @@
-import { Platform } from "react-native";
+import { Platform, TextStyle } from "react-native";
 
+// ─── Brand Colors ─────────────────────────────────────────────────────────────
 export const Colors = {
-  primary: "#1a1a2e",
-  secondary: "#e94560",
+  primary: "#000000",
+  primaryDark: "#0d1c32",
+  secondary: "#00677e",
+  accent: "#ba1a1a",
+  secondaryContainer: "#00d2fd",
+  onSecondaryContainer: "#005669",
+};
+
+// ─── Font Family ──────────────────────────────────────────────────────────────
+export const FontFamily = {
+  regular: "Manrope_400Regular",
+  medium: "Manrope_500Medium",
+  semiBold: "Manrope_600SemiBold",
+  bold: "Manrope_700Bold",
+  extraBold: "Manrope_800ExtraBold",
 };
 
 export const Fonts = Platform.select({
   ios: {
-    sans: "system-ui",
+    sans: FontFamily.regular,
     serif: "ui-serif",
     rounded: "ui-rounded",
     mono: "ui-monospace",
   },
   default: {
-    sans: "normal",
+    sans: FontFamily.regular,
     serif: "serif",
-    rounded: "normal",
+    rounded: FontFamily.regular,
     mono: "monospace",
   },
   web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    sans: "'Manrope', system-ui, -apple-system, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
-    rounded:
-      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    rounded: "'Manrope', sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   },
 });
+
+// ─── Typography Scale ─────────────────────────────────────────────────────────
+export const Typography: Record<string, TextStyle> = {
+  headlineLg: {
+    fontFamily: FontFamily.bold,
+    fontSize: 28,
+    lineHeight: 36,
+    letterSpacing: -0.56,
+  },
+  headlineMd: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.22,
+  },
+  bodyLg: {
+    fontFamily: FontFamily.regular,
+    fontSize: 18,
+    lineHeight: 26,
+  },
+  bodyMd: {
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  labelLg: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0.7,
+  },
+  labelSm: {
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+};
+
+// ─── Spacing ──────────────────────────────────────────────────────────────────
+export const Spacing = {
+  unit: 8,
+  cardGap: 12,
+  gutter: 16,
+  containerPadding: 20,
+  touchTargetMin: 48,
+};
+
+// ─── Border Radius ────────────────────────────────────────────────────────────
+export const Radius = {
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  xxl: 24,
+  full: 9999,
+};
+
+// ─── Shadows ──────────────────────────────────────────────────────────────────
+export const ambientShadow = {
+  shadowColor: "#0d1c32",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.05,
+  shadowRadius: 20,
+  elevation: 3,
+};
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 // All hardcoded colors should come from here.
 
 export const tokens = {
-  // Backgrounds
-  bgBase: "#F2F4F8", // Page background
-  bgSurface: "#FFFFFF", // Cards, sheets
-  bgElevated: "#FFFFFF", // Modals, popovers
-  bgSubtle: "#F2F4F8", // Input fields, read-only rows
-  bgMuted: "#E8EAF0", // Skeleton, dividers
+  // Material Design 3 Surface Hierarchy
+  bgBase: "#fbf9fb",
+  bgSurface: "#fbf9fb",
+  bgElevated: "#ffffff",
+  bgSubtle: "#f5f3f5",
+  bgMuted: "#efedef",
+
+  // Surface Container Scale
+  surfaceContainerLowest: "#ffffff",
+  surfaceContainerLow: "#f5f3f5",
+  surfaceContainer: "#efedef",
+  surfaceContainerHigh: "#eae7ea",
+  surfaceContainerHighest: "#e4e2e4",
+  surfaceVariant: "#e4e2e4",
 
   // Text
-  textPrimary: "#1C1C1E",
-  textSecondary: "#6B6B6B",
-  textTertiary: "#8E8E93",
-  textPlaceholder: "#C7C7CC",
-  textInverse: "#FFFFFF",
+  textPrimary: "#1b1b1d",
+  textSecondary: "#44474d",
+  textTertiary: "#75777e",
+  textPlaceholder: "#c5c6cd",
+  textInverse: "#ffffff",
 
   // Border / Divider
-  borderDefault: "#E5E5EA",
-  borderSubtle: "#F0F0F5",
-  divider: "#E5E5EA",
+  borderDefault: "#c5c6cd",
+  borderSubtle: "#e4e2e4",
+  divider: "#c5c6cd",
 
   // Semantic
   success: "#34C759",
@@ -57,16 +143,33 @@ export const tokens = {
   warning: "#F59E0B",
   warningBg: "#FFFBEB",
   warningText: "#D97706",
-  danger: "#EF4444",
-  dangerBg: "#FEF2F2",
-  dangerText: "#DC2626",
+  danger: "#ba1a1a",
+  dangerBg: "#ffdad6",
+  dangerText: "#93000a",
   info: "#3B82F6",
   infoBg: "#EFF6FF",
   infoText: "#2563EB",
 
-  // Brand
+  // Brand (M3 palette)
   primary: Colors.primary,
-  primaryLight: "#E8EEF9",
+  primaryDark: Colors.primaryDark,
+  accent: Colors.accent,
+  primaryLight: "#d6e3ff",
   secondary: Colors.secondary,
-  secondaryLight: "#E6F8FC",
+  secondaryLight: "#b4ebff",
+
+  // M3 Color Roles
+  primaryContainer: "#0d1c32",
+  onPrimary: "#ffffff",
+  onPrimaryContainer: "#76849f",
+  secondaryContainer: "#00d2fd",
+  onSecondaryContainer: "#005669",
+  tertiaryFixed: "#ffdcbd",
+  onTertiaryFixedVariant: "#5d4124",
+  errorContainer: "#ffdad6",
+  onErrorContainer: "#93000a",
+  surfaceTint: "#515f78",
+  inverseSurface: "#303032",
+  inverseOnSurface: "#f2f0f2",
+  secondaryFixedDim: "#3cd7ff",
 };

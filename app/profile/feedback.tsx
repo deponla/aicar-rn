@@ -1,8 +1,9 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useCreateFeedback } from "@/query-hooks/useFeedback";
 import { FeedbackType } from "@/types/feedback";
+import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -77,13 +78,11 @@ export default function FeedbackScreen() {
             });
             router.replace("/profile/feedback-history");
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } } };
-            notify({
-                type: "error",
+            notifyApiError({
+                error,
+                fallbackMessage: t("feedbackScreen.submitErrorMessage"),
+                notify,
                 title: t("feedbackScreen.submitErrorTitle"),
-                message:
-                    err?.response?.data?.message ||
-                    t("feedbackScreen.submitErrorMessage"),
             });
         }
     };
@@ -131,7 +130,7 @@ export default function FeedbackScreen() {
                                         <MaterialIcons
                                             name={option.icon}
                                             size={20}
-                                            color={isSelected ? "#FFFFFF" : Colors.primary}
+                                            color={isSelected ? tokens.textInverse : Colors.primary}
                                         />
                                     </View>
                                     <View style={styles.optionContent}>
@@ -151,7 +150,7 @@ export default function FeedbackScreen() {
                         value={subject}
                         onChangeText={setSubject}
                         placeholder={t("feedbackScreen.subjectPlaceholder")}
-                        placeholderTextColor="#C7C7CC"
+                        placeholderTextColor={tokens.textPlaceholder}
                         maxLength={160}
                     />
                     <Text style={styles.helperText}>
@@ -164,7 +163,7 @@ export default function FeedbackScreen() {
                         value={message}
                         onChangeText={setMessage}
                         placeholder={t("feedbackScreen.messagePlaceholder")}
-                        placeholderTextColor="#C7C7CC"
+                        placeholderTextColor={tokens.textPlaceholder}
                         multiline
                         textAlignVertical="top"
                         maxLength={4000}
@@ -186,7 +185,7 @@ export default function FeedbackScreen() {
                         activeOpacity={0.8}
                     >
                         {createFeedback.isPending ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={tokens.textInverse} />
                         ) : (
                             <Text style={styles.primaryButtonText}>
                                 {t("feedbackScreen.submit")}
@@ -201,23 +200,23 @@ export default function FeedbackScreen() {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: "#ECECEC",
+        backgroundColor: tokens.surfaceContainerLowest,
+        borderRadius: 24,
         padding: 18,
         gap: 12,
         marginTop: 12,
+        ...ambientShadow,
     },
     title: {
+        fontFamily: FontFamily.bold,
         fontSize: 18,
-        fontWeight: "700",
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     subtitle: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
         lineHeight: 20,
-        color: "#6B7280",
+        color: tokens.textSecondary,
     },
     optionList: {
         gap: 10,
@@ -229,14 +228,14 @@ const styles = StyleSheet.create({
         gap: 6,
         paddingHorizontal: 12,
         paddingVertical: 10,
-        borderRadius: 12,
+        borderRadius: 9999,
         borderWidth: 1,
-        borderColor: "#D6DCE8",
-        backgroundColor: "#F8FAFF",
+        borderColor: tokens.borderSubtle,
+        backgroundColor: tokens.surfaceContainerLow,
     },
     historyButtonText: {
+        fontFamily: FontFamily.bold,
         fontSize: 13,
-        fontWeight: "700",
         color: Colors.primary,
     },
     optionCard: {
@@ -245,13 +244,13 @@ const styles = StyleSheet.create({
         gap: 12,
         borderRadius: 14,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
+        borderColor: tokens.borderSubtle,
         padding: 14,
-        backgroundColor: "#FAFAFA",
+        backgroundColor: tokens.surfaceContainerLow,
     },
     optionCardSelected: {
-        borderColor: Colors.primary,
-        backgroundColor: "#EEF4FF",
+        borderColor: Colors.secondaryContainer,
+        backgroundColor: `${Colors.secondaryContainer}18`,
     },
     optionIconWrap: {
         width: 40,
@@ -259,7 +258,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#E0ECFF",
+        backgroundColor: tokens.surfaceContainer,
     },
     optionIconWrapSelected: {
         backgroundColor: Colors.primary,
@@ -269,29 +268,31 @@ const styles = StyleSheet.create({
         gap: 2,
     },
     optionTitle: {
+        fontFamily: FontFamily.bold,
         fontSize: 15,
-        fontWeight: "700",
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     optionText: {
+        fontFamily: FontFamily.regular,
         fontSize: 13,
         lineHeight: 18,
-        color: "#6B7280",
+        color: tokens.textSecondary,
     },
     label: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 14,
-        fontWeight: "600",
-        color: "#3C3C43",
+        color: tokens.textPrimary,
     },
     input: {
         minHeight: 50,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
-        backgroundColor: "#FAFAFA",
+        borderColor: tokens.borderSubtle,
+        backgroundColor: tokens.surfaceContainerLow,
         paddingHorizontal: 14,
+        fontFamily: FontFamily.regular,
         fontSize: 15,
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     messageInput: {
         minHeight: 140,
@@ -299,8 +300,9 @@ const styles = StyleSheet.create({
         paddingBottom: 14,
     },
     helperText: {
+        fontFamily: FontFamily.regular,
         fontSize: 12,
-        color: "#8E8E93",
+        color: tokens.textTertiary,
     },
     messageFooter: {
         flexDirection: "row",
@@ -308,12 +310,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     counterText: {
+        fontFamily: FontFamily.medium,
         fontSize: 12,
-        color: "#8E8E93",
+        color: tokens.textTertiary,
     },
     primaryButton: {
         minHeight: 52,
-        borderRadius: 14,
+        borderRadius: 9999,
         backgroundColor: Colors.primary,
         alignItems: "center",
         justifyContent: "center",
@@ -323,8 +326,8 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     primaryButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.bold,
+        color: tokens.textInverse,
         fontSize: 15,
-        fontWeight: "700",
     },
 });

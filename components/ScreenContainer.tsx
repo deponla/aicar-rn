@@ -1,8 +1,10 @@
+import { tokens, FontFamily } from "@/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { ReactNode } from "react";
 import {
   Keyboard,
+  Platform,
   RefreshControlProps,
   ScrollView,
   StyleProp,
@@ -12,9 +14,10 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const HEADER_HEIGHT = 56;
+const HEADER_HEIGHT = 48;
 
 interface ScreenContainerProps {
   readonly title: string;
@@ -48,6 +51,30 @@ export default function ScreenContainer({
       router.back();
     });
   };
+
+  const headerInner = (
+    <View style={styles.headerContent}>
+      <View style={styles.headerSide}>
+        {showBackButton && (
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <MaterialIcons
+              name="arrow-back-ios"
+              size={22}
+              color={tokens.textPrimary}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
+      <Text style={styles.headerTitle}>{title}</Text>
+      <View style={[styles.headerSide, styles.headerRightContainer]}>
+        {headerRight}
+      </View>
+    </View>
+  );
 
   const renderContent = () => {
     if (!scrollable) {
@@ -91,27 +118,14 @@ export default function ScreenContainer({
           },
         ]}
       >
-        <View style={styles.headerContent}>
-          <View style={styles.headerSide}>
-            {showBackButton && (
-              <TouchableOpacity
-                onPress={handleBack}
-                style={styles.backButton}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <MaterialIcons
-                  name="arrow-back-ios"
-                  size={22}
-                  color="#1C1C1E"
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-          <Text style={styles.headerTitle}>{title}</Text>
-          <View style={[styles.headerSide, styles.headerRightContainer]}>
-            {headerRight}
-          </View>
-        </View>
+        {Platform.OS === "ios" ? (
+          <BlurView
+            intensity={80}
+            tint="systemChromeMaterialLight"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
+        {headerInner}
         <View style={styles.headerBorder} />
       </View>
 
@@ -123,14 +137,14 @@ export default function ScreenContainer({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: tokens.bgBase,
   },
   header: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Platform.OS === "ios" ? "transparent" : "rgba(251,249,251,0.85)",
     zIndex: 100,
   },
   headerContent: {
@@ -138,7 +152,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   headerSide: {
     width: 80,
@@ -151,9 +165,11 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#1C1C1E",
+    fontFamily: FontFamily.semiBold,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.22,
+    color: tokens.textPrimary,
   },
   headerBorder: {
     position: "absolute",
@@ -161,13 +177,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: "#E5E5EA",
+    backgroundColor: tokens.borderSubtle,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingBottom: 40,
   },
   staticContainer: {

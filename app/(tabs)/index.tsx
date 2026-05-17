@@ -20,7 +20,10 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { LegendList } from '@legendapp/list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tokens } from '@/constants/theme';
+import { useTranslation } from 'react-i18next';
+import { tokens, FontFamily, Colors, ambientShadow } from '@/constants/theme';
+import HomeHeader from '@/components/HomeHeader';
+import i18n from '@/i18n';
 import {
   postCompleteAiImageUpload,
   postCompleteAiVideoUpload,
@@ -127,7 +130,7 @@ async function uploadImageAsset(
   });
 
   if (!uploadResponse.ok) {
-    throw new Error('Gorsel yukleme basarisiz oldu.');
+    throw new Error(i18n.t('scanScreen.alerts.imageUploadFailed'));
   }
 
   return postCompleteAiImageUpload({ id: init.id });
@@ -147,7 +150,7 @@ async function resolveVideoUpload(videoId: string): Promise<AiUploadCompleteResp
   }
 
   if (!latest) {
-    throw new Error('Video islenemedi.');
+    throw new Error(i18n.t('scanScreen.alerts.videoProcessingFailed'));
   }
 
   return latest;
@@ -169,41 +172,44 @@ async function uploadVideoAsset(
   });
 
   if (!uploadResponse.ok) {
-    throw new Error('Video yukleme basarisiz oldu.');
+    throw new Error(i18n.t('scanScreen.alerts.videoUploadFailed'));
   }
 
   return resolveVideoUpload(init.videoId);
 }
 
-function getUrgencyTone(urgency?: AiAnalysisPayload['urgency']) {
+function getUrgencyTone(
+  urgency: AiAnalysisPayload['urgency'] | undefined,
+  translate: (key: string) => string,
+) {
   switch (urgency) {
     case 'critical':
       return {
         backgroundColor: tokens.dangerBg,
         textColor: tokens.dangerText,
-        label: 'Kritik',
+        label: translate('history.urgency.critical'),
       };
     case 'warning':
       return {
         backgroundColor: tokens.warningBg,
         textColor: tokens.warningText,
-        label: 'Uyari',
+        label: translate('history.urgency.warning'),
       };
     default:
       return {
         backgroundColor: tokens.successBg,
         textColor: tokens.successText,
-        label: 'Bilgi',
+        label: translate('history.urgency.info'),
       };
   }
 }
 
-function getErrorMessage(error: unknown): string {
+function getErrorMessage(error: unknown, fallbackMessage: string): string {
   if (error instanceof Error) {
     return error.message;
   }
 
-  return 'Beklenmeyen bir hata olustu.';
+  return fallbackMessage;
 }
 
 function toPermissionStatus(status: string): 'granted' | 'denied' | 'undetermined' {
@@ -221,6 +227,7 @@ function toPermissionStatus(status: string): 'granted' | 'denied' | 'undetermine
 export default function ScanScreen() {
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const { t: translate } = useTranslation();
   const sourceSheetRef = useRef<BottomSheetModal>(null);
   const { status, user } = useAuthStore();
   const setCredits = useCreditsStore((state) => state.setCredits);
@@ -234,26 +241,21 @@ export default function ScanScreen() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
 
-  const carsQuery = useGetCars();
+  const isAuthenticated = status === AuthStatusEnum.LOGGED_IN && !!user;
+  const carsQuery = useGetCars(undefined, { enabled: isAuthenticated });
   const cars = useMemo(() => carsQuery.data?.results ?? [], [carsQuery.data?.results]);
 
-  const isAuthenticated = status === AuthStatusEnum.LOGGED_IN && !!user;
   const isBusy = isUploading || analyzeMedia.isPending;
   const creditBalance = creditBalanceQuery.data ?? null;
   const analysisPayload = analysis?.result.aiResponse;
   const urgencyTone = useMemo(
-    () => getUrgencyTone(analysisPayload?.urgency),
-    [analysisPayload?.urgency],
+    () => getUrgencyTone(analysisPayload?.urgency, translate),
+    [analysisPayload?.urgency, translate],
   );
   const shouldShowBalance = useMemo(
     () => isAuthenticated && !!creditBalance,
     [creditBalance, isAuthenticated],
   );
-  const isPremiumActive = useMemo(
-    () => shouldShowBalance && !!creditBalance?.isPremium,
-    [creditBalance?.isPremium, shouldShowBalance],
-  );
-
   useEffect(() => {
     if (!creditBalance) {
       return;
@@ -268,12 +270,15 @@ export default function ScanScreen() {
 
   const openSourceSheet = useCallback(() => {
     if (!isAuthenticated) {
-      Alert.alert('Giris gerekli', 'AI analizini kullanmak icin hesabiniza giris yapin.');
+      Alert.alert(
+        translate('scanScreen.alerts.loginRequiredTitle'),
+        translate('scanScreen.alerts.loginRequiredMessage'),
+      );
       return;
     }
 
     sourceSheetRef.current?.present();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, translate]);
 
   const pickAssetFromSource = useCallback(async (
     source: ScanSource,
@@ -283,7 +288,10 @@ export default function ScanScreen() {
       void syncPermissions({ mediaLibrary: toPermissionStatus(permission.status) });
 
       if (permission.status !== 'granted') {
-        Alert.alert('Izin gerekli', 'Fotograf veya video secmek icin galeri izni vermelisiniz.');
+        Alert.alert(
+          translate('scanScreen.alerts.permissionRequiredTitle'),
+          translate('scanScreen.alerts.galleryPermissionMessage'),
+        );
         return null;
       }
 
@@ -307,10 +315,10 @@ export default function ScanScreen() {
 
     if (permission.status !== 'granted') {
       Alert.alert(
-        'Izin gerekli',
+        translate('scanScreen.alerts.permissionRequiredTitle'),
         source === 'video'
-          ? 'Video cekmek icin kamera izni vermelisiniz.'
-          : 'Fotograf cekmek icin kamera izni vermelisiniz.',
+          ? translate('scanScreen.alerts.videoPermissionMessage')
+          : translate('scanScreen.alerts.cameraPermissionMessage'),
       );
       return null;
     }
@@ -330,7 +338,7 @@ export default function ScanScreen() {
     }
 
     return pickerResult.assets[0];
-  }, []);
+  }, [translate]);
 
   const processSelectedAsset = useCallback(async (asset: ImagePicker.ImagePickerAsset) => {
     const mediaType = getAssetMediaType(asset);
@@ -350,7 +358,7 @@ export default function ScanScreen() {
           : await uploadImageAsset(asset);
 
       if (uploadedMedia.mediaType === AiMediaType.VIDEO && uploadedMedia.readyToStream === false) {
-        throw new Error('Video henuz hazir degil. Lutfen kisa bir sure sonra tekrar deneyin.');
+        throw new Error(translate('scanScreen.alerts.videoNotReady'));
       }
 
       setSelectedMedia((current) =>
@@ -384,15 +392,21 @@ export default function ScanScreen() {
         nextBalance,
       );
     } catch (error) {
-      Alert.alert('Analiz basarisiz', getErrorMessage(error));
+      Alert.alert(
+        translate('scanScreen.alerts.analysisFailedTitle'),
+        getErrorMessage(error, translate('scanScreen.alerts.unexpectedError')),
+      );
     } finally {
       setIsUploading(false);
     }
-  }, [analyzeMedia, queryClient, selectedCarId, setCredits]);
+  }, [analyzeMedia, queryClient, selectedCarId, setCredits, translate]);
 
   const handleSelectSource = useCallback(async (source: ScanSource) => {
     if (!isAuthenticated) {
-      Alert.alert('Giris gerekli', 'AI analizini kullanmak icin hesabiniza giris yapin.');
+      Alert.alert(
+        translate('scanScreen.alerts.loginRequiredTitle'),
+        translate('scanScreen.alerts.loginRequiredMessage'),
+      );
       return;
     }
 
@@ -405,7 +419,7 @@ export default function ScanScreen() {
     }
 
     await processSelectedAsset(asset);
-  }, [closeSourceSheet, isAuthenticated, pickAssetFromSource, processSelectedAsset]);
+  }, [closeSourceSheet, isAuthenticated, pickAssetFromSource, processSelectedAsset, translate]);
 
   const handleSelectCar = useCallback((carId: string | null) => {
     setSelectedCarId(carId);
@@ -452,11 +466,11 @@ export default function ScanScreen() {
             selectedCarId === null && styles.carChipTextSelected,
           ]}
         >
-          Yok
+          {translate('scanScreen.noCar')}
         </Text>
       </TouchableOpacity>
     ),
-    [handleSelectCar, selectedCarId],
+    [handleSelectCar, selectedCarId, translate],
   );
 
   return (
@@ -464,36 +478,24 @@ export default function ScanScreen() {
       <ScrollView
         automaticallyAdjustContentInsets={false}
         contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
         contentContainerStyle={[
           styles.container,
-          { paddingTop: Math.max(insets.top, 12) },
+          {
+            paddingTop: 12,
+            paddingBottom: Math.max(insets.bottom + 112, 124),
+          },
         ]}
       >
-        <View style={styles.heroCard}>
-          <MaterialIcons name="camera-alt" size={72} color={tokens.primary} />
-          <Text style={styles.title}>Aracini Tara</Text>
-          <Text style={styles.subtitle}>
-            Ikaz lambasi, ariza kodu veya kisa bir video icin fotograf cek, video kaydet ya da galeriden sec.
-          </Text>
+        <HomeHeader />
 
-          {shouldShowBalance ? (
-            <View style={styles.metaRow}>
-              <View style={styles.metaBadge}>
-                <MaterialIcons name="bolt" size={16} color={tokens.primary} />
-                <Text style={styles.metaBadgeText}>
-                  {creditBalance?.remainingCredits ?? 0} kredi
-                </Text>
-              </View>
-              {isPremiumActive ? (
-                <View style={[styles.metaBadge, styles.metaBadgeSecondary]}>
-                  <MaterialIcons name="workspace-premium" size={16} color={tokens.secondary} />
-                  <Text style={[styles.metaBadgeText, styles.metaBadgeSecondaryText]}>
-                    Premium aktif
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
+        <View style={styles.heroCard}>
+          <MaterialIcons name="center-focus-strong" size={72} color={Colors.secondaryContainer} />
+          <Text style={styles.title}>{translate('scanScreen.title')}</Text>
+          <Text style={styles.subtitle}>
+            {translate('scanScreen.subtitle')}
+          </Text>
 
           <TouchableOpacity
             style={[styles.button, isBusy ? styles.buttonDisabled : null]}
@@ -504,7 +506,7 @@ export default function ScanScreen() {
             {isBusy ? (
               <ActivityIndicator color={tokens.textInverse} />
             ) : (
-              <Text style={styles.buttonText}>Taramayi Baslat</Text>
+              <Text style={styles.buttonText}>{translate('scanScreen.startButton')}</Text>
             )}
           </TouchableOpacity>
           {shouldShowBalance &&
@@ -516,7 +518,7 @@ export default function ScanScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={styles.lowCreditText}>
-                  Krediniz azalıyor, yeni kredi satın alın
+                  {translate('scanScreen.lowCreditBanner')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -524,7 +526,7 @@ export default function ScanScreen() {
 
         {selectedMedia ? (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Secilen Medya</Text>
+            <Text style={styles.cardTitle}>{translate('scanScreen.selectedMedia')}</Text>
             {selectedMedia.mediaType === AiMediaType.IMAGE || selectedMedia.thumbnailUrl ? (
               <Image
                 source={{ uri: selectedMedia.thumbnailUrl ?? selectedMedia.localUri }}
@@ -533,11 +535,13 @@ export default function ScanScreen() {
             ) : (
               <View style={styles.videoPlaceholder}>
                 <MaterialIcons name="videocam" size={32} color={tokens.primary} />
-                <Text style={styles.videoPlaceholderText}>Video secildi</Text>
+                <Text style={styles.videoPlaceholderText}>{translate('scanScreen.videoSelected')}</Text>
               </View>
             )}
             <Text style={styles.mediaMetaText}>
-              {selectedMedia.mediaType === AiMediaType.VIDEO ? 'Video analizi' : 'Fotograf analizi'}
+              {selectedMedia.mediaType === AiMediaType.VIDEO
+                ? translate('scanScreen.videoAnalysis')
+                : translate('scanScreen.imageAnalysis')}
             </Text>
             {selectedMedia.fileName ? (
               <Text style={styles.mediaMetaSubtext}>{selectedMedia.fileName}</Text>
@@ -546,37 +550,82 @@ export default function ScanScreen() {
         ) : null}
 
         {analysis && analysisPayload ? (
-          <View style={styles.card}>
-            <View style={styles.resultHeader}>
-              <Text style={styles.cardTitle}>{analysisPayload.title}</Text>
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: urgencyTone.backgroundColor },
-                ]}
-              >
-                <Text style={[styles.statusBadgeText, { color: urgencyTone.textColor }]}>
-                  {urgencyTone.label}
+          <View style={styles.resultCard}>
+            {/* Urgency Header */}
+            <View style={styles.resultUrgencyRow}>
+              <View style={[styles.resultIconBox, { backgroundColor: urgencyTone.backgroundColor }]}>
+                <MaterialIcons
+                  name={analysisPayload.urgency === 'critical' ? 'warning' : analysisPayload.urgency === 'warning' ? 'error-outline' : 'check-circle'}
+                  size={28}
+                  color={urgencyTone.textColor}
+                />
+              </View>
+              <View style={styles.resultUrgencyInfo}>
+                <Text style={[styles.resultUrgencyLabel, { color: urgencyTone.textColor }]}>
+                  {urgencyTone.label.toUpperCase()}
+                </Text>
+                <Text style={styles.resultTitle}>{analysisPayload.title}</Text>
+              </View>
+            </View>
+
+            {/* Description */}
+            <View style={styles.resultDescBox}>
+              <Text style={styles.resultDescText}>{analysisPayload.description}</Text>
+            </View>
+
+            {/* Steps - "Ne Yapmalısın?" */}
+            {analysisPayload.warnings && analysisPayload.warnings.length > 0 ? (
+              <View style={styles.stepsSection}>
+                <View style={styles.stepsSectionHeader}>
+                  <MaterialIcons name="tune" size={18} color={tokens.textPrimary} />
+                  <Text style={styles.stepsSectionTitle}>{translate('scanScreen.stepsTitle')}</Text>
+                </View>
+                {analysisPayload.warnings.map((warning, index) => (
+                  <View key={`${warning.name}-${index}`} style={styles.stepItem}>
+                    <View style={[styles.stepBorder, { borderColor: urgencyTone.textColor }]} />
+                    <View style={[styles.stepNumber, { backgroundColor: urgencyTone.backgroundColor }]}>
+                      <Text style={[styles.stepNumberText, { color: urgencyTone.textColor }]}>
+                        {index + 1}
+                      </Text>
+                    </View>
+                    <View style={styles.stepContent}>
+                      <Text style={styles.stepText}>{warning.description}</Text>
+                      {warning.recommendation ? (
+                        <Text style={styles.stepRecText}>{warning.recommendation}</Text>
+                      ) : null}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Bottom info cards */}
+            <View style={styles.infoCardsRow}>
+              <View style={[styles.infoCard, { backgroundColor: urgencyTone.backgroundColor }]}>
+                <MaterialIcons name="flash-on" size={20} color={urgencyTone.textColor} />
+                <Text style={styles.infoCardLabel}>{translate('scanScreen.likelyCause')}</Text>
+                <Text style={[styles.infoCardValue, { color: urgencyTone.textColor }]}>
+                  {analysisPayload.warnings?.[0]?.name ?? analysisPayload.title}
+                </Text>
+              </View>
+              <View style={[styles.infoCard, { backgroundColor: tokens.bgSubtle }]}>
+                <MaterialIcons name="schedule" size={20} color={tokens.textSecondary} />
+                <Text style={styles.infoCardLabel}>{translate('scanScreen.damageRisk')}</Text>
+                <Text style={styles.infoCardValue}>
+                  {analysisPayload.urgency === 'critical'
+                    ? translate('scanScreen.risk.high')
+                    : analysisPayload.urgency === 'warning'
+                      ? translate('scanScreen.risk.medium')
+                      : translate('scanScreen.risk.low')}
                 </Text>
               </View>
             </View>
 
-            <Text style={styles.resultSummary}>{analysisPayload.summary}</Text>
-            <Text style={styles.sectionLabel}>Detay</Text>
-            <Text style={styles.resultBody}>{analysisPayload.description}</Text>
-            <Text style={styles.sectionLabel}>Oneri</Text>
-            <Text style={styles.resultBody}>{analysisPayload.recommendation}</Text>
-
-            {analysisPayload.warnings.length > 0 ? (
-              <View style={styles.warningList}>
-                <Text style={styles.sectionLabel}>Tespit Edilen Uyarilar</Text>
-                {analysisPayload.warnings.map((warning, index) => (
-                  <View key={`${warning.name}-${index}`} style={styles.warningCard}>
-                    <Text style={styles.warningTitle}>{warning.name}</Text>
-                    <Text style={styles.warningDescription}>{warning.description}</Text>
-                    <Text style={styles.warningRecommendation}>{warning.recommendation}</Text>
-                  </View>
-                ))}
+            {/* Recommendation */}
+            {analysisPayload.recommendation ? (
+              <View style={styles.resultRecBox}>
+                <Text style={styles.sectionLabel}>{translate('history.sections.recommendation')}</Text>
+                <Text style={styles.resultBody}>{analysisPayload.recommendation}</Text>
               </View>
             ) : null}
           </View>
@@ -602,15 +651,15 @@ export default function ScanScreen() {
           style={[styles.sheetContent, { paddingBottom: insets.bottom + 20 }]}
         >
           <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Tarama Kaynagini Sec</Text>
+            <Text style={styles.sheetTitle}>{translate('scanScreen.sheetTitle')}</Text>
             <Text style={styles.sheetSubtitle}>
-              Analiz etmek istediginiz medya kaynagini belirleyin.
+              {translate('scanScreen.sheetSubtitle')}
             </Text>
           </View>
 
           {isAuthenticated && cars.length > 0 ? (
             <View style={styles.carSection}>
-              <Text style={styles.carSectionTitle}>Aracla Iliskilendir</Text>
+              <Text style={styles.carSectionTitle}>{translate('scanScreen.linkCar')}</Text>
               <LegendList
                 horizontal
                 data={cars}
@@ -639,9 +688,9 @@ export default function ScanScreen() {
                 <MaterialIcons name="photo-camera" size={22} color={tokens.primary} />
               </View>
               <View style={styles.sourceOptionBody}>
-                <Text style={styles.sourceOptionTitle}>Fotograf Cek</Text>
+                <Text style={styles.sourceOptionTitle}>{translate('scanScreen.cameraTitle')}</Text>
                 <Text style={styles.sourceOptionDescription}>
-                  Ikaz lambasi veya parca goruntusunu kamerayla yakalayin.
+                  {translate('scanScreen.cameraDescription')}
                 </Text>
               </View>
               <MaterialIcons name="keyboard-arrow-right" size={24} color={tokens.textTertiary} />
@@ -657,9 +706,9 @@ export default function ScanScreen() {
                 <MaterialIcons name="videocam" size={22} color={tokens.primary} />
               </View>
               <View style={styles.sourceOptionBody}>
-                <Text style={styles.sourceOptionTitle}>Video Cek</Text>
+                <Text style={styles.sourceOptionTitle}>{translate('scanScreen.videoTitle')}</Text>
                 <Text style={styles.sourceOptionDescription}>
-                  Kisa bir video cekerek aracin sesini ya da davranisini paylasin.
+                  {translate('scanScreen.videoDescription')}
                 </Text>
               </View>
               <MaterialIcons name="keyboard-arrow-right" size={24} color={tokens.textTertiary} />
@@ -675,9 +724,9 @@ export default function ScanScreen() {
                 <MaterialIcons name="photo-library" size={22} color={tokens.primary} />
               </View>
               <View style={styles.sourceOptionBody}>
-                <Text style={styles.sourceOptionTitle}>Galeriden Sec</Text>
+                <Text style={styles.sourceOptionTitle}>{translate('scanScreen.galleryTitle')}</Text>
                 <Text style={styles.sourceOptionDescription}>
-                  Onceden cektiginiz fotograf ya da videoyu kullanin.
+                  {translate('scanScreen.galleryDescription')}
                 </Text>
               </View>
               <MaterialIcons name="keyboard-arrow-right" size={24} color={tokens.textTertiary} />
@@ -694,104 +743,220 @@ function CarChipSeparator() {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: tokens.bgBase,
+  },
   container: {
+    flexGrow: 1,
     paddingHorizontal: 20,
-    paddingBottom: 20,
     backgroundColor: tokens.bgBase,
     gap: 16,
   },
   heroCard: {
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: tokens.borderDefault,
+    ...ambientShadow,
   },
   title: {
+    fontFamily: FontFamily.bold,
     fontSize: 28,
-    fontWeight: '700',
+    lineHeight: 36,
+    letterSpacing: -0.56,
     color: tokens.textPrimary,
     marginTop: 20,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
     color: tokens.textSecondary,
     textAlign: 'center',
-  },
-  metaRow: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 20,
     marginBottom: 24,
-  },
-  metaBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: tokens.primaryLight,
-  },
-  metaBadgeSecondary: {
-    backgroundColor: '#FDECEF',
-  },
-  metaBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: tokens.primary,
-  },
-  metaBadgeSecondaryText: {
-    color: tokens.secondary,
   },
   button: {
     width: '100%',
     backgroundColor: tokens.primary,
     paddingHorizontal: 24,
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 9999,
     alignItems: 'center',
   },
   buttonDisabled: {
     opacity: 0.75,
   },
   buttonText: {
+    fontFamily: FontFamily.semiBold,
     color: tokens.textInverse,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    letterSpacing: 0.7,
   },
   lowCreditBanner: {
     marginTop: 10,
-    backgroundColor: '#FEF9C3',
-    borderRadius: 10,
+    backgroundColor: tokens.warningBg,
+    borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 14,
   },
   lowCreditText: {
-    color: '#854D0E',
+    fontFamily: FontFamily.medium,
+    color: tokens.warningText,
     fontSize: 13,
-    fontWeight: '500',
     textAlign: 'center',
   },
   card: {
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderRadius: 24,
     padding: 20,
-    borderWidth: 1,
-    borderColor: tokens.borderDefault,
+    ...ambientShadow,
   },
+  // ── Result Card (M3 design) ──
+  resultCard: {
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 24,
+    padding: 20,
+    gap: 16,
+    ...ambientShadow,
+  },
+  resultUrgencyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14,
+  },
+  resultIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resultUrgencyInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  resultUrgencyLabel: {
+    fontFamily: FontFamily.bold,
+    fontSize: 12,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  resultTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: 28,
+    lineHeight: 36,
+    letterSpacing: -0.56,
+    color: tokens.textPrimary,
+  },
+  resultConfidence: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    color: tokens.secondary,
+    letterSpacing: 0.7,
+  },
+  resultDescBox: {
+    backgroundColor: tokens.surfaceContainerLow,
+    borderRadius: 16,
+    padding: 16,
+  },
+  resultDescText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    color: tokens.textSecondary,
+  },
+  stepsSection: {
+    gap: 12,
+  },
+  stepsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  stepsSectionTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    color: tokens.textSecondary,
+    letterSpacing: 0.7,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: tokens.surfaceContainer,
+    borderRadius: 12,
+    padding: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: tokens.borderDefault,
+  },
+  stepBorder: {
+    display: 'none',
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumberText: {
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+  },
+  stepContent: {
+    flex: 1,
+    gap: 4,
+  },
+  stepText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    color: tokens.textPrimary,
+    lineHeight: 24,
+  },
+  stepRecText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    color: tokens.textSecondary,
+    lineHeight: 19,
+  },
+  infoCardsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  infoCard: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    gap: 6,
+  },
+  infoCardLabel: {
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    color: tokens.textSecondary,
+    marginTop: 8,
+  },
+  infoCardValue: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    color: tokens.textPrimary,
+    letterSpacing: 0.7,
+  },
+  resultRecBox: {
+    gap: 6,
+  },
+  // ── Shared ──
   sheetBackground: {
-    backgroundColor: tokens.bgElevated,
-    borderRadius: 28,
+    backgroundColor: tokens.bgSurface,
+    borderRadius: 32,
   },
   sheetIndicator: {
     backgroundColor: tokens.borderDefault,
-    width: 56,
+    width: 48,
+    height: 6,
+    borderRadius: 3,
   },
   sheetContent: {
     paddingHorizontal: 20,
@@ -801,11 +966,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   carSectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
     color: tokens.textTertiary,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.7,
     marginBottom: 10,
   },
   carScroll: {
@@ -823,34 +988,37 @@ const styles = StyleSheet.create({
   carChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: 9999,
     borderWidth: 1.5,
     borderColor: tokens.borderDefault,
-    backgroundColor: tokens.bgSubtle,
+    backgroundColor: tokens.surfaceContainerLow,
     marginRight: 8,
   },
   carChipSelected: {
-    borderColor: tokens.primary,
-    backgroundColor: tokens.primaryLight,
+    borderColor: Colors.secondaryContainer,
+    backgroundColor: `${Colors.secondaryContainer}18`,
   },
   carChipText: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 13,
-    fontWeight: '600',
     color: tokens.textSecondary,
   },
   carChipTextSelected: {
-    color: tokens.primary,
+    color: tokens.onSecondaryContainer,
   },
   sheetHeader: {
     gap: 6,
     marginBottom: 14,
   },
   sheetTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.22,
     color: tokens.textPrimary,
   },
   sheetSubtitle: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
     lineHeight: 20,
     color: tokens.textSecondary,
@@ -863,36 +1031,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
     padding: 16,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: tokens.borderDefault,
-    backgroundColor: tokens.bgSurface,
+    borderRadius: 16,
+    backgroundColor: tokens.surfaceContainerLowest,
+    ...ambientShadow,
   },
   sourceOptionIcon: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.primaryLight,
+    backgroundColor: tokens.surfaceContainer,
   },
   sourceOptionBody: {
     flex: 1,
     gap: 4,
   },
   sourceOptionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FontFamily.semiBold,
+    fontSize: 16,
     color: tokens.textPrimary,
   },
   sourceOptionDescription: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     lineHeight: 18,
     color: tokens.textSecondary,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
+    lineHeight: 28,
     color: tokens.textPrimary,
   },
   previewImage: {
@@ -908,86 +1077,39 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.primaryLight,
+    backgroundColor: `${Colors.secondaryContainer}18`,
     gap: 10,
   },
   videoPlaceholderText: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 15,
-    fontWeight: '600',
-    color: tokens.primary,
+    color: tokens.secondary,
   },
   mediaMetaText: {
+    fontFamily: FontFamily.semiBold,
     marginTop: 14,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
     color: tokens.textPrimary,
   },
   mediaMetaSubtext: {
+    fontFamily: FontFamily.regular,
     marginTop: 4,
     fontSize: 13,
     color: tokens.textSecondary,
   },
-  resultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  statusBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  resultSummary: {
-    marginTop: 16,
-    fontSize: 16,
-    lineHeight: 24,
-    color: tokens.textPrimary,
-  },
   sectionLabel: {
-    marginTop: 18,
-    marginBottom: 6,
-    fontSize: 13,
-    fontWeight: '700',
-    color: tokens.textTertiary,
+    fontFamily: FontFamily.semiBold,
+    marginTop: 8,
+    marginBottom: 4,
+    fontSize: 14,
+    color: tokens.surfaceTint,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 1.5,
   },
   resultBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: tokens.textSecondary,
-  },
-  warningList: {
-    marginTop: 8,
-    gap: 10,
-  },
-  warningCard: {
-    borderRadius: 16,
-    padding: 14,
-    backgroundColor: tokens.warningBg,
-    borderWidth: 1,
-    borderColor: '#FCD34D',
-  },
-  warningTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: tokens.warningText,
-  },
-  warningDescription: {
-    marginTop: 6,
-    fontSize: 14,
-    lineHeight: 20,
-    color: tokens.textPrimary,
-  },
-  warningRecommendation: {
-    marginTop: 8,
-    fontSize: 13,
-    lineHeight: 19,
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
     color: tokens.textSecondary,
   },
 });

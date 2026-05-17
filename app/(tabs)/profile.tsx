@@ -1,20 +1,18 @@
-import { Colors, tokens } from "@/constants/theme";
+import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
+import HomeHeader from "@/components/HomeHeader";
 import {
   AUTH_CALLBACK_ACTIONS,
-  parseAuthCallbackFromUrl,
 } from "@/utils/parseSessionFromUrl";
+import { startAuthSession } from "@/utils/authSession";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import * as WebBrowser from "expo-web-browser";
 import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
   Image,
   Modal,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -50,21 +48,35 @@ const MenuItem = memo(function MenuItem({
   showDivider = true,
   destructive = false,
 }: MenuItemProps) {
-  const t = tokens;
-
   return (
     <>
       <TouchableOpacity
-        style={[styles.menuItem, { backgroundColor: t.bgSurface }]}
+        style={styles.menuItem}
         onPress={onPress}
         activeOpacity={0.6}
       >
         <View style={styles.menuItemLeft}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: iconBg ?? tokens.surfaceContainer,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <MaterialIcons
+              name={icon}
+              size={20}
+              color={iconColor ?? (destructive ? tokens.danger : tokens.textPrimary)}
+            />
+          </View>
           <Text
             style={[
               styles.menuItemLabel,
               {
-                color: destructive ? t.dangerText : t.textPrimary,
+                color: destructive ? tokens.danger : tokens.textPrimary,
               },
             ]}
           >
@@ -73,24 +85,19 @@ const MenuItem = memo(function MenuItem({
         </View>
         <View style={styles.menuItemRight}>
           {value ? (
-            <Text style={[styles.menuItemValue, { color: t.textTertiary }]}>
+            <Text style={[styles.menuItemValue, { color: tokens.textSecondary }]}>
               {value}
             </Text>
           ) : null}
           <MaterialIcons
             size={18}
             name="chevron-right"
-            color={destructive ? t.dangerText : t.textPlaceholder}
+            color={destructive ? tokens.danger : tokens.textTertiary}
           />
         </View>
       </TouchableOpacity>
       {showDivider && (
-        <View
-          style={[
-            styles.menuInnerDivider,
-            { backgroundColor: t.borderDefault, marginLeft: 16 },
-          ]}
-        />
+        <View style={styles.menuInnerDivider} />
       )}
     </>
   );
@@ -101,17 +108,8 @@ const MenuSection = memo(function MenuSection({
 }: {
   children: React.ReactNode;
 }) {
-  const t = tokens;
   return (
-    <View
-      style={[
-        styles.menuSection,
-        {
-          backgroundColor: t.bgSurface,
-          borderColor: t.borderSubtle,
-        },
-      ]}
-    >
+    <View style={styles.menuSection}>
       {children}
     </View>
   );
@@ -122,37 +120,12 @@ const SectionLabel = memo(function SectionLabel({
 }: {
   label: string;
 }) {
-  const t = tokens;
   return (
-    <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
+    <Text style={styles.sectionLabel}>
       {label}
     </Text>
   );
 });
-
-function buildAuthSessionConfig(
-  type: "login" | "register",
-  frontendUrlMissingMessage: string,
-) {
-  const frontendUrl = process.env.EXPO_PUBLIC_FRONTEND_URL;
-
-  if (!frontendUrl) {
-    throw new Error(frontendUrlMissingMessage);
-  }
-
-  const redirectUrl = Linking.createURL("/auth/callback");
-  const authUrl = new URL(`/auth/${type}`, frontendUrl);
-  authUrl.searchParams.set("from", "app");
-  authUrl.searchParams.set("redirect_uri", redirectUrl);
-  const useExternalBrowser =
-    Platform.OS === "ios" && authUrl.protocol !== "https:";
-
-  return {
-    authUrl: authUrl.toString(),
-    redirectUrl,
-    useExternalBrowser,
-  };
-}
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
@@ -174,29 +147,16 @@ export default function ProfileScreen() {
   const handleAuth = useCallback(
     async (type: "login" | "register") => {
       try {
-        const { authUrl, redirectUrl, useExternalBrowser } =
-          buildAuthSessionConfig(
-            type,
-            translate("profileScreen.errors.frontendUrlMissing"),
-          );
-
-        if (useExternalBrowser) {
-          await Linking.openURL(authUrl);
-          return;
-        }
-
-        const result = await WebBrowser.openAuthSessionAsync(
-          authUrl,
-          redirectUrl,
+        const result = await startAuthSession(
+          type,
+          translate("profileScreen.errors.frontendUrlMissing"),
         );
 
-        if (result.type !== "success" || !result.url) {
+        if (result.type === "opened-in-browser" || result.type === "cancelled") {
           return;
         }
 
-        const authCallback = parseAuthCallbackFromUrl(result.url);
-
-        if (!authCallback) {
+        if (result.type === "invalid-callback") {
           Alert.alert(
             translate("profileScreen.authFailedTitle"),
             translate("auth.callback.unreadableSession"),
@@ -204,13 +164,13 @@ export default function ProfileScreen() {
           return;
         }
 
-        if (authCallback.type === "intent") {
-          if (authCallback.action === AUTH_CALLBACK_ACTIONS.REACTIVATE_ACCOUNT) {
+        if (result.authCallback.type === "intent") {
+          if (result.authCallback.action === AUTH_CALLBACK_ACTIONS.REACTIVATE_ACCOUNT) {
             router.push({
               pathname: "/auth/reactivate",
               params: {
-                email: authCallback.email,
-                reason: authCallback.reason,
+                email: result.authCallback.email,
+                reason: result.authCallback.reason,
               },
             });
             return;
@@ -225,9 +185,9 @@ export default function ProfileScreen() {
 
         await SecureStore.setItemAsync(
           SECURE_STORE_KEY,
-          JSON.stringify(authCallback.session),
+          JSON.stringify(result.authCallback.session),
         );
-        authStore.login(authCallback.session);
+        authStore.login(result.authCallback.session);
       } catch (error) {
         Alert.alert(
           type === "login"
@@ -360,16 +320,14 @@ export default function ProfileScreen() {
   // ── Not logged in ──
   if (!isLoggedIn) {
     return (
-      <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: "#fff" }]}
-        edges={["top"]}
-      >
+      <View style={{ flex: 1, backgroundColor: tokens.bgBase }}>
+        <HomeHeader />
         <StatusBar barStyle="dark-content" />
         {webViewModal}
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { backgroundColor: "#fff" },
+            { backgroundColor: tokens.bgBase },
           ]}
           showsVerticalScrollIndicator={false}
           bounces={false}
@@ -439,16 +397,14 @@ export default function ProfileScreen() {
 
           {/* ── Keşfet ── */}
         </ScrollView>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // ── Logged in ──
   return (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: "#fff" }]}
-      edges={["top"]}
-    >
+    <View style={{ flex: 1, backgroundColor: tokens.bgBase }}>
+      <HomeHeader />
       <StatusBar barStyle="dark-content" />
       {webViewModal}
       <ScrollView
@@ -456,11 +412,11 @@ export default function ProfileScreen() {
         bounces={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { backgroundColor: "#fff" },
+          { backgroundColor: tokens.bgBase },
         ]}
       >
         {/* ── Hero Header ── */}
-        <View style={[styles.hero, { backgroundColor: "#fff" }]}>
+        <View style={[styles.hero, { backgroundColor: tokens.bgBase }]}>
           <View style={styles.heroInner}>
             {/* Avatar */}
             <TouchableOpacity
@@ -572,7 +528,7 @@ export default function ProfileScreen() {
           />
           <MenuItem
             icon="monetization-on"
-            iconBg="#EFF6FF"
+            iconBg={t.primaryLight}
             iconColor="#2563EB"
             label={translate("credits.title")}
             onPress={goToCredits}
@@ -586,7 +542,7 @@ export default function ProfileScreen() {
         <MenuSection>
           <MenuItem
             icon="help-outline"
-            iconBg="#EFF6FF"
+            iconBg={t.primaryLight}
             iconColor="#3B82F6"
             label={translate("profileScreen.support")}
             onPress={goToSupport}
@@ -607,7 +563,7 @@ export default function ProfileScreen() {
           />
           <MenuItem
             icon="info-outline"
-            iconBg="#EFF6FF"
+            iconBg={t.primaryLight}
             iconColor="#3B82F6"
             label={translate("about.title")}
             onPress={goToAbout}
@@ -643,7 +599,7 @@ export default function ProfileScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -668,40 +624,42 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     position: "relative",
-    marginBottom: 14,
+    marginBottom: 16,
   },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 3,
-    borderColor: "rgba(0,0,0,0.08)",
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    borderWidth: 4,
+    borderColor: tokens.surfaceContainerLowest,
+    ...ambientShadow,
   },
   avatarFallback: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 3,
-    borderColor: "rgba(0,0,0,0.08)",
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    borderWidth: 4,
+    borderColor: tokens.surfaceContainerLowest,
     justifyContent: "center",
     alignItems: "center",
+    ...ambientShadow,
   },
   avatarText: {
+    fontFamily: FontFamily.bold,
     color: "#fff",
-    fontSize: 32,
-    fontWeight: "700",
+    fontSize: 36,
   },
   avatarBadge: {
     position: "absolute",
-    bottom: 2,
-    right: 2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    bottom: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: tokens.surfaceContainerLowest,
   },
   heroInfo: {
     alignItems: "center",
@@ -709,12 +667,16 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   heroName: {
-    fontSize: 22,
-    fontWeight: "700",
-    letterSpacing: -0.3,
+    fontFamily: FontFamily.bold,
+    fontSize: 28,
+    lineHeight: 36,
+    letterSpacing: -0.56,
+    color: tokens.textPrimary,
   },
   heroEmail: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
+    color: tokens.textSecondary,
   },
   heroChips: {
     flexDirection: "row",
@@ -725,28 +687,30 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
+    gap: 6,
+    backgroundColor: tokens.primaryContainer,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 9999,
   },
   chipText: {
+    fontFamily: FontFamily.medium,
     fontSize: 12,
-    color: "#fff",
-    fontWeight: "500",
+    color: tokens.textInverse,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
 
   // ── Section label ─────────────────────────────────────────────────────────
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.6,
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: tokens.surfaceTint,
     marginTop: 24,
     marginBottom: 8,
-    marginHorizontal: 16,
+    marginHorizontal: 20,
   },
 
   // ── Menu section card ─────────────────────────────────────────────────────
@@ -754,22 +718,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
+    backgroundColor: tokens.surfaceContainerLowest,
+    ...ambientShadow,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 16,
+    minHeight: 56,
   },
   menuItemLeft: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 16,
   },
   menuItemLabel: {
-    fontSize: 15,
-    fontWeight: "500",
+    fontFamily: FontFamily.regular,
+    fontSize: 18,
+    lineHeight: 26,
+    color: tokens.textPrimary,
   },
   menuItemRight: {
     flexDirection: "row",
@@ -777,10 +746,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   menuItemValue: {
-    fontSize: 14,
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    color: tokens.textSecondary,
   },
   menuInnerDivider: {
-    height: StyleSheet.hairlineWidth,
+    height: 1,
+    backgroundColor: tokens.surfaceVariant,
+    marginLeft: 64,
   },
 
   // ── Guest screen ──────────────────────────────────────────────────────────
@@ -791,22 +764,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   guestIconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
+    backgroundColor: tokens.primaryLight,
   },
   guestTitle: {
-    fontSize: 22,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
+    fontSize: 28,
+    lineHeight: 36,
+    letterSpacing: -0.56,
+    color: tokens.textPrimary,
     marginBottom: 10,
     textAlign: "center",
   },
   guestDesc: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
+    color: tokens.textSecondary,
     textAlign: "center",
   },
   authRow: {
@@ -818,38 +797,46 @@ const styles = StyleSheet.create({
   authBtn: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
   authBtnFilled: {
-    backgroundColor: Colors.primary,
+    backgroundColor: tokens.primary,
   },
   authBtnOutline: {
     borderWidth: 1,
+    borderColor: tokens.borderDefault,
   },
   authBtnFilledText: {
+    fontFamily: FontFamily.semiBold,
     color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 14,
+    letterSpacing: 0.7,
   },
   authBtnOutlineText: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    color: tokens.textPrimary,
+    letterSpacing: 0.7,
   },
   termsText: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
     lineHeight: 18,
     textAlign: "center",
     marginHorizontal: 32,
+    color: tokens.textSecondary,
   },
   termsLink: {
-    fontWeight: "500",
+    fontFamily: FontFamily.medium,
+    color: tokens.secondary,
   },
 
   // ── WebView modal ─────────────────────────────────────────────────────────
   modalContainer: {
     flex: 1,
+    backgroundColor: tokens.bgSurface,
   },
   modalHeader: {
     flexDirection: "row",
@@ -858,13 +845,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
+    borderBottomColor: tokens.borderSubtle,
   },
   modalHeaderSpacer: {
     width: 30,
   },
   modalTitle: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 17,
-    fontWeight: "600",
+    color: tokens.textPrimary,
     flex: 1,
     textAlign: "center",
   },
@@ -875,6 +864,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
+    backgroundColor: tokens.surfaceContainer,
     justifyContent: "center",
     alignItems: "center",
   },

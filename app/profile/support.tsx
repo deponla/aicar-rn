@@ -1,5 +1,5 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
@@ -70,7 +70,7 @@ function FaqItem({
         <TouchableOpacity
             style={[
                 styles.faqItem,
-                { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
+                { backgroundColor: t.surfaceContainerLowest, borderColor: t.borderDefault },
             ]}
             onPress={toggle}
             activeOpacity={0.7}
@@ -112,7 +112,7 @@ function ContactCard({
         <TouchableOpacity
             style={[
                 styles.contactCard,
-                { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
+                { backgroundColor: t.surfaceContainerLowest, borderColor: t.borderDefault },
             ]}
             onPress={onPress}
             activeOpacity={0.7}
@@ -202,7 +202,7 @@ export default function SupportScreen() {
                 <TouchableOpacity
                     style={[
                         styles.bugReportCard,
-                        { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
+                        { backgroundColor: t.surfaceContainerLowest, borderColor: t.borderDefault },
                     ]}
                     onPress={() => router.push("/profile/feedback")}
                     activeOpacity={0.7}
@@ -222,7 +222,7 @@ export default function SupportScreen() {
                     <View
                         style={[styles.bugReportButton, { backgroundColor: Colors.primary }]}
                     >
-                        <MaterialIcons name="arrow-forward" size={16} color="#fff" />
+                        <MaterialIcons name="arrow-forward" size={16} color={tokens.textInverse} />
                         <Text style={styles.bugReportButtonText}>Forma Git</Text>
                     </View>
                 </TouchableOpacity>
@@ -236,7 +236,7 @@ export default function SupportScreen() {
                 <TouchableOpacity
                     style={[
                         styles.bugReportCard,
-                        { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
+                        { backgroundColor: t.surfaceContainerLowest, borderColor: t.borderDefault },
                     ]}
                     onPress={handleBugReport}
                     activeOpacity={0.7}
@@ -256,7 +256,7 @@ export default function SupportScreen() {
                     <View
                         style={[styles.bugReportButton, { backgroundColor: Colors.primary }]}
                     >
-                        <MaterialIcons name="send" size={16} color="#fff" />
+                        <MaterialIcons name="send" size={16} color={tokens.textInverse} />
                         <Text style={styles.bugReportButtonText}>E-posta Gönder</Text>
                     </View>
                 </TouchableOpacity>
@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     sectionLabel: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 12,
-        fontWeight: "600",
         letterSpacing: 0.6,
         marginBottom: 10,
         marginLeft: 4,
@@ -282,11 +282,12 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     faqItem: {
-        borderRadius: 14,
+        borderRadius: 18,
         borderWidth: 1,
         paddingHorizontal: 16,
         paddingVertical: 14,
         gap: 8,
+        ...ambientShadow,
     },
     faqHeader: {
         flexDirection: "row",
@@ -294,12 +295,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     faqQuestion: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 15,
-        fontWeight: "600",
         flex: 1,
         marginRight: 8,
     },
     faqAnswer: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
         lineHeight: 20,
     },
@@ -309,11 +311,12 @@ const styles = StyleSheet.create({
     contactCard: {
         flexDirection: "row",
         alignItems: "center",
-        borderRadius: 14,
+        borderRadius: 18,
         borderWidth: 1,
         paddingHorizontal: 16,
         paddingVertical: 14,
         gap: 12,
+        ...ambientShadow,
     },
     contactIcon: {
         width: 40,
@@ -327,17 +330,19 @@ const styles = StyleSheet.create({
         gap: 2,
     },
     contactTitle: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 15,
-        fontWeight: "600",
     },
     contactSubtitle: {
+        fontFamily: FontFamily.regular,
         fontSize: 13,
     },
     bugReportCard: {
-        borderRadius: 16,
+        borderRadius: 20,
         borderWidth: 1,
         padding: 16,
         gap: 14,
+        ...ambientShadow,
     },
     bugReportContent: {
         flexDirection: "row",
@@ -349,10 +354,11 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     bugReportTitle: {
+        fontFamily: FontFamily.bold,
         fontSize: 16,
-        fontWeight: "700",
     },
     bugReportDesc: {
+        fontFamily: FontFamily.regular,
         fontSize: 13,
         lineHeight: 19,
     },
@@ -361,12 +367,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        borderRadius: 12,
+        borderRadius: 9999,
         minHeight: 44,
     },
     bugReportButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.semiBold,
+        color: tokens.textInverse,
         fontSize: 14,
-        fontWeight: "600",
     },
 });

@@ -1,13 +1,14 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import {
   useConfirmUpload,
   useDeletePhoto,
   usePatchUsers,
   useUploadUrl,
 } from "@/query-hooks/useUser";
-import { useAuthStore } from "@/store/useAuth";
+import { mergeAuthenticatedUser, useAuthStore } from "@/store/useAuth";
+import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
@@ -76,31 +77,23 @@ export default function EditProfileScreen() {
         },
       });
 
-      if (authStore.user) {
-        authStore.login({
-          ...authStore.user,
-          user: {
-            ...authStore.user.user,
-            name: name.trim(),
-            surname: surname.trim(),
-            phone: phone.trim(),
-          },
-        });
-      }
+      mergeAuthenticatedUser({
+        name: name.trim(),
+        surname: surname.trim(),
+        phone: phone.trim(),
+      });
 
       notify({
         type: "success",
         title: "Profil güncellendi",
       });
       router.back();
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        "Profil güncellenirken bir hata oluştu.";
-      notify({
-        type: "error",
+    } catch (error: unknown) {
+      notifyApiError({
+        error,
+        fallbackMessage: "Profil güncellenirken bir hata oluştu.",
+        notify,
         title: "Güncelleme başarısız",
-        message,
       });
     }
   };
@@ -154,23 +147,15 @@ export default function EditProfileScreen() {
         userId: user!.id,
       });
 
-      if (authStore.user) {
-        authStore.login({
-          ...authStore.user,
-          user: {
-            ...authStore.user.user,
-            photo: confirmResult.photo,
-          },
-        });
-      }
+      mergeAuthenticatedUser({ photo: confirmResult.photo });
 
       notify({ type: "success", title: "Fotoğraf güncellendi" });
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      notify({
-        type: "error",
+      notifyApiError({
+        error,
+        fallbackMessage: "Lütfen tekrar deneyin.",
+        notify,
         title: "Fotoğraf yüklenemedi",
-        message: err?.response?.data?.message || "Lütfen tekrar deneyin.",
       });
     } finally {
       setIsUploadingPhoto(false);
@@ -188,20 +173,15 @@ export default function EditProfileScreen() {
         userId: user.id,
       });
 
-      if (authStore.user) {
-        authStore.login({
-          ...authStore.user,
-          user: { ...authStore.user.user, photo: null },
-        });
-      }
+      mergeAuthenticatedUser({ photo: null });
 
       notify({ type: "success", title: "Fotoğraf silindi" });
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      notify({
-        type: "error",
+      notifyApiError({
+        error,
+        fallbackMessage: "Lütfen tekrar deneyin.",
+        notify,
         title: "Fotoğraf silinemedi",
-        message: err?.response?.data?.message || "Lütfen tekrar deneyin.",
       });
     } finally {
       setIsUploadingPhoto(false);
@@ -253,7 +233,7 @@ export default function EditProfileScreen() {
     return (
       <ScreenContainer title="Kişisel Bilgilerim" showBackButton>
         <View style={styles.emptyState}>
-          <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
+          <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
           <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
         </View>
       </ScreenContainer>
@@ -275,7 +255,7 @@ export default function EditProfileScreen() {
           ]}
         >
           {patchUser.isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={tokens.textInverse} />
           ) : (
             <Text
               style={[
@@ -307,11 +287,11 @@ export default function EditProfileScreen() {
             )}
             {isUploadingPhoto ? (
               <View style={styles.avatarOverlay}>
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={tokens.textInverse} />
               </View>
             ) : (
               <View style={styles.avatarBadge}>
-                <MaterialIcons name="camera-alt" size={14} color="#fff" />
+                <MaterialIcons name="camera-alt" size={14} color={tokens.textInverse} />
               </View>
             )}
           </TouchableOpacity>
@@ -337,7 +317,7 @@ export default function EditProfileScreen() {
                 value={name}
                 onChangeText={setName}
                 placeholder="Adınızı girin"
-                placeholderTextColor="#C7C7CC"
+                placeholderTextColor={tokens.textPlaceholder}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
@@ -354,7 +334,7 @@ export default function EditProfileScreen() {
                 value={surname}
                 onChangeText={setSurname}
                 placeholder="Soyadınızı girin"
-                placeholderTextColor="#C7C7CC"
+                placeholderTextColor={tokens.textPlaceholder}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
@@ -367,7 +347,7 @@ export default function EditProfileScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>E-posta</Text>
               <View style={styles.readOnlyField}>
-                <MaterialIcons name="lock" size={16} color="#C7C7CC" />
+                <MaterialIcons name="lock" size={16} color={tokens.textPlaceholder} />
                 <Text style={styles.readOnlyText}>{user.email}</Text>
               </View>
               <Text style={styles.helperText}>
@@ -383,7 +363,7 @@ export default function EditProfileScreen() {
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="Telefon numaranız"
-                placeholderTextColor="#C7C7CC"
+                placeholderTextColor={tokens.textPlaceholder}
                 keyboardType="phone-pad"
                 returnKeyType="done"
               />
@@ -403,10 +383,10 @@ export default function EditProfileScreen() {
           activeOpacity={0.8}
         >
           {patchUser.isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={tokens.textInverse} />
           ) : (
             <>
-              <MaterialIcons name="check" size={20} color="#fff" />
+              <MaterialIcons name="check" size={20} color={tokens.textInverse} />
               <Text style={styles.saveButtonText}>Değişiklikleri Kaydet</Text>
             </>
           )}
@@ -434,8 +414,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 15,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
 
   // Save Header Button
@@ -443,18 +424,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 9999,
   },
   saveHeaderBtnDisabled: {
-    backgroundColor: "#E5E5EA",
+    backgroundColor: tokens.borderSubtle,
   },
   saveHeaderBtnText: {
-    color: "#fff",
+    fontFamily: FontFamily.semiBold,
+    color: tokens.textInverse,
     fontSize: 14,
-    fontWeight: "600",
   },
   saveHeaderBtnTextDisabled: {
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
 
   // Avatar
@@ -471,22 +452,22 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     borderWidth: 4,
-    borderColor: "#F2F2F7",
+    borderColor: tokens.surfaceContainer,
   },
   avatarFallback: {
     width: 96,
     height: 96,
     borderRadius: 48,
     borderWidth: 4,
-    borderColor: "#F2F2F7",
+    borderColor: tokens.surfaceContainer,
     backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
   avatarText: {
-    color: "#fff",
+    fontFamily: FontFamily.bold,
+    color: tokens.textInverse,
     fontSize: 34,
-    fontWeight: "700",
   },
   avatarOverlay: {
     position: "absolute",
@@ -510,24 +491,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: tokens.surfaceContainerLowest,
   },
   avatarHint: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
     textAlign: "center",
   },
 
   // Card
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 24,
     marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    ...ambientShadow,
   },
   cardHeader: {
     flexDirection: "row",
@@ -538,13 +516,13 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
   },
   cardTitle: {
+    fontFamily: FontFamily.bold,
     fontSize: 16,
-    fontWeight: "700",
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   cardDivider: {
     height: 1,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: tokens.borderSubtle,
     marginHorizontal: 20,
   },
   cardBody: {
@@ -557,42 +535,46 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   fieldLabel: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 13,
-    fontWeight: "600",
-    color: "#3C3C43",
+    color: tokens.textPrimary,
     marginBottom: 2,
   },
   input: {
-    backgroundColor: "#F9F9FB",
+    backgroundColor: tokens.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
+    borderColor: tokens.borderSubtle,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    fontFamily: FontFamily.regular,
     fontSize: 16,
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   readOnlyField: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: tokens.surfaceContainer,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
   readOnlyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 16,
-    color: "#8E8E93",
+    color: tokens.textSecondary,
     flex: 1,
   },
   helperText: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
   errorText: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
-    color: "#FF3B30",
+    color: tokens.danger,
   },
 
   // Save Button
@@ -603,30 +585,30 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: Colors.primary,
     paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 9999,
     marginBottom: 12,
   },
   saveButtonDisabled: {
-    backgroundColor: "#C7C7CC",
+    backgroundColor: tokens.textPlaceholder,
   },
   saveButtonText: {
-    color: "#fff",
+    fontFamily: FontFamily.bold,
+    color: tokens.textInverse,
     fontSize: 16,
-    fontWeight: "700",
   },
 
   // Cancel
   cancelButton: {
     alignItems: "center",
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 9999,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
-    backgroundColor: "#fff",
+    borderColor: tokens.borderSubtle,
+    backgroundColor: tokens.surfaceContainerLowest,
   },
   cancelButtonText: {
-    color: "#1C1C1E",
+    fontFamily: FontFamily.semiBold,
+    color: tokens.textPrimary,
     fontSize: 16,
-    fontWeight: "600",
   },
 });

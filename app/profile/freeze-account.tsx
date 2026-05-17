@@ -1,5 +1,6 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
+import { ambientShadow, FontFamily, tokens } from "@/constants/theme";
 import { useFreezeAccount } from "@/query-hooks/useUser";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -58,7 +59,7 @@ export default function FreezeAccountScreen() {
         return (
             <ScreenContainer title="Hesabı dondur" showBackButton>
                 <View style={styles.emptyState}>
-                    <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
+                    <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
                     <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
                 </View>
             </ScreenContainer>
@@ -68,7 +69,7 @@ export default function FreezeAccountScreen() {
     return (
         <ScreenContainer title="Hesabı dondur" showBackButton>
             <View style={styles.warningCard}>
-                <MaterialIcons name="pause-circle-outline" size={36} color="#92400E" />
+                <MaterialIcons name="pause-circle-outline" size={36} color={tokens.warningText} />
                 <Text style={styles.warningTitle}>Bu işlem geri alınabilir</Text>
                 <Text style={styles.warningText}>
                     Hesabınız dondurulduğunda mevcut oturumlarınız kapanır ve korumalı
@@ -91,10 +92,10 @@ export default function FreezeAccountScreen() {
                 activeOpacity={0.85}
             >
                 {freezeAccount.isPending ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color={tokens.textInverse} />
                 ) : (
                     <>
-                        <MaterialIcons name="pause-circle-outline" size={20} color="#FFFFFF" />
+                        <MaterialIcons name="pause-circle-outline" size={20} color={tokens.textInverse} />
                         <Text style={styles.freezeButtonText}>Hesabımı dondur</Text>
                     </>
                 )}
@@ -110,61 +111,62 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     emptyText: {
+        fontFamily: FontFamily.regular,
         fontSize: 15,
-        color: "#8E8E93",
+        color: tokens.textTertiary,
     },
     warningCard: {
-        backgroundColor: "#FFFBEB",
-        borderWidth: 1,
-        borderColor: "#FDE68A",
-        borderRadius: 18,
+        backgroundColor: tokens.warningBg,
+        borderRadius: 24,
         padding: 20,
         alignItems: "center",
         gap: 10,
         marginBottom: 18,
         marginTop: 12,
+        ...ambientShadow,
     },
     warningTitle: {
+        fontFamily: FontFamily.bold,
         fontSize: 18,
-        fontWeight: "700",
-        color: "#92400E",
+        color: tokens.warningText,
     },
     warningText: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
         lineHeight: 20,
         textAlign: "center",
-        color: "#78350F",
+        color: tokens.warningText,
     },
     detailCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: "#ECECEC",
+        backgroundColor: tokens.surfaceContainerLowest,
+        borderRadius: 24,
         padding: 18,
         gap: 8,
         marginBottom: 18,
+        ...ambientShadow,
     },
     detailTitle: {
+        fontFamily: FontFamily.bold,
         fontSize: 16,
-        fontWeight: "700",
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     detailText: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
-        color: "#4B5563",
+        color: tokens.textSecondary,
     },
     freezeButton: {
         minHeight: 52,
-        borderRadius: 14,
-        backgroundColor: "#B45309",
+        borderRadius: 9999,
+        backgroundColor: tokens.warning,
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "row",
         gap: 8,
     },
     freezeButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.bold,
+        color: tokens.textInverse,
         fontSize: 15,
-        fontWeight: "700",
     },
 });

@@ -1,7 +1,7 @@
 import { LegendList } from "@legendapp/list";
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import {
   useActiveSessions,
   useRevokeSession,
@@ -79,10 +79,10 @@ const SessionCard = React.memo(function SessionCard({
     () => [
       styles.sessionCard,
       {
-        backgroundColor: tokens.bgSurface,
+        backgroundColor: tokens.surfaceContainerLowest,
         borderColor: session.isCurrent
           ? `${Colors.primary}40`
-          : tokens.borderDefault,
+          : tokens.borderSubtle,
       },
     ],
     [session.isCurrent],
@@ -298,7 +298,7 @@ export default function ActiveSessionsScreen() {
   const emptyState = useMemo(
     () => (
       <View style={styles.emptyState}>
-        <MaterialIcons name="devices" size={48} color="#C7C7CC" />
+        <MaterialIcons name="devices" size={48} color={tokens.textPlaceholder} />
         <Text style={styles.emptyText}>Aktif oturum bulunamadı</Text>
       </View>
     ),
@@ -315,7 +315,7 @@ export default function ActiveSessionsScreen() {
             disabled={revokeSession.isPending}
             activeOpacity={0.8}
           >
-            <MaterialIcons name="logout" size={18} color="#FFFFFF" />
+            <MaterialIcons name="logout" size={18} color={tokens.textInverse} />
             <Text style={styles.revokeAllButtonText}>
               Diğer Tüm Oturumları Kapat ({otherSessionCount})
             </Text>
@@ -379,13 +379,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     backgroundColor: tokens.infoBg,
-    borderRadius: 14,
+    borderRadius: 20,
     padding: 14,
     marginTop: 8,
     marginBottom: 16,
     alignItems: "flex-start",
+    ...ambientShadow,
   },
   infoText: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     lineHeight: 19,
     flex: 1,
@@ -405,10 +407,11 @@ const styles = StyleSheet.create({
     height: 12,
   },
   sessionCard: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     gap: 12,
+    ...ambientShadow,
   },
   sessionHeader: {
     flexDirection: "row",
@@ -431,8 +434,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   deviceName: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 16,
-    fontWeight: "600",
     flexShrink: 1,
   },
   currentBadge: {
@@ -442,11 +445,12 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.successBg,
   },
   currentBadgeText: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 11,
-    fontWeight: "600",
     color: tokens.successText,
   },
   sessionMeta: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
   },
   sessionDetailRow: {
@@ -456,6 +460,7 @@ const styles = StyleSheet.create({
     paddingLeft: 56,
   },
   sessionDetailText: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
   },
   revokeButton: {
@@ -464,13 +469,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 9999,
     paddingVertical: 10,
     marginTop: 2,
   },
   revokeButtonText: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 14,
-    fontWeight: "600",
   },
   revokeAllButton: {
     flexDirection: "row",
@@ -479,13 +484,13 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: tokens.danger,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 9999,
     marginTop: 20,
   },
   revokeAllButtonText: {
-    color: "#FFFFFF",
+    fontFamily: FontFamily.semiBold,
+    color: tokens.textInverse,
     fontSize: 15,
-    fontWeight: "600",
   },
   footerSpacing: {
     height: 32,
@@ -496,18 +501,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 15,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
   errorTitle: {
+    fontFamily: FontFamily.bold,
     fontSize: 16,
-    fontWeight: "700",
     color: tokens.textPrimary,
   },
   emptySubtext: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     lineHeight: 19,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
     textAlign: "center",
     paddingHorizontal: 24,
   },

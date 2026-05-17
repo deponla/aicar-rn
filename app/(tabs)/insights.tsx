@@ -1,7 +1,7 @@
 import { LegendList } from "@legendapp/list";
-import { Colors, tokens } from "@/constants/theme";
+import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
+import HomeHeader from "@/components/HomeHeader";
 import LoginRequired from "@/components/LoginRequired";
-import ScreenContainer from "@/components/ScreenContainer";
 import { useAuthStore } from "@/store/useAuth";
 import { AuthStatusEnum } from "@/types/auth";
 import { AnalyzeMediaLog, AiAnalysisType, AiUrgency } from "@/types/ai";
@@ -222,14 +222,41 @@ function AnalysisDetailModal({
 
 type UrgencyFilter = "all" | AiUrgency;
 
-export default function HistoryScreen() {
+// ── Stat Card ──
+const StatCard = React.memo(function StatCard({
+  icon,
+  iconBg,
+  iconColor,
+  label,
+  value,
+}: {
+  icon: keyof typeof MaterialIcons.glyphMap;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  value: number;
+}) {
+  return (
+    <View style={styles.statCard}>
+      <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
+        <MaterialIcons name={icon} size={18} color={iconColor} />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+});
+
+export default function InsightsScreen() {
   const { t } = useTranslation();
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const [selected, setSelected] = useState<AnalyzeMediaLog | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
-  const { data, isLoading, refetch } = useGetAnalysisLogs();
+  const { data, isLoading, refetch } = useGetAnalysisLogs(undefined, {
+    enabled: isLoggedIn,
+  });
 
   const filters = useMemo(
     () => [
@@ -250,6 +277,20 @@ export default function HistoryScreen() {
     [logs, urgencyFilter],
   );
 
+  const stats = useMemo(() => {
+    const total = logs.length;
+    let critical = 0;
+    let warning = 0;
+    let ok = 0;
+    for (const log of logs) {
+      const u = log.aiResponse?.urgency;
+      if (u === "critical") critical++;
+      else if (u === "warning") warning++;
+      else ok++;
+    }
+    return { total, critical, warning, ok };
+  }, [logs]);
+
   const handlePress = useCallback((item: AnalyzeMediaLog) => {
     setSelected(item);
     setModalVisible(true);
@@ -266,40 +307,76 @@ export default function HistoryScreen() {
 
   const listHeader = useMemo(
     () => (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterRow}
-        contentContainerStyle={styles.filterContent}
-      >
-        {filters.map((filter) => (
-          <TouchableOpacity
-            key={filter.key}
-            style={[
-              styles.filterChip,
-              urgencyFilter === filter.key && styles.filterChipActive,
-            ]}
-            onPress={() => setUrgencyFilter(filter.key)}
-          >
-            <Text
+      <View>
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <StatCard
+            icon="bar-chart"
+            iconBg={tokens.primaryLight}
+            iconColor={Colors.primary}
+            label={t("history.stats.total")}
+            value={stats.total}
+          />
+          <StatCard
+            icon="error"
+            iconBg={tokens.dangerBg}
+            iconColor={tokens.danger}
+            label={t("history.urgency.critical")}
+            value={stats.critical}
+          />
+          <StatCard
+            icon="flash-on"
+            iconBg={tokens.warningBg}
+            iconColor={tokens.warning}
+            label={t("history.urgency.warning")}
+            value={stats.warning}
+          />
+          <StatCard
+            icon="check-circle"
+            iconBg="#ECFDF5"
+            iconColor={tokens.success}
+            label="OK"
+            value={stats.ok}
+          />
+        </View>
+
+        {/* Section header + filter chips */}
+        <Text style={styles.sectionHeader}>{t("history.title")}</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterRow}
+          contentContainerStyle={styles.filterContent}
+        >
+          {filters.map((filter) => (
+            <TouchableOpacity
+              key={filter.key}
               style={[
-                styles.filterChipText,
-                urgencyFilter === filter.key && styles.filterChipTextActive,
+                styles.filterChip,
+                urgencyFilter === filter.key && styles.filterChipActive,
               ]}
+              onPress={() => setUrgencyFilter(filter.key)}
             >
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Text
+                style={[
+                  styles.filterChipText,
+                  urgencyFilter === filter.key && styles.filterChipTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
     ),
-    [filters, urgencyFilter],
+    [filters, urgencyFilter, stats, t],
   );
 
   const emptyState = useMemo(
     () => (
       <View style={styles.emptyContainer}>
-        <MaterialIcons name="history" size={64} color={tokens.textTertiary} />
+        <MaterialIcons name="bar-chart" size={64} color={tokens.textTertiary} />
         <Text style={styles.emptyTitle}>{t("history.emptyTitle")}</Text>
         <Text style={styles.emptySubtitle}>
           {urgencyFilter === "all"
@@ -322,11 +399,9 @@ export default function HistoryScreen() {
   }
 
   return (
-    <ScreenContainer
-      title={t("history.title")}
-      scrollable={false}
-      contentContainerStyle={styles.screenContent}
-    >
+    <View style={styles.screen}>
+      <HomeHeader />
+
       {isLoading && data === undefined ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary} />
@@ -354,7 +429,7 @@ export default function HistoryScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />
-    </ScreenContainer>
+    </View>
   );
 }
 
@@ -363,32 +438,76 @@ function ListSeparator() {
 }
 
 const styles = StyleSheet.create({
-  screenContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+  screen: {
+    flex: 1,
+    backgroundColor: tokens.bgBase,
   },
+  // ── Stats ──
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 12,
+    alignItems: "center",
+    gap: 4,
+    ...ambientShadow,
+  },
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 2,
+  },
+  statValue: {
+    fontFamily: FontFamily.extraBold,
+    fontSize: 22,
+    color: tokens.textPrimary,
+  },
+  statLabel: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 10,
+    color: tokens.textTertiary,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  sectionHeader: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.22,
+    color: tokens.textPrimary,
+    marginBottom: 10,
+  },
+  // ── Filters ──
   filterRow: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   filterContent: {
     gap: 8,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: tokens.bgSubtle,
+    borderRadius: 9999,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: tokens.borderDefault,
+    borderColor: tokens.borderSubtle,
   },
   filterChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: tokens.primary,
+    borderColor: tokens.primary,
   },
   filterChipText: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 13,
-    fontWeight: "600",
     color: tokens.textSecondary,
   },
   filterChipTextActive: {
@@ -404,19 +523,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingTop: 4,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 100,
   },
   listSeparator: {
-    height: 12,
+    height: 10,
   },
   card: {
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderRadius: 16,
     padding: 16,
     gap: 10,
-    borderWidth: 1,
-    borderColor: tokens.borderSubtle,
+    ...ambientShadow,
   },
   cardHeader: {
     flexDirection: "row",
@@ -434,13 +553,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: tokens.primaryLight,
+    backgroundColor: `${Colors.secondaryContainer}18`,
     alignItems: "center",
     justifyContent: "center",
   },
   cardTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontFamily: FontFamily.semiBold,
+    fontSize: 16,
     color: tokens.textPrimary,
     flex: 1,
   },
@@ -450,10 +569,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   urgencyText: {
+    fontFamily: FontFamily.bold,
     fontSize: 12,
-    fontWeight: "700",
   },
   summary: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     color: tokens.textSecondary,
     lineHeight: 18,
@@ -469,6 +589,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   metaText: {
+    fontFamily: FontFamily.medium,
     fontSize: 12,
     color: tokens.textTertiary,
   },
@@ -482,8 +603,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   creditText: {
+    fontFamily: FontFamily.bold,
     fontSize: 11,
-    fontWeight: "700",
     color: tokens.warningText,
   },
   statusDot: {
@@ -497,13 +618,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
     color: tokens.textPrimary,
     marginTop: 16,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
     color: tokens.textSecondary,
     textAlign: "center",
     paddingHorizontal: 32,
@@ -525,8 +648,9 @@ const styles = StyleSheet.create({
   modalTitle: {
     flex: 1,
     marginRight: 12,
-    fontSize: 18,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
+    fontSize: 22,
+    lineHeight: 28,
     color: tokens.textPrimary,
   },
   modalBody: {
@@ -548,6 +672,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     flex: 1,
+    fontFamily: FontFamily.regular,
     color: tokens.dangerText,
     fontSize: 13,
     lineHeight: 18,
@@ -557,36 +682,39 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sectionTitle: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 14,
-    fontWeight: "700",
     color: tokens.textPrimary,
+    letterSpacing: 0.7,
   },
   sectionContent: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    lineHeight: 24,
     color: tokens.textSecondary,
   },
   warningItem: {
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderRadius: 12,
     padding: 12,
-    borderWidth: 1,
-    borderColor: tokens.borderSubtle,
+    ...ambientShadow,
     gap: 4,
   },
   warningName: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
+    fontSize: 14,
     color: tokens.textPrimary,
   },
   warningDesc: {
-    fontSize: 13,
-    lineHeight: 19,
+    fontFamily: FontFamily.regular,
+    fontSize: 14,
+    lineHeight: 20,
     color: tokens.textSecondary,
   },
   warningRec: {
+    fontFamily: FontFamily.medium,
     fontSize: 12,
     lineHeight: 18,
-    color: tokens.primary,
+    color: tokens.secondary,
   },
 });

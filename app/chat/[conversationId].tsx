@@ -1,4 +1,4 @@
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import {
   ChatQueryKeys,
   useGetChatConversations,
@@ -8,6 +8,8 @@ import {
 } from "@/query-hooks/useChat";
 import { useChatSocket } from "@/query-hooks/useChatSocket";
 import { useAuthStore } from "@/store/useAuth";
+import { AuthStatusEnum } from "@/types/auth";
+import LoginRequired from "@/components/LoginRequired";
 import type {
   ChatReadEventPayload,
   ChatSocketMessagePayload,
@@ -54,11 +56,13 @@ export default function ChatDetailScreen() {
   const queryClient = useQueryClient();
   const flatListRef = useRef<FlatList>(null);
   const t = tokens;
+  const isLoggedIn = auth.status === AuthStatusEnum.LOGGED_IN && !!auth.user;
 
   const [messageText, setMessageText] = useState("");
 
   const conversationsQuery = useGetChatConversations({
     filters: { page: 0, limit: 50 },
+    enabled: isLoggedIn,
   });
 
   const conversation = conversationsQuery.data?.results?.find(
@@ -68,7 +72,7 @@ export default function ChatDetailScreen() {
   const messagesQuery = useGetChatMessages({
     conversationId,
     filters: { page: 0, limit: 100 },
-    enabled: !!conversationId,
+    enabled: isLoggedIn && !!conversationId,
   });
 
   const sendMessage = useSendChatMessage();
@@ -134,10 +138,10 @@ export default function ChatDetailScreen() {
             .map((c) =>
               c.id === incoming.conversationId
                 ? {
-                    ...c,
-                    lastMessage: incoming.content,
-                    lastMessageAt: incoming.createdAt,
-                  }
+                  ...c,
+                  lastMessage: incoming.content,
+                  lastMessageAt: incoming.createdAt,
+                }
                 : c,
             )
             .sort((a, b) => {
@@ -183,14 +187,14 @@ export default function ChatDetailScreen() {
 
   // ---------- Join & mark read ----------
   useEffect(() => {
-    if (!conversationId) return;
+    if (!isLoggedIn || !conversationId) return;
     if (isConnected) {
       emitJoin(conversationId);
       emitRead(conversationId);
     }
     markConversationRead.mutate(conversationId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId, isConnected, emitJoin, emitRead]);
+  }, [conversationId, isConnected, emitJoin, emitRead, isLoggedIn]);
 
   // ---------- Scroll to bottom on new messages ----------
   useEffect(() => {
@@ -267,6 +271,16 @@ export default function ChatDetailScreen() {
   );
 
   const conversationName = getConversationName(conversation);
+
+  if (!isLoggedIn) {
+    return (
+      <LoginRequired
+        pageTitle="Mesajlar"
+        title="Sohbetlerinizi görmek için giriş yapın"
+        description="Mesajları görüntülemek ve yanıt vermek için hesabınıza giriş yapın."
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -423,8 +437,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 17,
-    fontWeight: "600",
   },
   onlineIndicator: {
     flexDirection: "row",
@@ -435,12 +449,13 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#34C759",
+    backgroundColor: tokens.success,
     marginRight: 4,
   },
   onlineText: {
+    fontFamily: FontFamily.medium,
     fontSize: 12,
-    color: "#34C759",
+    color: tokens.success,
   },
   headerRight: {
     width: 40,
@@ -496,23 +511,20 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   messageBubbleOther: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: tokens.surfaceContainerLowest,
     borderBottomLeftRadius: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    ...ambientShadow,
   },
   messageText: {
+    fontFamily: FontFamily.regular,
     fontSize: 15,
     lineHeight: 21,
   },
   messageTextMine: {
-    color: "#FFFFFF",
+    color: tokens.textInverse,
   },
   messageTextOther: {
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   messageFooter: {
     flexDirection: "row",
@@ -521,15 +533,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   messageTime: {
+    fontFamily: FontFamily.medium,
     fontSize: 11,
   },
   messageTimeMine: {
     color: "rgba(255,255,255,0.7)",
   },
   messageTimeOther: {
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
   readIndicator: {
+    fontFamily: FontFamily.medium,
     fontSize: 11,
     color: "rgba(255,255,255,0.7)",
   },
@@ -547,6 +561,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 10,
+    fontFamily: FontFamily.regular,
     fontSize: 16,
     maxHeight: 100,
     minHeight: 40,

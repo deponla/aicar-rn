@@ -1,5 +1,5 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import { tokens } from "@/constants/theme";
+import { ambientShadow, FontFamily, tokens } from "@/constants/theme";
 import { normalizeLanguage } from "@/i18n";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -95,7 +95,7 @@ const MenuCard = memo(function MenuCard({
     <View
       style={[
         styles.menuCard,
-        { backgroundColor: t.bgSurface, borderColor: t.borderDefault },
+        { backgroundColor: t.surfaceContainerLowest, borderColor: t.borderSubtle },
       ]}
     >
       {children}
@@ -265,12 +265,13 @@ const styles = StyleSheet.create({
     paddingTop: 80,
   },
   emptyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 15,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
   sectionLabel: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 12,
-    fontWeight: "600",
     letterSpacing: 0.6,
     marginTop: 22,
     marginBottom: 8,
@@ -280,6 +281,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     overflow: "hidden",
+    ...ambientShadow,
   },
   menuItem: {
     flexDirection: "row",
@@ -294,10 +296,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuItemTitle: {
+    fontFamily: FontFamily.medium,
     fontSize: 16,
-    fontWeight: "500",
   },
   menuItemSubtitle: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     marginRight: 4,
   },

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ambientShadow, FontFamily, tokens } from "@/constants/theme";
 import { useImperativeHandle, useRef, useState } from "react";
 import {
   Keyboard,
@@ -62,7 +63,7 @@ export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
           <Ionicons
             name="search"
             size={20}
-            color="#999"
+            color={tokens.textTertiary}
             style={styles.searchIcon}
           />
           <GooglePlacesAutocomplete
@@ -78,11 +79,11 @@ export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
                   name: data.description,
                   viewport: viewport
                     ? {
-                        north: viewport.northeast.lat,
-                        south: viewport.southwest.lat,
-                        east: viewport.northeast.lng,
-                        west: viewport.southwest.lng,
-                      }
+                      north: viewport.northeast.lat,
+                      south: viewport.southwest.lat,
+                      east: viewport.northeast.lng,
+                      west: viewport.southwest.lng,
+                    }
                     : undefined,
                 });
                 setSearchText(data.description);
@@ -121,27 +122,25 @@ export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
                 paddingLeft: 36,
                 paddingRight: 40,
                 fontSize: 16,
+                fontFamily: FontFamily.regular,
+                color: tokens.textPrimary,
                 backgroundColor: "transparent",
                 borderWidth: 0,
                 marginBottom: 0,
                 marginTop: 0,
               },
               listView: {
-                backgroundColor: "#fff",
-                borderRadius: 12,
+                backgroundColor: tokens.surfaceContainerLowest,
+                borderRadius: 16,
                 marginTop: 8,
                 position: "absolute",
                 top: 44,
                 left: -12,
                 right: -12,
                 zIndex: 1000,
-                elevation: 5,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 8,
+                ...ambientShadow,
                 borderWidth: 1,
-                borderColor: "#eee",
+                borderColor: tokens.borderSubtle,
               },
               row: {
                 padding: 14,
@@ -149,15 +148,16 @@ export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
               },
               separator: {
                 height: 1,
-                backgroundColor: "#f0f0f0",
+                backgroundColor: tokens.borderSubtle,
               },
               description: {
                 fontSize: 15,
-                color: "#333",
+                fontFamily: FontFamily.regular,
+                color: tokens.textPrimary,
               },
             }}
             textInputProps={{
-              placeholderTextColor: "#999",
+              placeholderTextColor: tokens.textPlaceholder,
               autoCorrect: false,
               onChangeText: (text) => setSearchText(text),
             }}
@@ -169,7 +169,7 @@ export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <View style={styles.clearIconContainer}>
-                <Ionicons name="close" size={16} color="#fff" />
+                <Ionicons name="close" size={16} color={tokens.textSecondary} />
               </View>
             </TouchableOpacity>
           )}
@@ -188,16 +188,12 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: tokens.borderSubtle,
     paddingHorizontal: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    ...ambientShadow,
   },
   searchIcon: {
     position: "absolute",
@@ -210,7 +206,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   clearIconContainer: {
-    backgroundColor: "#999",
+    backgroundColor: tokens.surfaceContainerHighest,
     borderRadius: 12,
     width: 24,
     height: 24,

@@ -1,5 +1,5 @@
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
@@ -34,7 +34,7 @@ const MASTER_ICON_ENABLED_STYLE = { backgroundColor: tokens.successBg };
 const MASTER_ICON_DISABLED_STYLE = { backgroundColor: tokens.bgSubtle };
 const MANAGE_BUTTON_STYLE = { borderColor: tokens.borderDefault };
 const PREFERENCE_TRACK_COLOR = {
-    false: "#E5E5EA",
+    false: tokens.borderSubtle,
     true: Colors.primary + "60",
 };
 
@@ -89,8 +89,8 @@ const PreferenceRow = memo(function PreferenceRow({
                 onValueChange={onToggle}
                 disabled={disabled}
                 trackColor={PREFERENCE_TRACK_COLOR}
-                thumbColor={value && !disabled ? Colors.primary : "#FFFFFF"}
-                ios_backgroundColor="#E5E5EA"
+                thumbColor={value && !disabled ? Colors.primary : tokens.textInverse}
+                ios_backgroundColor={tokens.borderSubtle}
             />
         </View>
     );
@@ -167,7 +167,7 @@ export default function NotificationPreferencesScreen() {
     return (
         <ScreenContainer title="Bildirim Tercihleri" showBackButton>
             <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}> 
+                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
                     PUSH BİLDİRİMLERİ
                 </Text>
                 <View
@@ -191,10 +191,10 @@ export default function NotificationPreferencesScreen() {
                             />
                         </View>
                         <View style={styles.masterContent}>
-                            <Text style={[styles.masterTitle, { color: t.textPrimary }]}> 
+                            <Text style={[styles.masterTitle, { color: t.textPrimary }]}>
                                 Bildirimler
                             </Text>
-                            <Text style={[styles.masterDesc, { color: t.textTertiary }]}> 
+                            <Text style={[styles.masterDesc, { color: t.textTertiary }]}>
                                 {pushEnabled
                                     ? "Bildirimler açık"
                                     : "Bildirimler kapalı — ayarlardan açabilirsiniz"}
@@ -229,7 +229,7 @@ export default function NotificationPreferencesScreen() {
             </View>
 
             <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}> 
+                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
                     BİLDİRİM KATEGORİLERİ
                 </Text>
                 <View style={styles.prefList}>
@@ -270,7 +270,7 @@ export default function NotificationPreferencesScreen() {
                         size={16}
                         color={t.warningText}
                     />
-                    <Text style={[styles.disabledNoteText, { color: t.warningText }]}> 
+                    <Text style={[styles.disabledNoteText, { color: t.warningText }]}>
                         Kategori tercihlerini yönetebilmek için bildirimleri açın.
                     </Text>
                 </View>
@@ -286,20 +286,21 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     sectionLabel: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 12,
-        fontWeight: "600",
         letterSpacing: 0.6,
         marginBottom: 10,
         marginLeft: 4,
     },
     masterCard: {
-        borderRadius: 16,
+        borderRadius: 20,
         borderWidth: 1,
         padding: 16,
         gap: 14,
     },
     masterCardSurface: {
-        backgroundColor: tokens.bgSurface,
+        backgroundColor: tokens.surfaceContainerLowest,
+        ...ambientShadow,
     },
     masterRow: {
         flexDirection: "row",
@@ -318,34 +319,36 @@ const styles = StyleSheet.create({
         gap: 2,
     },
     masterTitle: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 17,
-        fontWeight: "600",
     },
     masterDesc: {
+        fontFamily: FontFamily.regular,
         fontSize: 13,
     },
     enableButton: {
-        borderRadius: 12,
+        borderRadius: 9999,
         alignItems: "center",
         justifyContent: "center",
         minHeight: 44,
         backgroundColor: Colors.primary,
     },
     enableButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.semiBold,
+        color: tokens.textInverse,
         fontSize: 15,
-        fontWeight: "600",
     },
     manageButton: {
-        borderRadius: 12,
+        borderRadius: 9999,
         borderWidth: 1,
         alignItems: "center",
         justifyContent: "center",
         minHeight: 44,
+        backgroundColor: tokens.surfaceContainerLowest,
     },
     manageButtonText: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 14,
-        fontWeight: "600",
     },
     prefList: {
         gap: 10,
@@ -353,15 +356,16 @@ const styles = StyleSheet.create({
     prefRow: {
         flexDirection: "row",
         alignItems: "center",
-        borderRadius: 14,
+        borderRadius: 18,
         borderWidth: 1,
         paddingHorizontal: 14,
         paddingVertical: 14,
         gap: 12,
     },
     prefRowSurface: {
-        backgroundColor: tokens.bgSurface,
+        backgroundColor: tokens.surfaceContainerLowest,
         borderColor: tokens.borderDefault,
+        ...ambientShadow,
     },
     prefIconCircle: {
         width: 36,
@@ -375,8 +379,8 @@ const styles = StyleSheet.create({
         gap: 2,
     },
     prefLabel: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 15,
-        fontWeight: "600",
     },
     prefLabelEnabled: {
         color: tokens.textPrimary,
@@ -385,6 +389,7 @@ const styles = StyleSheet.create({
         color: tokens.textPlaceholder,
     },
     prefDesc: {
+        fontFamily: FontFamily.regular,
         fontSize: 12,
     },
     prefDescMuted: {
@@ -395,11 +400,13 @@ const styles = StyleSheet.create({
         gap: 8,
         alignItems: "center",
         backgroundColor: tokens.warningBg,
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 12,
         marginTop: 16,
+        ...ambientShadow,
     },
     disabledNoteText: {
+        fontFamily: FontFamily.regular,
         fontSize: 13,
         flex: 1,
     },

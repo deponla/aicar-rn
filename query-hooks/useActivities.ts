@@ -6,9 +6,13 @@ export enum ActivityQueryKeys {
   ACTIVITIES = "activities",
 }
 
-export const useGetActivities = (filters?: ActivityQuery) => {
+export const useGetActivities = (
+  filters?: ActivityQuery,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   return useQuery({
     queryKey: [ActivityQueryKeys.ACTIVITIES, filters],
     queryFn: () => getActivities(filters),
+    enabled,
   });
 };

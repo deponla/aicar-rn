@@ -1,8 +1,9 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useChangePassword } from "@/query-hooks/useUser";
 import { useAuthStore } from "@/store/useAuth";
+import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -27,11 +28,11 @@ function PasswordStrengthBar({ password }: { password: string }) {
     const passed = checks.filter(Boolean).length;
 
     const getColor = () => {
-        if (passed <= 1) return "#FF3B30";
-        if (passed <= 2) return "#FF9500";
-        if (passed <= 3) return "#F59E0B";
-        if (passed <= 4) return "#34C759";
-        return "#059669";
+        if (passed <= 1) return tokens.danger;
+        if (passed <= 2) return tokens.warningText;
+        if (passed <= 3) return tokens.warning;
+        if (passed <= 4) return tokens.success;
+        return tokens.successText;
     };
 
     const getLabel = () => {
@@ -53,7 +54,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
                         style={[
                             styles.strengthBarSegment,
                             {
-                                backgroundColor: i <= passed ? getColor() : "#E5E5EA",
+                                backgroundColor: i <= passed ? getColor() : tokens.borderSubtle,
                             },
                         ]}
                     />
@@ -84,7 +85,7 @@ export default function ChangePasswordScreen() {
         return (
             <ScreenContainer title="Şifre Değiştir" showBackButton>
                 <View style={styles.emptyState}>
-                    <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
+                    <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
                     <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
                 </View>
             </ScreenContainer>
@@ -95,7 +96,7 @@ export default function ChangePasswordScreen() {
         return (
             <ScreenContainer title="Şifre Değiştir" showBackButton>
                 <View style={styles.oauthCard}>
-                    <MaterialIcons name="info-outline" size={40} color="#3B82F6" />
+                    <MaterialIcons name="info-outline" size={40} color={tokens.info} />
                     <Text style={styles.oauthTitle}>Şifre değiştirme kullanılamaz</Text>
                     <Text style={styles.oauthText}>
                         Hesabınız {user.authProvider === "google" ? "Google" : user.authProvider === "apple" ? "Apple" : user.authProvider} ile
@@ -139,12 +140,11 @@ export default function ChangePasswordScreen() {
             });
             router.back();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } } };
-            notify({
-                type: "error",
+            notifyApiError({
+                error,
+                fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+                notify,
                 title: "Şifre değiştirilemedi",
-                message:
-                    err?.response?.data?.message || "Lütfen daha sonra tekrar deneyin.",
             });
         }
     };
@@ -169,7 +169,7 @@ export default function ChangePasswordScreen() {
                                 onChangeText={setOldPassword}
                                 secureTextEntry={!showOld}
                                 placeholder="Mevcut şifreniz"
-                                placeholderTextColor="#C7C7CC"
+                                placeholderTextColor={tokens.textPlaceholder}
                                 autoCapitalize="none"
                                 autoCorrect={false}
                             />
@@ -181,7 +181,7 @@ export default function ChangePasswordScreen() {
                                 <MaterialIcons
                                     name={showOld ? "visibility-off" : "visibility"}
                                     size={22}
-                                    color="#8E8E93"
+                                    color={tokens.textTertiary}
                                 />
                             </TouchableOpacity>
                         </View>
@@ -197,7 +197,7 @@ export default function ChangePasswordScreen() {
                                 onChangeText={setNewPassword}
                                 secureTextEntry={!showNew}
                                 placeholder="Yeni şifreniz"
-                                placeholderTextColor="#C7C7CC"
+                                placeholderTextColor={tokens.textPlaceholder}
                                 autoCapitalize="none"
                                 autoCorrect={false}
                             />
@@ -209,7 +209,7 @@ export default function ChangePasswordScreen() {
                                 <MaterialIcons
                                     name={showNew ? "visibility-off" : "visibility"}
                                     size={22}
-                                    color="#8E8E93"
+                                    color={tokens.textTertiary}
                                 />
                             </TouchableOpacity>
                         </View>
@@ -224,12 +224,12 @@ export default function ChangePasswordScreen() {
                                     <MaterialIcons
                                         name={check.met ? "check-circle" : "radio-button-unchecked"}
                                         size={16}
-                                        color={check.met ? "#34C759" : "#C7C7CC"}
+                                        color={check.met ? tokens.success : tokens.textPlaceholder}
                                     />
                                     <Text
                                         style={[
                                             styles.requirementText,
-                                            { color: check.met ? "#059669" : "#8E8E93" },
+                                            { color: check.met ? tokens.successText : tokens.textTertiary },
                                         ]}
                                     >
                                         {check.label}
@@ -249,7 +249,7 @@ export default function ChangePasswordScreen() {
                                 onChangeText={setConfirmPassword}
                                 secureTextEntry={!showConfirm}
                                 placeholder="Yeni şifrenizi tekrar girin"
-                                placeholderTextColor="#C7C7CC"
+                                placeholderTextColor={tokens.textPlaceholder}
                                 autoCapitalize="none"
                                 autoCorrect={false}
                             />
@@ -261,7 +261,7 @@ export default function ChangePasswordScreen() {
                                 <MaterialIcons
                                     name={showConfirm ? "visibility-off" : "visibility"}
                                     size={22}
-                                    color="#8E8E93"
+                                    color={tokens.textTertiary}
                                 />
                             </TouchableOpacity>
                         </View>
@@ -281,7 +281,7 @@ export default function ChangePasswordScreen() {
                         activeOpacity={0.8}
                     >
                         {changePassword.isPending ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={tokens.textInverse} />
                         ) : (
                             <Text style={styles.primaryButtonText}>Şifreyi Değiştir</Text>
                         )}
@@ -301,80 +301,83 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     emptyText: {
+        fontFamily: FontFamily.regular,
         fontSize: 15,
-        color: "#8E8E93",
+        color: tokens.textTertiary,
     },
     oauthCard: {
-        backgroundColor: "#EFF6FF",
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: "#BFDBFE",
+        backgroundColor: tokens.infoBg,
+        borderRadius: 24,
         padding: 24,
         marginTop: 24,
         alignItems: "center",
         gap: 12,
+        ...ambientShadow,
     },
     oauthTitle: {
+        fontFamily: FontFamily.bold,
         fontSize: 17,
-        fontWeight: "700",
-        color: "#1E40AF",
+        color: tokens.textPrimary,
         textAlign: "center",
     },
     oauthText: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
         lineHeight: 20,
-        color: "#3B82F6",
+        color: tokens.textSecondary,
         textAlign: "center",
     },
     card: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: "#ECECEC",
+        backgroundColor: tokens.surfaceContainerLowest,
+        borderRadius: 24,
         padding: 18,
         gap: 16,
         marginTop: 12,
+        ...ambientShadow,
     },
     title: {
+        fontFamily: FontFamily.bold,
         fontSize: 18,
-        fontWeight: "700",
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     subtitle: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
         lineHeight: 20,
-        color: "#6B7280",
+        color: tokens.textSecondary,
     },
     fieldGroup: {
         gap: 6,
     },
     label: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 14,
-        fontWeight: "600",
-        color: "#3C3C43",
+        color: tokens.textPrimary,
     },
     passwordRow: {
         flexDirection: "row",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#E5E5EA",
+        borderColor: tokens.borderSubtle,
         borderRadius: 12,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: tokens.surfaceContainerLow,
     },
     passwordInput: {
         flex: 1,
         paddingHorizontal: 14,
         paddingVertical: 14,
+        fontFamily: FontFamily.regular,
         fontSize: 16,
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     eyeButton: {
         paddingHorizontal: 14,
         paddingVertical: 14,
     },
     errorText: {
+        fontFamily: FontFamily.regular,
         fontSize: 12,
-        color: "#FF3B30",
+        color: tokens.danger,
     },
     strengthContainer: {
         flexDirection: "row",
@@ -393,8 +396,8 @@ const styles = StyleSheet.create({
         borderRadius: 2,
     },
     strengthLabel: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 12,
-        fontWeight: "600",
         minWidth: 70,
         textAlign: "right",
     },
@@ -408,11 +411,12 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     requirementText: {
+        fontFamily: FontFamily.regular,
         fontSize: 13,
     },
     primaryButton: {
         backgroundColor: Colors.primary,
-        borderRadius: 12,
+        borderRadius: 9999,
         alignItems: "center",
         justifyContent: "center",
         minHeight: 48,
@@ -420,9 +424,9 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     primaryButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.semiBold,
+        color: tokens.textInverse,
         fontSize: 15,
-        fontWeight: "600",
     },
     disabledButton: {
         opacity: 0.45,

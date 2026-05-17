@@ -1,7 +1,9 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
+import { ambientShadow, FontFamily, tokens } from "@/constants/theme";
 import { useDeleteAccount } from "@/query-hooks/useUser";
 import { useAuthStore } from "@/store/useAuth";
+import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -53,13 +55,12 @@ export default function DeleteAccountScreen() {
                 title: t("deleteAccount.deleted"),
               });
               router.replace("/(tabs)/profile");
-            } catch (error: any) {
-              notify({
-                type: "error",
+            } catch (error: unknown) {
+              notifyApiError({
+                error,
+                fallbackMessage: t("deleteAccount.retryLater"),
+                notify,
                 title: t("deleteAccount.deleteFailed"),
-                message:
-                  error?.response?.data?.message ||
-                  t("deleteAccount.retryLater"),
               });
             }
           },
@@ -72,7 +73,7 @@ export default function DeleteAccountScreen() {
     return (
       <ScreenContainer title={t("deleteAccount.title")} showBackButton>
         <View style={styles.emptyState}>
-          <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
+          <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
           <Text style={styles.emptyText}>{t("deleteAccount.noUser")}</Text>
         </View>
       </ScreenContainer>
@@ -82,7 +83,7 @@ export default function DeleteAccountScreen() {
   return (
     <ScreenContainer title={t("deleteAccount.title")} showBackButton>
       <View style={styles.warningCard}>
-        <MaterialIcons name="warning-amber" size={36} color="#DC2626" />
+        <MaterialIcons name="warning-amber" size={36} color={tokens.danger} />
         <Text style={styles.warningTitle}>{t("deleteAccount.warningTitle")}</Text>
         <Text style={styles.warningText}>
           {t("deleteAccount.warningText")}
@@ -110,7 +111,7 @@ export default function DeleteAccountScreen() {
           autoCorrect={false}
           keyboardType="email-address"
           placeholder={user.email}
-          placeholderTextColor="#C7C7CC"
+          placeholderTextColor={tokens.textPlaceholder}
         />
       </View>
 
@@ -124,10 +125,10 @@ export default function DeleteAccountScreen() {
         activeOpacity={0.85}
       >
         {deleteAccount.isPending ? (
-          <ActivityIndicator color="#FFFFFF" />
+          <ActivityIndicator color={tokens.textInverse} />
         ) : (
           <>
-            <MaterialIcons name="delete-forever" size={20} color="#FFFFFF" />
+            <MaterialIcons name="delete-forever" size={20} color={tokens.textInverse} />
             <Text style={styles.deleteButtonText}>{t("deleteAccount.button")}</Text>
           </>
         )}
@@ -143,82 +144,84 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 15,
-    color: "#8E8E93",
+    color: tokens.textTertiary,
   },
   warningCard: {
-    backgroundColor: "#FEF2F2",
-    borderWidth: 1,
-    borderColor: "#FECACA",
-    borderRadius: 18,
+    backgroundColor: tokens.dangerBg,
+    borderRadius: 24,
     padding: 20,
     alignItems: "center",
     gap: 10,
     marginBottom: 18,
     marginTop: 12,
+    ...ambientShadow,
   },
   warningTitle: {
+    fontFamily: FontFamily.bold,
     fontSize: 18,
-    fontWeight: "700",
-    color: "#991B1B",
+    color: tokens.dangerText,
   },
   warningText: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
-    color: "#7F1D1D",
+    color: tokens.dangerText,
   },
   detailCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#ECECEC",
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 24,
     padding: 18,
     gap: 8,
     marginBottom: 18,
+    ...ambientShadow,
   },
   detailTitle: {
+    fontFamily: FontFamily.bold,
     fontSize: 16,
-    fontWeight: "700",
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   detailText: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
-    color: "#4B5563",
+    color: tokens.textSecondary,
   },
   confirmationCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#ECECEC",
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 24,
     padding: 18,
     gap: 10,
     marginBottom: 18,
+    ...ambientShadow,
   },
   confirmationTitle: {
+    fontFamily: FontFamily.bold,
     fontSize: 16,
-    fontWeight: "700",
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   confirmationText: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
     lineHeight: 20,
-    color: "#6B7280",
+    color: tokens.textSecondary,
   },
   input: {
     minHeight: 50,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FAFAFA",
+    borderColor: tokens.borderSubtle,
+    backgroundColor: tokens.surfaceContainerLow,
     paddingHorizontal: 14,
+    fontFamily: FontFamily.regular,
     fontSize: 15,
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   deleteButton: {
     minHeight: 52,
-    borderRadius: 14,
-    backgroundColor: "#DC2626",
+    borderRadius: 9999,
+    backgroundColor: tokens.danger,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -228,8 +231,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   deleteButtonText: {
-    color: "#FFFFFF",
+    fontFamily: FontFamily.bold,
+    color: tokens.textInverse,
     fontSize: 15,
-    fontWeight: "700",
   },
 });

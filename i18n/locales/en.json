@@ -26,11 +26,10 @@
         }
     },
     "tabs": {
-        "scan": "Scan",
-        "garage": "My Garage",
-        "history": "History",
-        "guide": "Guide",
-        "profile": "Profile",
+        "scanner": "Scanner",
+        "garage": "Garage",
+        "insights": "Insights",
+        "settings": "Settings",
         "signIn": "Sign In"
     },
     "settings": {
@@ -116,6 +115,51 @@
             "description": "Description",
             "recommendation": "Recommendation",
             "warnings": "Warnings"
+        },
+        "stats": {
+            "total": "Total"
+        }
+    },
+    "scanScreen": {
+        "title": "Scan Your Car",
+        "subtitle": "Take a photo of a warning light, error code, or a short video, record a clip, or choose one from your gallery.",
+        "startButton": "Start Scan",
+        "lowCreditBanner": "Your credits are running low, purchase more credits",
+        "selectedMedia": "Selected Media",
+        "videoSelected": "Video selected",
+        "videoAnalysis": "Video analysis",
+        "imageAnalysis": "Photo analysis",
+        "stepsTitle": "What should you do?",
+        "likelyCause": "Likely Cause",
+        "damageRisk": "Damage Risk",
+        "risk": {
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low"
+        },
+        "sheetTitle": "Choose Scan Source",
+        "sheetSubtitle": "Select the media source you want to analyze.",
+        "linkCar": "Link to a Car",
+        "noCar": "None",
+        "cameraTitle": "Take Photo",
+        "cameraDescription": "Capture the warning light or a part image with your camera.",
+        "videoTitle": "Record Video",
+        "videoDescription": "Record a short video to share the car's sound or behavior.",
+        "galleryTitle": "Choose from Gallery",
+        "galleryDescription": "Use a photo or video you captured earlier.",
+        "alerts": {
+            "loginRequiredTitle": "Sign in required",
+            "loginRequiredMessage": "Sign in to use AI analysis.",
+            "permissionRequiredTitle": "Permission required",
+            "galleryPermissionMessage": "You need to grant gallery permission to select a photo or video.",
+            "videoPermissionMessage": "You need to grant camera permission to record a video.",
+            "cameraPermissionMessage": "You need to grant camera permission to take a photo.",
+            "analysisFailedTitle": "Analysis failed",
+            "unexpectedError": "An unexpected error occurred.",
+            "imageUploadFailed": "Image upload failed.",
+            "videoUploadFailed": "Video upload failed.",
+            "videoProcessingFailed": "The video could not be processed.",
+            "videoNotReady": "The video is not ready yet. Please try again shortly."
         }
     },
     "legal": {
@@ -143,6 +187,8 @@
         "transmissionLabel": "Transmission",
         "engineCcLabel": "Engine Volume (cc)",
         "engineCcPlaceholder": "e.g. 1600",
+        "mileageLabel": "Mileage (km)",
+        "mileagePlaceholder": "e.g. 128500",
         "save": "Save",
         "fuel": {
             "gasoline": "Gasoline",

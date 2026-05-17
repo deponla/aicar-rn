@@ -1,7 +1,14 @@
-import { Colors } from "@/constants/theme";
+import {
+  AUTH_CALLBACK_ACTIONS,
+} from "@/utils/parseSessionFromUrl";
+import { startAuthSession } from "@/utils/authSession";
+import * as SecureStore from "expo-secure-store";
+import { tokens, FontFamily } from "@/constants/theme";
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ScreenContainer from "./ScreenContainer";
+import { SECURE_STORE_KEY, useAuthStore } from "@/store/useAuth";
 
 interface LoginRequiredProps {
   readonly pageTitle: string;
@@ -15,6 +22,61 @@ export default function LoginRequired({
   description,
 }: LoginRequiredProps) {
   const router = useRouter();
+  const { t } = useTranslation();
+  const authStore = useAuthStore();
+
+  const handleLogin = async () => {
+    try {
+      const result = await startAuthSession(
+        "login",
+        t("profileScreen.errors.frontendUrlMissing"),
+      );
+
+      if (result.type === "opened-in-browser" || result.type === "cancelled") {
+        return;
+      }
+
+      if (result.type === "invalid-callback") {
+        Alert.alert(
+          t("profileScreen.authFailedTitle"),
+          t("auth.callback.unreadableSession"),
+        );
+        return;
+      }
+
+      if (result.authCallback.type === "intent") {
+        if (result.authCallback.action === AUTH_CALLBACK_ACTIONS.REACTIVATE_ACCOUNT) {
+          router.push({
+            pathname: "/auth/reactivate",
+            params: {
+              email: result.authCallback.email,
+              reason: result.authCallback.reason,
+            },
+          });
+          return;
+        }
+
+        Alert.alert(
+          t("profileScreen.authFailedTitle"),
+          t("profileScreen.errors.additionalActionRequired"),
+        );
+        return;
+      }
+
+      await SecureStore.setItemAsync(
+        SECURE_STORE_KEY,
+        JSON.stringify(result.authCallback.session),
+      );
+      authStore.login(result.authCallback.session);
+    } catch (error) {
+      Alert.alert(
+        t("profileScreen.loginStartFailed"),
+        error instanceof Error
+          ? error.message
+          : t("profileScreen.errors.browserSessionFailed"),
+      );
+    }
+  };
 
   return (
     <ScreenContainer title={pageTitle}>
@@ -25,10 +87,12 @@ export default function LoginRequired({
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => router.push("/(tabs)/profile")}
+          onPress={() => {
+            void handleLogin();
+          }}
           activeOpacity={0.8}
         >
-          <Text style={styles.loginButtonText}>Giriş Yap</Text>
+          <Text style={styles.loginButtonText}>{t("tabs.signIn")}</Text>
         </TouchableOpacity>
       </View>
     </ScreenContainer>
@@ -41,26 +105,27 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: "600",
-    color: "#1C1C1E",
+    fontFamily: FontFamily.semiBold,
+    color: tokens.textPrimary,
     marginBottom: 8,
   },
   description: {
     fontSize: 16,
-    color: "#6B6B6B",
+    fontFamily: FontFamily.regular,
+    color: tokens.textSecondary,
     lineHeight: 22,
     marginBottom: 24,
   },
   loginButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: tokens.primary,
     paddingVertical: 14,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 9999,
     alignSelf: "flex-start",
   },
   loginButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
   },
 });

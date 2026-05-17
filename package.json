@@ -11,12 +11,14 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "lint": "expo lint",
+    "postinstall": "patch-package",
     "ios:prebuild": "expo prebuild --platform ios --clean",
     "android:prebuild": "expo prebuild --platform android --clean",
     "ios:run": "expo run:ios --device",
     "android:run": "expo run:android --device"
   },
   "dependencies": {
+    "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/vector-icons": "^15.1.1",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@legendapp/list": "^2.0.19",
@@ -32,7 +34,7 @@
     "expo-clipboard": "~55.0.8",
     "expo-constants": "~55.0.15",
     "expo-device": "~55.0.10",
-    "expo-font": "~55.0.4",
+    "expo-font": "^55.0.7",
     "expo-haptics": "~55.0.9",
     "expo-image": "~55.0.9",
     "expo-image-picker": "~55.0.19",
@@ -74,6 +76,8 @@
     "@types/react": "~19.2.0",
     "eslint": "9.39.1",
     "eslint-config-expo": "~55.0.0",
+    "expo-module-scripts": "~55.0.2",
+    "patch-package": "^8.0.1",
     "typescript": "~5.9.2"
   },
   "private": true

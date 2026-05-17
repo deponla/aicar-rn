@@ -1,5 +1,6 @@
-import { Colors } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
@@ -31,6 +32,8 @@ export default function AuthCallback() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    void WebBrowser.dismissBrowser().catch(() => undefined);
+
     const saveSessionAndRedirect = async (sessionData: UserResponseData) => {
       await SecureStore.setItemAsync(
         SECURE_STORE_KEY,
@@ -155,32 +158,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F2F4F8",
+    backgroundColor: tokens.bgBase,
     padding: 20,
   },
   title: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 20,
-    fontWeight: "600",
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
     marginTop: 20,
   },
   subtitle: {
+    fontFamily: FontFamily.regular,
     fontSize: 14,
-    color: "#6B6B6B",
+    color: tokens.textSecondary,
     marginTop: 8,
     textAlign: "center",
   },
   button: {
     marginTop: 20,
     backgroundColor: Colors.primary,
-    borderRadius: 12,
+    borderRadius: 9999,
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    ...ambientShadow,
   },
   buttonLabel: {
-    color: "#FFFFFF",
+    fontFamily: FontFamily.semiBold,
+    color: tokens.textInverse,
     fontSize: 15,
-    fontWeight: "600",
   },
   debug: {
     fontSize: 12,

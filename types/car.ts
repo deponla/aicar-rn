@@ -22,6 +22,7 @@ export interface Car {
   fuelType?: FuelTypeEnum;
   transmission?: TransmissionEnum;
   engineCC?: number;
+  currentMileage?: number;
   vin?: string;
   createdAt: string;
   updatedAt: string;
@@ -36,6 +37,7 @@ export interface CreateCarRequest {
   fuelType?: FuelTypeEnum;
   transmission?: TransmissionEnum;
   engineCC?: number;
+  currentMileage?: number;
 }
 
 export type UpdateCarRequest = Partial<CreateCarRequest>;

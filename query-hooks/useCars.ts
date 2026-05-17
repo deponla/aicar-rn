@@ -10,10 +10,14 @@ export enum CarQueryKeys {
   CAR = "car",
 }
 
-export const useGetCars = (filters?: CarQuery) => {
+export const useGetCars = (
+  filters?: CarQuery,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   return useQuery({
     queryKey: [CarQueryKeys.CARS, filters],
     queryFn: () => getCars(filters),
+    enabled,
   });
 };
 

@@ -1,5 +1,6 @@
 
 import { MaterialIcons } from "@expo/vector-icons";
+import { ambientShadow, FontFamily, tokens } from "@/constants/theme";
 import React, {
   createContext,
   useCallback,
@@ -45,27 +46,27 @@ const TYPE_CONFIG: Record<
 > = {
   success: {
     icon: "check-circle",
-    accent: "#34C759",
-    bg: "#0D2E1A",
-    text: "#ECFDF3",
+    accent: tokens.success,
+    bg: tokens.successBg,
+    text: tokens.successText,
   },
   error: {
     icon: "error",
-    accent: "#FF453A",
-    bg: "#2E0D0D",
-    text: "#FEF2F2",
+    accent: tokens.danger,
+    bg: tokens.dangerBg,
+    text: tokens.dangerText,
   },
   warning: {
     icon: "warning",
-    accent: "#FFD60A",
-    bg: "#2A2200",
-    text: "#FFFBEB",
+    accent: tokens.warning,
+    bg: tokens.warningBg,
+    text: tokens.warningText,
   },
   info: {
     icon: "info",
-    accent: "#0A84FF",
-    bg: "#001A3D",
-    text: "#EFF6FF",
+    accent: tokens.info,
+    bg: tokens.infoBg,
+    text: tokens.infoText,
   },
 };
 
@@ -241,11 +242,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 16,
     borderLeftWidth: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 12,
+    ...ambientShadow,
   },
   iconBox: {
     width: 36,
@@ -259,11 +256,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
+    fontFamily: FontFamily.bold,
     fontSize: 14,
-    fontWeight: "700",
     letterSpacing: -0.1,
   },
   message: {
+    fontFamily: FontFamily.regular,
     fontSize: 13,
     lineHeight: 18,
   },

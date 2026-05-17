@@ -1,7 +1,7 @@
 import { LegendList } from "@legendapp/list";
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { tokens } from "@/constants/theme";
+import { tokens, FontFamily, ambientShadow } from "@/constants/theme";
 import { normalizeLanguage } from "@/i18n";
 import {
   useGetCreditPackages,
@@ -148,7 +148,7 @@ export default function CreditsScreen() {
 
   const balanceCard = useMemo(
     () => (
-      <View style={[styles.balanceCard, { backgroundColor: tokens.bgSurface }]}> 
+      <View style={[styles.balanceCard, { backgroundColor: tokens.bgSurface }]}>
         {accountQuery.isLoading ? (
           <ActivityIndicator color={tokens.textPrimary} />
         ) : account ? (
@@ -157,7 +157,7 @@ export default function CreditsScreen() {
               <Text style={[styles.balanceNumber, { color: tokens.textPrimary }]}>
                 {account.remainingCredits}
               </Text>
-              <Text style={[styles.balanceLabel, { color: tokens.textSecondary }]}> 
+              <Text style={[styles.balanceLabel, { color: tokens.textSecondary }]}>
                 {t("credits.balanceUnit")}
               </Text>
               {account.isPremium ? (
@@ -171,12 +171,12 @@ export default function CreditsScreen() {
                 </View>
               ) : null}
             </View>
-            <Text style={[styles.usedLabel, { color: tokens.textTertiary }]}> 
+            <Text style={[styles.usedLabel, { color: tokens.textTertiary }]}>
               {t("credits.usedTotal", { count: account.totalCreditsUsed })}
             </Text>
           </>
         ) : (
-          <Text style={[styles.emptyText, { color: tokens.textTertiary }]}> 
+          <Text style={[styles.emptyText, { color: tokens.textTertiary }]}>
             {t("credits.unavailable")}
           </Text>
         )}
@@ -252,7 +252,7 @@ export default function CreditsScreen() {
               activeOpacity={0.75}
             >
               <View style={styles.packageTop}>
-                <Text style={[styles.packageName, { color: tokens.textPrimary }]}> 
+                <Text style={[styles.packageName, { color: tokens.textPrimary }]}>
                   {item.item.name}
                 </Text>
                 {item.item.isPopular ? (
@@ -261,10 +261,10 @@ export default function CreditsScreen() {
                   </View>
                 ) : null}
               </View>
-              <Text style={[styles.packageCredits, { color: tokens.textSecondary }]}> 
+              <Text style={[styles.packageCredits, { color: tokens.textSecondary }]}>
                 {t("credits.packageCredits", { count: item.item.creditAmount })}
               </Text>
-              <Text style={[styles.packagePrice, { color: tokens.textPrimary }]}> 
+              <Text style={[styles.packagePrice, { color: tokens.textPrimary }]}>
                 {item.item.price} {item.item.currency}
               </Text>
             </TouchableOpacity>
@@ -274,11 +274,11 @@ export default function CreditsScreen() {
         case "history-header":
           return (
             <View style={styles.historyHeader}>
-              <Text style={[styles.sectionTitle, { color: tokens.textPrimary }]}> 
+              <Text style={[styles.sectionTitle, { color: tokens.textPrimary }]}>
                 {item.title}
               </Text>
               <TouchableOpacity>
-                <Text style={[styles.allHistoryLink, { color: tokens.textSecondary }]}> 
+                <Text style={[styles.allHistoryLink, { color: tokens.textSecondary }]}>
                   {item.actionLabel}
                 </Text>
               </TouchableOpacity>
@@ -288,18 +288,18 @@ export default function CreditsScreen() {
           return <ActivityIndicator color={tokens.textPrimary} style={styles.inlineLoader} />;
         case "history-empty":
           return (
-            <Text style={[styles.emptyText, { color: tokens.textTertiary }]}> 
+            <Text style={[styles.emptyText, { color: tokens.textTertiary }]}>
               {item.text}
             </Text>
           );
         case "transaction":
           return (
-            <View style={[styles.txRow, { backgroundColor: tokens.bgSurface }]}> 
+            <View style={[styles.txRow, { backgroundColor: tokens.bgSurface }]}>
               <View style={styles.txLeft}>
-                <Text style={[styles.txDate, { color: tokens.textTertiary }]}> 
+                <Text style={[styles.txDate, { color: tokens.textTertiary }]}>
                   {formatDate(item.item.createdAt, locale)}
                 </Text>
-                <Text style={[styles.txCredits, { color: tokens.textPrimary }]}> 
+                <Text style={[styles.txCredits, { color: tokens.textPrimary }]}>
                   {t("credits.transactionCredits", {
                     count: item.item.creditAmount,
                   })}
@@ -376,11 +376,11 @@ const styles = StyleSheet.create({
   },
   balanceNumber: {
     fontSize: 40,
-    fontWeight: "700",
+    fontFamily: FontFamily.extraBold,
   },
   balanceLabel: {
     fontSize: 20,
-    fontWeight: "500",
+    fontFamily: FontFamily.medium,
   },
   premiumBadge: {
     borderRadius: 8,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   premiumBadgeText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
     color: "#92400E",
   },
   usedLabel: {
@@ -399,12 +399,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 17,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
     marginBottom: 12,
   },
   packageCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
+    backgroundColor: tokens.surfaceContainerLowest,
+    ...ambientShadow,
   },
   packageTop: {
     flexDirection: "row",
@@ -414,7 +416,7 @@ const styles = StyleSheet.create({
   },
   packageName: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
   },
   popularBadge: {
     borderRadius: 6,
@@ -424,7 +426,7 @@ const styles = StyleSheet.create({
   },
   popularBadgeText: {
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
     color: "#1D4ED8",
   },
   packageCredits: {
@@ -433,7 +435,7 @@ const styles = StyleSheet.create({
   },
   packagePrice: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
   },
   historyHeader: {
     flexDirection: "row",
@@ -460,7 +462,7 @@ const styles = StyleSheet.create({
   },
   txCredits: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
   },
   statusBadge: {
     borderRadius: 6,
@@ -469,7 +471,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 12,
-    fontWeight: "500",
+    fontFamily: FontFamily.medium,
   },
   emptyText: {
     fontSize: 14,

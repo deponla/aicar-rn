@@ -6,38 +6,37 @@
         "languages": {
             "de": "Deutsch",
             "en": "Englisch",
-            "tr": "Tuerkisch"
+            "tr": "Türkisch"
         },
         "status": {
-            "verified": "Bestaetigt",
-            "unverified": "Nicht bestaetigt"
+            "verified": "Bestätigt",
+            "unverified": "Nicht bestätigt"
         }
     },
     "auth": {
         "loading": "Wird geladen...",
         "callback": {
-            "unreadableSession": "Die an die App zurueckgesendete Sitzung konnte nicht gelesen werden. Bitte melden Sie sich erneut an.",
-            "invalidSessionData": "Die Sitzungsdaten wirken unvollstaendig oder beschaedigt. Bitte versuchen Sie es erneut.",
-            "noPendingSession": "Es gibt keine offene Anmeldung zum Abschliessen. Bitte versuchen Sie es erneut ueber Ihr Profil.",
+            "unreadableSession": "Die an die App zurückgesendete Sitzung konnte nicht gelesen werden. Bitte melden Sie sich erneut an.",
+            "invalidSessionData": "Die Sitzungsdaten wirken unvollständig oder beschädigt. Bitte versuchen Sie es erneut.",
+            "noPendingSession": "Es gibt keine offene Anmeldung zum Abschließen. Bitte versuchen Sie es erneut über Ihr Profil.",
             "failedTitle": "Anmeldung konnte nicht abgeschlossen werden",
-            "backToProfile": "Zurueck zum Profil",
-            "signingIn": "Anmeldung laeuft...",
+            "backToProfile": "Zurück zum Profil",
+            "signingIn": "Anmeldung läuft...",
             "pleaseWait": "Bitte warten"
         }
     },
     "tabs": {
-        "scan": "Scan",
+        "scanner": "Scanner",
         "garage": "Garage",
-        "history": "Verlauf",
-        "guide": "Leitfaden",
-        "profile": "Profil",
+        "insights": "Insights",
+        "settings": "Settings",
         "signIn": "Anmelden"
     },
     "settings": {
         "title": "Kontoeinstellungen",
         "noUser": "Benutzerinformationen konnten nicht gefunden werden.",
         "sections": {
-            "personal": "PERSOENLICHE DATEN",
+            "personal": "PERSÖNLICHE DATEN",
             "security": "SICHERHEIT",
             "preferences": "EINSTELLUNGEN",
             "account": "KONTO"
@@ -45,20 +44,20 @@
         "editProfile": "Profil bearbeiten",
         "phoneNumber": "Telefonnummer",
         "emailAddress": "E-Mail-Adresse",
-        "changePassword": "Passwort aendern",
+        "changePassword": "Passwort ändern",
         "activeSessions": "Aktive Sitzungen",
         "language": "Sprache",
         "notificationPreferences": "Benachrichtigungseinstellungen",
         "freezeAccount": "Konto einfrieren",
-        "deleteAccount": "Konto schliessen"
+        "deleteAccount": "Konto schließen"
     },
     "language": {
         "title": "Sprache",
         "noUser": "Benutzerinformationen konnten nicht gefunden werden.",
-        "description": "Waehlen Sie eine Sprache fuer die App- und Benachrichtigungssprache.",
+        "description": "Wählen Sie eine Sprache für die App- und Benachrichtigungssprache.",
         "save": "Speichern",
         "saved": "Spracheinstellung gespeichert",
-        "saveFailed": "Sprache konnte nicht geaendert werden",
+        "saveFailed": "Sprache konnte nicht geändert werden",
         "retryLater": "Bitte versuchen Sie es erneut."
     },
     "credits": {
@@ -71,9 +70,9 @@
         "popular": "Beliebt",
         "packageCredits": "{{count}} Credits",
         "purchaseTitle": "Kaufen",
-        "purchasePrompt": "Moechten Sie das Paket {{name}} fuer {{price}} {{currency}} kaufen?",
+        "purchasePrompt": "Möchten Sie das Paket {{name}} für {{price}} {{currency}} kaufen?",
         "purchaseConfirm": "Kaufen",
-        "purchaseSuccess": "Credits erfolgreich hinzugefuegt",
+        "purchaseSuccess": "Credits erfolgreich hinzugefügt",
         "purchaseFailed": "Kauf fehlgeschlagen.",
         "historyTitle": "Transaktionsverlauf",
         "allHistory": "Gesamter Verlauf",
@@ -96,7 +95,7 @@
         "loginRequiredTitle": "Sehen Sie Ihren Analyseverlauf an",
         "loginRequiredDescription": "Melden Sie sich an, um Ihre bisherigen Analysen zu sehen.",
         "emptyTitle": "Keine Analysen gefunden",
-        "emptyAll": "Sie haben noch keine Analysen durchgefuehrt.",
+        "emptyAll": "Sie haben noch keine Analysen durchgeführt.",
         "emptyFiltered": "In dieser Kategorie gibt es keine Analysen.",
         "filters": {
             "all": "Alle"
@@ -116,6 +115,51 @@
             "description": "Beschreibung",
             "recommendation": "Empfehlung",
             "warnings": "Warnungen"
+        },
+        "stats": {
+            "total": "Gesamt"
+        }
+    },
+    "scanScreen": {
+        "title": "Scannen Sie Ihr Auto",
+        "subtitle": "Machen Sie ein Foto von einer Warnleuchte, einem Fehlercode oder einem kurzen Video, nehmen Sie ein Video auf oder wählen Sie eines aus Ihrer Galerie.",
+        "startButton": "Scan starten",
+        "lowCreditBanner": "Ihre Credits werden knapp, kaufen Sie neue Credits",
+        "selectedMedia": "Ausgewähltes Medium",
+        "videoSelected": "Video ausgewählt",
+        "videoAnalysis": "Videoanalyse",
+        "imageAnalysis": "Fotoanalyse",
+        "stepsTitle": "Was sollten Sie tun?",
+        "likelyCause": "Mögliche Ursache",
+        "damageRisk": "Schadensrisiko",
+        "risk": {
+            "high": "Hoch",
+            "medium": "Mittel",
+            "low": "Niedrig"
+        },
+        "sheetTitle": "Scan-Quelle auswählen",
+        "sheetSubtitle": "Wählen Sie die Medienquelle aus, die Sie analysieren möchten.",
+        "linkCar": "Mit Fahrzeug verknüpfen",
+        "noCar": "Keine",
+        "cameraTitle": "Foto aufnehmen",
+        "cameraDescription": "Erfassen Sie die Warnleuchte oder ein Teilebild mit der Kamera.",
+        "videoTitle": "Video aufnehmen",
+        "videoDescription": "Nehmen Sie ein kurzes Video auf, um das Geräusch oder Verhalten des Fahrzeugs zu teilen.",
+        "galleryTitle": "Aus Galerie wählen",
+        "galleryDescription": "Verwenden Sie ein Foto oder Video, das Sie bereits aufgenommen haben.",
+        "alerts": {
+            "loginRequiredTitle": "Anmeldung erforderlich",
+            "loginRequiredMessage": "Melden Sie sich an, um die KI-Analyse zu verwenden.",
+            "permissionRequiredTitle": "Berechtigung erforderlich",
+            "galleryPermissionMessage": "Sie müssen die Galerie-Berechtigung erteilen, um ein Foto oder Video auszuwählen.",
+            "videoPermissionMessage": "Sie müssen die Kameraberechtigung erteilen, um ein Video aufzunehmen.",
+            "cameraPermissionMessage": "Sie müssen die Kameraberechtigung erteilen, um ein Foto aufzunehmen.",
+            "analysisFailedTitle": "Analyse fehlgeschlagen",
+            "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten.",
+            "imageUploadFailed": "Bild-Upload fehlgeschlagen.",
+            "videoUploadFailed": "Video-Upload fehlgeschlagen.",
+            "videoProcessingFailed": "Das Video konnte nicht verarbeitet werden.",
+            "videoNotReady": "Das Video ist noch nicht bereit. Bitte versuchen Sie es in Kürze erneut."
         }
     },
     "legal": {
@@ -126,12 +170,12 @@
     "carDetail": {
         "title": "Fahrzeugdetails",
         "notFound": "Fahrzeug wurde nicht gefunden.",
-        "back": "Zurueck",
+        "back": "Zurück",
         "updated": "Fahrzeug aktualisiert",
         "updateFailed": "Aktualisierung fehlgeschlagen",
-        "addedOn": "Hinzugefuegt: {{date}}",
+        "addedOn": "Hinzugefügt: {{date}}",
         "analyses": "Analysen",
-        "emptyAnalysis": "Fuer dieses Fahrzeug gibt es noch keine Analysen.",
+        "emptyAnalysis": "Für dieses Fahrzeug gibt es noch keine Analysen.",
         "editTitle": "Fahrzeug bearbeiten",
         "brandLabel": "Marke *",
         "brandPlaceholder": "z. B. Toyota",
@@ -143,6 +187,8 @@
         "transmissionLabel": "Getriebe",
         "engineCcLabel": "Hubraum (cc)",
         "engineCcPlaceholder": "z. B. 1600",
+        "mileageLabel": "Kilometerstand (km)",
+        "mileagePlaceholder": "z. B. 128500",
         "save": "Speichern",
         "fuel": {
             "gasoline": "Benzin",
@@ -157,45 +203,45 @@
         }
     },
     "deleteAccount": {
-        "title": "Konto loeschen",
+        "title": "Konto löschen",
         "noUser": "Benutzerinformationen konnten nicht gefunden werden.",
-        "confirmTitle": "Konto schliessen",
-        "confirmMessage": "Ihr Konto wird geschlossen und Ihre Sitzung beendet. Danach koennen Sie sich nicht erneut anmelden.",
+        "confirmTitle": "Konto schließen",
+        "confirmMessage": "Ihr Konto wird geschlossen und Ihre Sitzung beendet. Danach können Sie sich nicht erneut anmelden.",
         "cancel": "Abbrechen",
-        "confirmAction": "Konto schliessen",
+        "confirmAction": "Konto schließen",
         "deleted": "Konto geschlossen",
         "deleteFailed": "Konto konnte nicht geschlossen werden",
-        "retryLater": "Bitte versuchen Sie es spaeter erneut.",
-        "warningTitle": "Diese Aktion kann nicht rueckgaengig gemacht werden",
-        "warningText": "Ihr Konto wird per Soft Delete geschlossen, alle Sitzungen werden beendet und der Zugriff auf geschuetzte Bereiche wird entzogen.",
-        "accountTitle": "Zu schliessendes Konto",
-        "emailTitle": "E-Mail-Bestaetigung",
+        "retryLater": "Bitte versuchen Sie es später erneut.",
+        "warningTitle": "Diese Aktion kann nicht rückgängig gemacht werden",
+        "warningText": "Ihr Konto wird per Soft Delete geschlossen, alle Sitzungen werden beendet und der Zugriff auf geschützte Bereiche wird entzogen.",
+        "accountTitle": "Zu schließendes Konto",
+        "emailTitle": "E-Mail-Bestätigung",
         "emailDescription": "Geben Sie zum Fortfahren Ihre Konto-E-Mail-Adresse erneut ein.",
-        "button": "Mein Konto schliessen"
+        "button": "Mein Konto schließen"
     },
     "reactivateAccount": {
         "title": "Konto reaktivieren",
         "heroTitle": "Reaktivieren Sie Ihr Konto",
-        "description": "Wenn Sie Ihr Konto zuvor eingefroren haben, koennen Sie es mit Ihrer E-Mail-Adresse und Ihrem Passwort wieder aktivieren.",
-        "frozenDescription": "Wir haben waehrend der Anmeldung festgestellt, dass Ihr Konto eingefroren ist. Bestaetigen Sie Ihre E-Mail-Adresse und Ihr Passwort, um fortzufahren.",
+        "description": "Wenn Sie Ihr Konto zuvor eingefroren haben, können Sie es mit Ihrer E-Mail-Adresse und Ihrem Passwort wieder aktivieren.",
+        "frozenDescription": "Wir haben während der Anmeldung festgestellt, dass Ihr Konto eingefroren ist. Bestätigen Sie Ihre E-Mail-Adresse und Ihr Passwort, um fortzufahren.",
         "emailLabel": "E-Mail",
         "emailPlaceholder": "beispiel@aicar.com",
         "passwordLabel": "Passwort",
         "passwordPlaceholder": "Ihr Passwort",
         "button": "Mein Konto reaktivieren",
         "successTitle": "Konto reaktiviert",
-        "successMessage": "Sie koennen wieder auf Ihr Profil zugreifen.",
+        "successMessage": "Sie können wieder auf Ihr Profil zugreifen.",
         "errorTitle": "Konto konnte nicht reaktiviert werden",
-        "errorMessage": "Pruefen Sie Ihre Angaben und versuchen Sie es erneut."
+        "errorMessage": "Prüfen Sie Ihre Angaben und versuchen Sie es erneut."
     },
     "about": {
         "title": "Info",
-        "tagline": "KI-gestuetzte Fahrzeuganalyse",
+        "tagline": "KI-gestützte Fahrzeuganalyse",
         "versionLabel": "Version",
         "buildLabel": "Build",
         "platformLabel": "Plattform",
         "checkUpdates": "Nach Updates suchen",
-        "updateAvailableTitle": "Update verfuegbar",
+        "updateAvailableTitle": "Update verfügbar",
         "updateAvailableMessage": "Neue Version: {{version}}",
         "upToDateTitle": "Ihre App ist aktuell",
         "versionValue": "Version {{version}}",
@@ -208,8 +254,8 @@
     },
     "feedbackScreen": {
         "title": "Beschwerde & Vorschlag",
-        "heading": "Waehlen Sie Ihre Rueckmeldungsart",
-        "description": "Waehlen Sie das Thema aus, das Sie mit unserem Team teilen moechten, und schildern Sie die Details.",
+        "heading": "Wählen Sie Ihre Rückmeldungsart",
+        "description": "Wählen Sie das Thema aus, das Sie mit unserem Team teilen möchten, und schildern Sie die Details.",
         "historyButton": "Meine Einsendungen",
         "types": {
             "complaint": {
@@ -230,9 +276,9 @@
         "submit": "Senden",
         "successComplaintTitle": "Beschwerde gesendet",
         "successSuggestionTitle": "Vorschlag gesendet",
-        "successMessage": "Unser Team wird Ihr Feedback pruefen.",
+        "successMessage": "Unser Team wird Ihr Feedback prüfen.",
         "submitErrorTitle": "Feedback konnte nicht gesendet werden",
-        "submitErrorMessage": "Bitte versuchen Sie es spaeter erneut."
+        "submitErrorMessage": "Bitte versuchen Sie es später erneut."
     },
     "profileScreen": {
         "guestTitle": "Melden Sie sich in Ihrem Konto an",
@@ -248,7 +294,7 @@
         "feedback": "Beschwerde & Vorschlag",
         "feedbackHistory": "Mein Feedback",
         "logout": "Abmelden",
-        "logoutConfirm": "Moechten Sie sich wirklich abmelden?",
+        "logoutConfirm": "Möchten Sie sich wirklich abmelden?",
         "cancel": "Abbrechen",
         "loginStartFailed": "Anmeldung konnte nicht gestartet werden",
         "registerStartFailed": "Registrierung konnte nicht gestartet werden",
@@ -259,7 +305,7 @@
         },
         "errors": {
             "frontendUrlMissing": "Die Frontend-URL-Konfiguration fehlt.",
-            "additionalActionRequired": "Fuer Ihr Konto ist eine zusaetzliche Aktion erforderlich. Bitte versuchen Sie es erneut.",
+            "additionalActionRequired": "Für Ihr Konto ist eine zusätzliche Aktion erforderlich. Bitte versuchen Sie es erneut.",
             "browserSessionFailed": "Beim Starten der Browser-Sitzung ist ein Problem aufgetreten."
         }
     }

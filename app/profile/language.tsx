@@ -1,9 +1,10 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { changeAppLanguage, normalizeLanguage } from "@/i18n";
 import { usePatchUsers } from "@/query-hooks/useUser";
-import { useAuthStore } from "@/store/useAuth";
+import { mergeAuthenticatedUser, useAuthStore } from "@/store/useAuth";
+import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,7 +39,7 @@ export default function LanguageScreen() {
         return (
             <ScreenContainer title={translate("language.title")} showBackButton>
                 <View style={styles.emptyState}>
-                    <MaterialIcons name="person-off" size={48} color="#C7C7CC" />
+                    <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
                     <Text style={styles.emptyText}>{translate("language.noUser")}</Text>
                 </View>
             </ScreenContainer>
@@ -59,20 +60,15 @@ export default function LanguageScreen() {
                 d: { language: nextLanguage },
             });
 
-            if (authStore.user) {
-                authStore.login({
-                    ...authStore.user,
-                    user: { ...authStore.user.user, language: nextLanguage },
-                });
-            }
+            mergeAuthenticatedUser({ language: nextLanguage });
 
             notify({ type: "success", title: translate("language.saved") });
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } } };
-            notify({
-                type: "error",
+            notifyApiError({
+                error,
+                fallbackMessage: translate("language.retryLater"),
+                notify,
                 title: translate("language.saveFailed"),
-                message: err?.response?.data?.message || translate("language.retryLater"),
             });
         } finally {
             setIsSaving(false);
@@ -113,7 +109,9 @@ export default function LanguageScreen() {
                                     styles.languageLabel,
                                     {
                                         color: t.textPrimary,
-                                        fontWeight: isSelected ? "700" : "500",
+                                        fontFamily: isSelected
+                                            ? FontFamily.bold
+                                            : FontFamily.medium,
                                     },
                                 ]}
                             >
@@ -150,7 +148,7 @@ export default function LanguageScreen() {
                 activeOpacity={0.8}
             >
                 {isSaving ? (
-                    <ActivityIndicator color="#FFFFFF" />
+                    <ActivityIndicator color={tokens.textInverse} />
                 ) : (
                     <Text style={styles.saveButtonText}>{translate("language.save")}</Text>
                 )}
@@ -166,19 +164,22 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     emptyText: {
+        fontFamily: FontFamily.regular,
         fontSize: 15,
-        color: "#8E8E93",
+        color: tokens.textTertiary,
     },
     infoCard: {
         flexDirection: "row",
         gap: 10,
         backgroundColor: tokens.infoBg,
-        borderRadius: 14,
+        borderRadius: 20,
         padding: 14,
         marginTop: 8,
         alignItems: "flex-start",
+        ...ambientShadow,
     },
     infoText: {
+        fontFamily: FontFamily.regular,
         fontSize: 13,
         lineHeight: 19,
         flex: 1,
@@ -190,10 +191,11 @@ const styles = StyleSheet.create({
     languageItem: {
         flexDirection: "row",
         alignItems: "center",
-        borderRadius: 16,
+        borderRadius: 20,
         paddingHorizontal: 18,
         paddingVertical: 18,
         gap: 14,
+        ...ambientShadow,
     },
     flag: {
         fontSize: 28,
@@ -208,16 +210,16 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         backgroundColor: Colors.primary,
-        borderRadius: 14,
+        borderRadius: 9999,
         alignItems: "center",
         justifyContent: "center",
         minHeight: 48,
         marginTop: 24,
     },
     saveButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.semiBold,
+        color: tokens.textInverse,
         fontSize: 16,
-        fontWeight: "600",
     },
     disabledButton: {
         opacity: 0.45,

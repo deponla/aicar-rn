@@ -1,6 +1,6 @@
 import { LegendList } from "@legendapp/list";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useGetLegalDocuments } from "@/query-hooks/useLegal";
 import { LegalDocument, LegalDocumentTypeEnum } from "@/types/legal";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -51,7 +51,7 @@ const LegalDocumentViewer = React.memo(function LegalDocumentViewer({
           </Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <View style={styles.closeButtonCircle}>
-              <MaterialIcons size={16} name="close" color="#8E8E93" />
+              <MaterialIcons size={16} name="close" color={tokens.textTertiary} />
             </View>
           </TouchableOpacity>
         </View>
@@ -101,7 +101,7 @@ const LegalDocumentRow = React.memo(function LegalDocumentRow({
           ) : null}
         </View>
       </View>
-      <MaterialIcons size={20} name="chevron-right" color="#C7C7CC" />
+      <MaterialIcons size={20} name="chevron-right" color={tokens.textPlaceholder} />
     </TouchableOpacity>
   );
 });
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: tokens.bgBase,
   },
   modalHeader: {
     flexDirection: "row",
@@ -192,15 +192,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E5EA",
+    borderBottomColor: tokens.borderSubtle,
   },
   modalHeaderSpacer: {
     width: 30,
   },
   modalTitle: {
+    fontFamily: FontFamily.semiBold,
     fontSize: 17,
-    fontWeight: "600",
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
     flex: 1,
     textAlign: "center",
   },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#F2F4F8",
+    backgroundColor: tokens.surfaceContainerLow,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -223,28 +223,26 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   documentText: {
+    fontFamily: FontFamily.regular,
     color: tokens.textPrimary,
     fontSize: 15,
     lineHeight: 22,
   },
   versionText: {
+    fontFamily: FontFamily.medium,
     fontSize: 12,
     color: tokens.textTertiary,
     marginTop: 24,
     textAlign: "center",
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 20,
     paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#E5E5EA",
+    borderColor: tokens.borderSubtle,
     paddingBottom: 4,
+    ...ambientShadow,
   },
   menuItem: {
     flexDirection: "row",
@@ -267,18 +265,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   menuItemTitle: {
+    fontFamily: FontFamily.medium,
     fontSize: 15,
-    fontWeight: "500",
-    color: "#1C1C1E",
+    color: tokens.textPrimary,
   },
   menuItemSubtitle: {
+    fontFamily: FontFamily.regular,
     fontSize: 12,
     color: tokens.textTertiary,
     marginTop: 2,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#E5E5EA",
+    backgroundColor: tokens.borderSubtle,
     marginLeft: 50,
   },
   emptyContainer: {
@@ -289,6 +288,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
+    fontFamily: FontFamily.regular,
     fontSize: 16,
     color: tokens.textSecondary,
   },

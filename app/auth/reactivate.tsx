@@ -1,6 +1,6 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors } from "@/constants/theme";
+import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useReactivateAccount } from "@/query-hooks/useUser";
 import { SECURE_STORE_KEY, useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -93,7 +93,7 @@ export default function ReactivateAccountScreen() {
                         autoCorrect={false}
                         keyboardType="email-address"
                         placeholder={t("reactivateAccount.emailPlaceholder")}
-                        placeholderTextColor="#C7C7CC"
+                        placeholderTextColor={tokens.textPlaceholder}
                     />
 
                     <Text style={styles.label}>{t("reactivateAccount.passwordLabel")}</Text>
@@ -106,7 +106,7 @@ export default function ReactivateAccountScreen() {
                             autoCapitalize="none"
                             autoCorrect={false}
                             placeholder={t("reactivateAccount.passwordPlaceholder")}
-                            placeholderTextColor="#C7C7CC"
+                            placeholderTextColor={tokens.textPlaceholder}
                         />
                         <TouchableOpacity
                             onPress={() => setShowPassword((current) => !current)}
@@ -116,7 +116,7 @@ export default function ReactivateAccountScreen() {
                             <MaterialIcons
                                 name={showPassword ? "visibility-off" : "visibility"}
                                 size={22}
-                                color="#8E8E93"
+                                color={tokens.textTertiary}
                             />
                         </TouchableOpacity>
                     </View>
@@ -131,7 +131,7 @@ export default function ReactivateAccountScreen() {
                         activeOpacity={0.8}
                     >
                         {reactivateAccount.isPending ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={tokens.textInverse} />
                         ) : (
                             <Text style={styles.primaryButtonText}>{t("reactivateAccount.button")}</Text>
                         )}
@@ -144,77 +144,78 @@ export default function ReactivateAccountScreen() {
 
 const styles = StyleSheet.create({
     heroCard: {
-        backgroundColor: "#EFF6FF",
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: "#BFDBFE",
+        backgroundColor: tokens.primaryLight,
+        borderRadius: 24,
         padding: 20,
         gap: 10,
         marginTop: 12,
         marginBottom: 18,
+        ...ambientShadow,
     },
     heroIconWrap: {
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: "#DBEAFE",
+        backgroundColor: tokens.surfaceContainerLowest,
         justifyContent: "center",
         alignItems: "center",
     },
     heroTitle: {
+        fontFamily: FontFamily.bold,
         fontSize: 18,
-        fontWeight: "700",
-        color: "#1E3A8A",
+        color: tokens.textPrimary,
     },
     heroText: {
+        fontFamily: FontFamily.regular,
         fontSize: 14,
         lineHeight: 20,
-        color: "#1D4ED8",
+        color: tokens.textSecondary,
     },
     formCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: "#ECECEC",
+        backgroundColor: tokens.surfaceContainerLowest,
+        borderRadius: 24,
         padding: 18,
         gap: 12,
+        ...ambientShadow,
     },
     label: {
+        fontFamily: FontFamily.semiBold,
         fontSize: 14,
-        fontWeight: "600",
-        color: "#3C3C43",
+        color: tokens.textPrimary,
     },
     input: {
         minHeight: 50,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
-        backgroundColor: "#FAFAFA",
+        borderColor: tokens.borderSubtle,
+        backgroundColor: tokens.surfaceContainerLow,
         paddingHorizontal: 14,
+        fontFamily: FontFamily.regular,
         fontSize: 15,
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     passwordRow: {
         flexDirection: "row",
         alignItems: "center",
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
-        backgroundColor: "#FAFAFA",
+        borderColor: tokens.borderSubtle,
+        backgroundColor: tokens.surfaceContainerLow,
     },
     passwordInput: {
         flex: 1,
         minHeight: 50,
         paddingHorizontal: 14,
+        fontFamily: FontFamily.regular,
         fontSize: 15,
-        color: "#1C1C1E",
+        color: tokens.textPrimary,
     },
     eyeButton: {
         paddingHorizontal: 12,
     },
     primaryButton: {
         minHeight: 52,
-        borderRadius: 14,
+        borderRadius: 9999,
         backgroundColor: Colors.primary,
         alignItems: "center",
         justifyContent: "center",
@@ -224,8 +225,8 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     primaryButtonText: {
-        color: "#FFFFFF",
+        fontFamily: FontFamily.bold,
+        color: tokens.textInverse,
         fontSize: 15,
-        fontWeight: "700",
     },
 });

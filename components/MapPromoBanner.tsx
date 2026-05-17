@@ -1,4 +1,4 @@
-import { tokens } from "@/constants/theme";
+import { ambientShadow, FontFamily, tokens } from "@/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -14,14 +14,13 @@ export default function MapPromoBanner() {
         styles.container,
         {
           backgroundColor: t.primaryLight,
-          borderColor: t.primary + "1A",
         },
       ]}
       activeOpacity={0.8}
       onPress={() => router.push("/(tabs)/search")}
     >
       <View style={[styles.iconBox, { backgroundColor: t.primary }]}>
-        <MaterialIcons name="map" size={22} color="#fff" />
+        <MaterialIcons name="map" size={22} color={t.textInverse} />
       </View>
 
       <View style={styles.textCol}>
@@ -45,8 +44,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     padding: 14,
     borderRadius: 16,
-    borderWidth: 1,
     gap: 12,
+    ...ambientShadow,
   },
   iconBox: {
     width: 42,
@@ -60,10 +59,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
   },
   subtitle: {
     fontSize: 12,
+    fontFamily: FontFamily.regular,
     marginTop: 2,
   },
 });

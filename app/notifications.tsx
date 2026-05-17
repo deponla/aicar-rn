@@ -1,6 +1,6 @@
 import { LegendList } from "@legendapp/list";
 import ScreenContainer from "@/components/ScreenContainer";
-import { Colors, tokens } from "@/constants/theme";
+import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
 import { normalizeLanguage } from "@/i18n";
 import { useGetNotifications } from "@/query-hooks/useNotifications";
 import {
@@ -172,11 +172,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
-    backgroundColor: tokens.bgSurface,
+    backgroundColor: tokens.surfaceContainerLowest,
     borderRadius: 14,
     padding: 14,
-    borderWidth: 1,
-    borderColor: tokens.borderSubtle,
+    ...ambientShadow,
   },
   iconBox: {
     width: 40,
@@ -191,7 +190,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: FontFamily.semiBold,
     color: tokens.textPrimary,
   },
   cardBody: {
@@ -214,7 +213,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: FontFamily.bold,
     color: tokens.textPrimary,
   },
   emptyMessage: {

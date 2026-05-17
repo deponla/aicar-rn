@@ -21,13 +21,17 @@ export interface AnalysisLogListResponse {
   page: number;
   limit: number;
 }
-export const useGetAnalysisLogs = (filters?: AnalysisLogQuery) => {
+export const useGetAnalysisLogs = (
+  filters?: AnalysisLogQuery,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   const { i18n } = useTranslation();
   const language = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
   return useQuery({
     queryKey: [AnalysisLogQueryKeys.LOGS, filters, language],
     queryFn: () => getAnalysisLogs(filters),
+    enabled,
     staleTime: 30_000,
   });
 };
