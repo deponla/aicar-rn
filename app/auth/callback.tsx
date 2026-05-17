@@ -19,6 +19,64 @@ import {
   parseAuthCallbackFromUrl,
 } from "../../utils/parseSessionFromUrl";
 
+function getSingleParamValue(
+  value: string | string[] | undefined,
+): string | undefined {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+}
+
+function buildCallbackUrlFromParams(params: {
+  session?: string | string[];
+  action?: string | string[];
+  reason?: string | string[];
+  email?: string | string[];
+}) {
+  const callbackParams = new URLSearchParams();
+  const session = getSingleParamValue(params.session);
+  const action = getSingleParamValue(params.action);
+  const reason = getSingleParamValue(params.reason);
+  const email = getSingleParamValue(params.email);
+
+  if (session) {
+    callbackParams.set("session", session);
+  }
+
+  if (action) {
+    callbackParams.set("action", action);
+  }
+
+  if (reason) {
+    callbackParams.set("reason", reason);
+  }
+
+  if (email) {
+    callbackParams.set("email", email);
+  }
+
+  const query = callbackParams.toString();
+
+  return query ? `?${query}` : null;
+}
+
+function hasCallbackPayload(url: string) {
+  try {
+    const urlObj = url.includes("://")
+      ? new URL(url)
+      : new URL(url, "https://aicar.local");
+
+    return (
+      urlObj.searchParams.has("session") ||
+      urlObj.searchParams.has("action")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function AuthCallback() {
   const { t } = useTranslation();
   const params = useLocalSearchParams<{
@@ -30,6 +88,10 @@ export default function AuthCallback() {
   const router = useRouter();
   const authStore = useAuthStore();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const sessionParam = getSingleParamValue(params.session);
+  const actionParam = getSingleParamValue(params.action);
+  const reasonParam = getSingleParamValue(params.reason);
+  const emailParam = getSingleParamValue(params.email);
 
   useEffect(() => {
     void WebBrowser.dismissBrowser().catch(() => undefined);
@@ -74,43 +136,35 @@ export default function AuthCallback() {
     };
 
     const handleDeepLink = async () => {
+      const paramCallbackUrl = buildCallbackUrlFromParams({
+        session: sessionParam,
+        action: actionParam,
+        reason: reasonParam,
+        email: emailParam,
+      });
       const url = await Linking.getInitialURL();
+      const callbackCandidates = [paramCallbackUrl, url].filter(
+        (candidate, index, candidates): candidate is string =>
+          typeof candidate === "string" &&
+          candidate.length > 0 &&
+          candidates.indexOf(candidate) === index,
+      );
 
-      if (url) {
-        if (await handleAuthCallback(url)) {
+      for (const callbackCandidate of callbackCandidates) {
+        if (await handleAuthCallback(callbackCandidate)) {
           return;
         }
+      }
 
-        setErrorMessage(
-          t("auth.callback.unreadableSession"),
-        );
+      if (paramCallbackUrl) {
+        setErrorMessage(t("auth.callback.invalidSessionData"));
         return;
       }
 
-      if (params.session || params.action) {
-        const callbackParams = new URLSearchParams();
-
-        if (typeof params.session === "string") {
-          callbackParams.set("session", params.session);
-        }
-
-        if (typeof params.action === "string") {
-          callbackParams.set("action", params.action);
-        }
-
-        if (typeof params.reason === "string") {
-          callbackParams.set("reason", params.reason);
-        }
-
-        if (typeof params.email === "string") {
-          callbackParams.set("email", params.email);
-        }
-
-        if (await handleAuthCallback(`?${callbackParams.toString()}`)) {
-          return;
-        }
-
-        setErrorMessage(t("auth.callback.invalidSessionData"));
+      if (url && hasCallbackPayload(url)) {
+        setErrorMessage(
+          t("auth.callback.unreadableSession"),
+        );
         return;
       }
 
@@ -120,11 +174,11 @@ export default function AuthCallback() {
     handleDeepLink();
   }, [
     authStore,
-    params.action,
-    params.email,
-    params.reason,
-    params.session,
+    actionParam,
+    emailParam,
+    reasonParam,
     router,
+    sessionParam,
     t,
   ]);
 
