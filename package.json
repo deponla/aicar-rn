@@ -50,7 +50,7 @@
     "expo-updates": "~55.0.21",
     "expo-web-browser": "~55.0.10",
     "i18next": "^26.2.0",
-    "react": "19.2.0",
+    "react": "19.2.6",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.76.0",
     "react-i18next": "^17.0.7",
