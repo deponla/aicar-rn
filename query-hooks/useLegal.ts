@@ -1,11 +1,10 @@
-import { getLegalDocuments, getLegalDocument } from "@/api/get";
+import { getLegalDocuments } from "@/api/get";
 import { normalizeLanguage } from "@/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 export enum LegalQueryKeys {
   LEGAL_DOCUMENTS = "legal-documents",
-  LEGAL_DOCUMENT = "legal-document",
 }
 
 export const useGetLegalDocuments = () => {
@@ -15,16 +14,5 @@ export const useGetLegalDocuments = () => {
   return useQuery({
     queryKey: [LegalQueryKeys.LEGAL_DOCUMENTS, language],
     queryFn: () => getLegalDocuments({ language }),
-  });
-};
-
-export const useGetLegalDocument = (type: string, { enabled = true } = {}) => {
-  const { i18n } = useTranslation();
-  const language = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
-
-  return useQuery({
-    queryKey: [LegalQueryKeys.LEGAL_DOCUMENT, type, language],
-    queryFn: () => getLegalDocument({ type, language }),
-    enabled,
   });
 };

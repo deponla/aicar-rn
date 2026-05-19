@@ -1,10 +1,8 @@
 import { RefreshRequest, UserResponseData } from "@/types/auth";
 import { DeviceResponse, RegisterDevicePayload } from "@/types/device";
 import {
-  ConversationResponse,
   MessageResponse as ChatMessageResponse,
   SendMessageRequest,
-  StartConversationRequest,
 } from "@/types/chat";
 import {
   ChangePasswordRequest,
@@ -38,6 +36,11 @@ import {
   TransactionResponse,
   VerifyReceiptRequest,
 } from "@/types/credit";
+import {
+  CarReminderResponse,
+  CompleteCarReminderRequest,
+  CreateCarReminderRequest,
+} from "@/types/car-reminder";
 import { instance } from "./config";
 
 export async function postRefreshToken(
@@ -47,14 +50,6 @@ export async function postRefreshToken(
 }
 
 // Chat
-export async function postStartConversation(
-  payload: StartConversationRequest,
-): Promise<ConversationResponse> {
-  return instance
-    .post("v1/chat/conversations/start", payload)
-    .then((r) => r.data);
-}
-
 export async function postSendMessage(
   payload: SendMessageRequest,
 ): Promise<ChatMessageResponse> {
@@ -146,18 +141,6 @@ export async function postCompleteAiVideoUpload(payload: {
     .then((r) => r.data);
 }
 
-export interface AnalyzeObdRequest {
-  code: string;
-  carId?: string;
-  prompt?: string;
-}
-
-export async function postAnalyzeObd(
-  payload: AnalyzeObdRequest,
-): Promise<AnalyzeMediaResponse> {
-  return instance.post("v1/ai/analyze/obd", payload).then((r) => r.data);
-}
-
 export async function postAnalyzeMedia(
   payload: AnalyzeMediaRequest,
 ): Promise<AnalyzeMediaResponse> {
@@ -200,6 +183,22 @@ export async function postCreateCar(
   payload: CreateCarRequest,
 ): Promise<CarResponse> {
   return instance.post("v1/cars", payload).then((r) => r.data);
+}
+
+// Car Reminders
+export async function postCreateCarReminder(
+  payload: CreateCarReminderRequest,
+): Promise<CarReminderResponse> {
+  return instance.post("v1/car-reminders", payload).then((r) => r.data);
+}
+
+export async function postCompleteCarReminder(
+  id: string,
+  payload: CompleteCarReminderRequest,
+): Promise<CarReminderResponse> {
+  return instance
+    .post(`v1/car-reminders/${id}/complete`, payload)
+    .then((r) => r.data);
 }
 
 // Account / Credits

@@ -153,10 +153,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
+    gap: 12,
   },
   headerSide: {
     width: 80,
     justifyContent: "center",
+    flexShrink: 0,
   },
   backButton: {
     padding: 4,
@@ -165,11 +167,14 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   headerTitle: {
+    flex: 1,
+    minWidth: 0,
     fontFamily: FontFamily.semiBold,
     fontSize: 22,
     lineHeight: 28,
     letterSpacing: -0.22,
     color: tokens.textPrimary,
+    textAlign: "center",
   },
   headerBorder: {
     position: "absolute",

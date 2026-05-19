@@ -1,5 +1,6 @@
 import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
 import HomeHeader from "@/components/HomeHeader";
+import { PRIVACY_URL, TERMS_URL } from "@/utils/env";
 import {
   AUTH_CALLBACK_ACTIONS,
 } from "@/utils/parseSessionFromUrl";
@@ -18,6 +19,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -136,6 +138,7 @@ export default function ProfileScreen() {
   const t = tokens;
   const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
   const [webViewTitle, setWebViewTitle] = useState<string>("");
+  const colorScheme = useColorScheme();
 
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const user = authStore.user?.user;
@@ -210,28 +213,23 @@ export default function ProfileScreen() {
     void handleAuth("login");
   }, [handleAuth]);
 
-  const handleLogout = useCallback(() => {
-    Alert.alert(translate("profileScreen.logout"), translate("profileScreen.logoutConfirm"), [
-      { text: translate("profileScreen.cancel"), style: "cancel" },
-      {
-        text: translate("profileScreen.logout"),
-        style: "destructive",
-        onPress: async () => {
-          await authStore.logout();
-        },
-      },
-    ]);
-  }, [authStore, translate]);
+  const appendTheme = useCallback(
+    (url: string) => {
+      const sep = url.includes("?") ? "&" : "?";
+      return `${url}${sep}theme=${colorScheme === "dark" ? "dark" : "light"}`;
+    },
+    [colorScheme],
+  );
 
   const openTerms = useCallback(() => {
     setWebViewTitle(translate("about.links.terms"));
-    setWebViewUrl("https://deponla.com/terms");
-  }, [translate]);
+    setWebViewUrl(appendTheme(TERMS_URL));
+  }, [appendTheme, translate]);
 
   const openPrivacy = useCallback(() => {
     setWebViewTitle(translate("about.links.privacy"));
-    setWebViewUrl("https://deponla.com/privacy");
-  }, [translate]);
+    setWebViewUrl(appendTheme(PRIVACY_URL));
+  }, [appendTheme, translate]);
 
   const goToSettings = useCallback(() => {
     router.push("/profile/settings");
@@ -585,18 +583,6 @@ export default function ProfileScreen() {
           />
         </MenuSection>
 
-        {/* ── Çıkış ── */}
-        <SectionLabel label="" />
-        <MenuSection>
-          <MenuItem
-            icon="logout"
-            label={translate("profileScreen.logout")}
-            destructive
-            onPress={handleLogout}
-            showDivider={false}
-          />
-        </MenuSection>
-
         <View style={{ height: 32 }} />
       </ScrollView>
     </View>
@@ -609,7 +595,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 16,
+    paddingBottom: 100,
   },
 
   // ── Hero ──────────────────────────────────────────────────────────────────

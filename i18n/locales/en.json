@@ -3,6 +3,10 @@
         "loading": "Loading...",
         "requestFailed": "Request failed",
         "retry": "Retry",
+        "close": "Close",
+        "searchLocation": "Search location...",
+        "offline": "No internet connection",
+        "online": "Internet connection restored",
         "languages": {
             "de": "German",
             "en": "English",
@@ -38,7 +42,7 @@
         "sections": {
             "personal": "PERSONAL INFORMATION",
             "security": "SECURITY",
-            "preferences": "PREFERENCES",
+            "appSettings": "APP SETTINGS",
             "account": "ACCOUNT"
         },
         "editProfile": "Edit Profile",
@@ -47,9 +51,30 @@
         "changePassword": "Change Password",
         "activeSessions": "Active Sessions",
         "language": "Language",
+        "textSize": "Text Size",
         "notificationPreferences": "Notification Preferences",
         "freezeAccount": "Freeze Account",
         "deleteAccount": "Delete Account"
+    },
+    "textSize": {
+        "title": "Text Size",
+        "description": "Adjust heading and body text sizes across the app instantly. Your choice is saved on this device.",
+        "previewLabel": "Live Preview",
+        "previewTitle": "Headings and body copy scale together",
+        "previewBody": "This preview shows how your selected size affects titles, descriptions, and supporting text throughout the app.",
+        "previewCaption": "The new size is applied across the app immediately.",
+        "options": {
+            "small": "Small",
+            "medium": "Medium",
+            "large": "Large",
+            "extraLarge": "Extra Large"
+        },
+        "descriptions": {
+            "small": "Creates a more compact layout.",
+            "medium": "The default balanced appearance.",
+            "large": "Improves readability.",
+            "extraLarge": "Uses larger text for maximum visibility."
+        }
     },
     "language": {
         "title": "Language",
@@ -118,6 +143,76 @@
         },
         "stats": {
             "total": "Total"
+        },
+        "dashboard": {
+            "pageTitle": "Statistics and Insights",
+            "periods": {
+                "weekly": "Weekly",
+                "monthly": "Monthly",
+                "yearly": "Yearly"
+            },
+            "forecast": {
+                "label": "AI Forecast",
+                "message": "Recommended maintenance window for {{type}}: {{due}}.",
+                "emptyMessage": "There is no active maintenance plan yet. Create one based on how this vehicle is used.",
+                "noTargetMessage": "A maintenance plan exists for {{type}}, but no target date or mileage has been set yet.",
+                "lastScan": "Last Scan",
+                "currentMileage": "Current Mileage",
+                "noScans": "No scans yet",
+                "noMileage": "Mileage not added",
+                "cta": "Plan Maintenance",
+                "mileageRemaining": "{{mileage}} km {{qualifier}}",
+                "mileageQualifierRemaining": "remaining",
+                "mileageQualifierOverdue": "overdue"
+            },
+            "activity": {
+                "title": "Scan Activity",
+                "active": "Active",
+                "idle": "Ready"
+            },
+            "findings": {
+                "title": "Most Common Findings",
+                "empty": "No classifiable findings were detected for this period.",
+                "categories": {
+                    "powertrain": "Engine & Emissions",
+                    "electronics": "Electronic Systems",
+                    "fluids": "Fluid Levels",
+                    "tires": "Tires & Brakes"
+                }
+            },
+            "reminderTypes": {
+                "oil_change": "Oil Change",
+                "periodic_maintenance": "General Check",
+                "inspection": "Detailed Inspection"
+            },
+            "emptyTitle": "There is no analysis data for this vehicle yet",
+            "emptyDescription": "Start a new scan and this screen will fill with period-based summaries.",
+            "noVehicleTitle": "Select a vehicle first",
+            "noVehicleDescription": "Add at least one vehicle to your garage to unlock the Insights dashboard.",
+            "goToGarage": "Go to Garage",
+            "scanCta": "Start New Scan"
+        },
+        "reminderPlanner": {
+            "title": "Maintenance Planner",
+            "subtitle": "Plan the next service step for your selected vehicle and set a reminder threshold.",
+            "currentMileage": "Current mileage",
+            "typeLabel": "Maintenance type",
+            "intervalLabel": "Target time window",
+            "intervalMonths": "{{count}} mo",
+            "previewLabel": "Estimated target date",
+            "nextMileageLabel": "Target mileage (optional)",
+            "nextMileagePlaceholder": "e.g. 128500",
+            "remindDaysLabel": "Remind this many days before",
+            "remindMileageLabel": "Remind this many km before",
+            "notesLabel": "Notes",
+            "notesPlaceholder": "Add anything the service visit should focus on.",
+            "save": "Save Plan",
+            "saveSuccessTitle": "Maintenance plan saved",
+            "saveSuccessMessage": "The Insights screen has been refreshed with the latest reminder data.",
+            "saveErrorTitle": "Maintenance plan could not be saved",
+            "saveErrorMessage": "Please check the fields and try again.",
+            "missingCarTitle": "Vehicle information is missing",
+            "missingCarMessage": "You need to select a vehicle before you can create a maintenance plan."
         }
     },
     "scanScreen": {
@@ -189,6 +284,18 @@
         "engineCcPlaceholder": "e.g. 1600",
         "mileageLabel": "Mileage (km)",
         "mileagePlaceholder": "e.g. 128500",
+        "nicknameLabel": "Car Title",
+        "nicknamePlaceholder": "e.g. City Commuter",
+        "licensePlateLabel": "License Plate",
+        "licensePlatePlaceholder": "e.g. 34 ABC 123",
+        "colorLabel": "Color",
+        "colorPlaceholder": "e.g. Midnight Blue",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Add maintenance, insurance, or personal notes",
+        "purchaseDateLabel": "Purchase Date",
+        "purchaseDatePlaceholder": "Select a date",
+        "purchaseDateClear": "Clear date",
+        "cancel": "Cancel",
         "save": "Save",
         "fuel": {
             "gasoline": "Gasoline",
@@ -200,6 +307,39 @@
         "transmission": {
             "manual": "Manual",
             "automatic": "Automatic"
+        }
+    },
+    "garageScreen": {
+        "title": "Garage",
+        "loginTitle": "Manage your cars",
+        "loginDescription": "Sign in to add vehicles and track their analysis results.",
+        "odometerLabel": "ODOMETER",
+        "emptyTitle": "You have not added a car yet",
+        "emptySubtitle": "Add a car to your garage to track analysis results.",
+        "emptyAction": "Add Car",
+        "recentScansTitle": "Recent Scans",
+        "seeAll": "See All",
+        "noScans": "No scans yet",
+        "deleteTitle": "Delete Car",
+        "deleteMessage": "Are you sure you want to delete this car?",
+        "deleteAction": "Delete",
+        "deleteSuccess": "Car deleted",
+        "deleteError": "Car could not be deleted",
+        "addCar": {
+            "title": "Add New Car",
+            "subtitle": "Save the essential details of your car, organize your garage, and connect future analyses to the right vehicle.",
+            "previewTitle": "Live Preview",
+            "previewDescription": "Your card will take shape here as you fill in the form.",
+            "previewFallback": "Car Title",
+            "primarySectionTitle": "Core Details",
+            "secondarySectionTitle": "Additional Details",
+            "notesSectionTitle": "Personal Notes",
+            "photoSectionTitle": "Photo",
+            "photoPlaceholderTitle": "Car photo coming soon",
+            "photoPlaceholderDescription": "You will soon be able to add a vehicle image here from your camera or gallery.",
+            "cta": "Save Car",
+            "success": "Car added successfully",
+            "error": "Car could not be added"
         }
     },
     "deleteAccount": {
@@ -225,7 +365,7 @@
         "description": "If you previously froze your account, you can reactivate it with your email address and password.",
         "frozenDescription": "We noticed that your account is frozen during sign-in. Verify your email address and password to continue.",
         "emailLabel": "Email",
-        "emailPlaceholder": "example@aicar.com",
+        "emailPlaceholder": "example@autolensly.com",
         "passwordLabel": "Password",
         "passwordPlaceholder": "Your password",
         "button": "Reactivate my account",
@@ -250,7 +390,7 @@
             "privacy": "Privacy Policy",
             "openSource": "Open Source Licenses"
         },
-        "copyright": "© {{year}} AiCar. All rights reserved."
+        "copyright": "© {{year}} AutoLensly. All rights reserved."
     },
     "feedbackScreen": {
         "title": "Complaint & Suggestion",
@@ -280,6 +420,203 @@
         "submitErrorTitle": "Feedback could not be sent",
         "submitErrorMessage": "Please try again later."
     },
+    "feedbackHistory": {
+        "infoText": "You can track the status of the complaints and suggestions you submitted here.",
+        "createButton": "New Feedback",
+        "emptyTitle": "No feedback yet",
+        "emptyText": "Send your first complaint or suggestion to contact the team directly.",
+        "emptyAction": "Create Feedback",
+        "latestRecords": "Showing the latest {{count}} records.",
+        "loadErrorTitle": "Feedback could not be loaded",
+        "loadErrorFallback": "Please refresh the page and try again.",
+        "reviewNote": "Review note",
+        "lastUpdated": "Latest status date",
+        "status": {
+            "new": "New",
+            "in_review": "In Review",
+            "resolved": "Resolved",
+            "closed": "Closed"
+        }
+    },
+    "permissionsScreen": {
+        "status": {
+            "active": "Active",
+            "inactive": "Off"
+        },
+        "actions": {
+            "manage": "Manage Settings",
+            "allow": "Allow"
+        },
+        "cards": {
+            "notifications": {
+                "label": "Notifications",
+                "description": "Used to receive reservation updates and important notifications"
+            },
+            "camera": {
+                "label": "Camera",
+                "description": "Used to take vehicle photos"
+            },
+            "media": {
+                "label": "Gallery & Media",
+                "description": "Used to choose vehicle photos and videos from your gallery"
+            }
+        },
+        "footer": {
+            "description": "You can also manage all permissions from your device settings.",
+            "openSettings": "Open Settings"
+        }
+    },
+    "changePasswordScreen": {
+        "title": "Change your password",
+        "subtitle": "For your security, enter your current password and set a new one.",
+        "oauthTitle": "Password change unavailable",
+        "oauthMessage": "Because your account was created with {{provider}}, changing your password is not available here. You can manage your account security through your provider.",
+        "strength": {
+            "veryWeak": "Very weak",
+            "weak": "Weak",
+            "medium": "Medium",
+            "strong": "Strong",
+            "veryStrong": "Very strong"
+        },
+        "requirements": {
+            "minLength": "At least 8 characters",
+            "uppercase": "Uppercase letter (A-Z)",
+            "lowercase": "Lowercase letter (a-z)",
+            "number": "Number (0-9)",
+            "special": "Special character (!@#$...)"
+        },
+        "fields": {
+            "current": {
+                "label": "Current password",
+                "placeholder": "Your current password"
+            },
+            "next": {
+                "label": "New password",
+                "placeholder": "Your new password"
+            },
+            "confirm": {
+                "label": "Confirm new password",
+                "placeholder": "Enter your new password again"
+            }
+        },
+        "passwordMismatch": "Passwords do not match",
+        "submit": "Change Password",
+        "successTitle": "Password changed",
+        "successMessage": "Your new password has been saved successfully.",
+        "errorTitle": "Password could not be changed",
+        "errorMessage": "Please try again later."
+    },
+    "freezeAccount": {
+        "confirmTitle": "Freeze account",
+        "confirmMessage": "Your account will be temporarily frozen and all of your sessions will be ended. The next time you sign in, you can reactivate your account with your email address and password.",
+        "cancel": "Cancel",
+        "confirmAction": "Freeze account",
+        "successTitle": "Account frozen",
+        "successMessage": "You can reactivate your account the next time you sign in.",
+        "errorTitle": "Account could not be frozen",
+        "errorMessage": "Please try again later.",
+        "warningTitle": "This action can be reversed",
+        "warningText": "When your account is frozen, your current sessions will be closed and you will lose access to protected areas. You can reactivate your account on your next sign-in.",
+        "accountTitle": "Account to be frozen",
+        "button": "Freeze my account"
+    },
+    "activeSessionsScreen": {
+        "unknownPlatform": "Unknown",
+        "currentDevice": "This device",
+        "lastActive": "Last active",
+        "revokeButton": "Close session",
+        "confirmTitle": "Close session",
+        "confirmMessage": "The session on this device will be ended. Do you want to continue?",
+        "cancel": "Cancel",
+        "confirmAction": "Close Session",
+        "revokeSuccess": "Session closed",
+        "revokeErrorTitle": "Session could not be closed",
+        "revokeErrorMessage": "Please try again.",
+        "noOtherSessions": "There are no other active sessions",
+        "revokeAllTitle": "Close all sessions",
+        "revokeAllMessage": "{{count}} sessions except this device will be ended. Do you want to continue?",
+        "revokeAllAction": "Close All",
+        "revokeAllSuccess": "All sessions were closed",
+        "revokeAllErrorTitle": "Some sessions could not be closed",
+        "revokeAllErrorMessage": "Please refresh the page and try again.",
+        "infoText": "You can view and manage all active sessions on your account here.",
+        "emptyTitle": "No active sessions found",
+        "revokeOtherSessions": "Close All Other Sessions ({{count}})",
+        "loadErrorTitle": "Sessions could not be loaded",
+        "loadErrorFallback": "Please refresh the page and try again."
+    },
+    "emailAddressScreen": {
+        "title": "Registered email",
+        "subtitle": "When you change your email address, your verification status will be reset.",
+        "label": "Email address",
+        "placeholder": "example@mail.com",
+        "statusLabel": "Status",
+        "saveButton": "Save email",
+        "verificationButton": "Send verification email",
+        "updateSuccessTitle": "Email updated",
+        "updateSuccessMessage": "You need to verify your new address.",
+        "updateErrorTitle": "Email could not be updated",
+        "verificationSuccessTitle": "Verification email sent",
+        "verificationErrorTitle": "Email could not be sent",
+        "errorMessage": "Please try again later."
+    },
+    "editProfileScreen": {
+        "title": "My Personal Information",
+        "saveHeader": "Save",
+        "avatarHint": "Tap to change your profile photo",
+        "personalInfoTitle": "Personal Information",
+        "saveButton": "Save Changes",
+        "cancel": "Cancel",
+        "saveSuccessTitle": "Profile updated",
+        "saveErrorTitle": "Update failed",
+        "saveErrorMessage": "An error occurred while updating the profile.",
+        "photoUpdated": "Photo updated",
+        "photoUploadFailedTitle": "Photo could not be uploaded",
+        "photoUploadFailedMessage": "Please try again.",
+        "photoDeleted": "Photo deleted",
+        "photoDeleteFailedTitle": "Photo could not be deleted",
+        "photoDeleteFailedMessage": "Please try again.",
+        "photoOptions": {
+            "title": "Profile Photo",
+            "message": "Choose an option",
+            "takePhoto": "Take Photo",
+            "chooseFromGallery": "Choose from Gallery",
+            "deletePhoto": "Delete Photo",
+            "cancel": "Cancel"
+        },
+        "fields": {
+            "name": {
+                "label": "First name *",
+                "placeholder": "Enter your first name",
+                "required": "First name is required"
+            },
+            "surname": {
+                "label": "Last name *",
+                "placeholder": "Enter your last name",
+                "required": "Last name is required"
+            },
+            "email": {
+                "label": "Email",
+                "helper": "Contact support to change your email address"
+            },
+            "phone": {
+                "label": "Phone",
+                "placeholder": "Your phone number"
+            }
+        }
+    },
+    "chatScreen": {
+        "pageTitle": "Messages",
+        "defaultTitle": "Chat",
+        "unknownUser": "Unknown User",
+        "readIndicator": "Seen",
+        "loginTitle": "Sign in to view your chats",
+        "loginDescription": "Sign in to view and reply to messages.",
+        "online": "Online",
+        "warehouseLabel": "Warehouse",
+        "emptyMessages": "There are no messages yet. Send the first one!",
+        "messagePlaceholder": "Write your message..."
+    },
     "profileScreen": {
         "guestTitle": "Sign in to your account",
         "guestDescription": "Manage your profile, access your garage, and use all features.",
@@ -308,5 +645,67 @@
             "additionalActionRequired": "An additional action is required for your account. Please try again.",
             "browserSessionFailed": "A problem occurred while starting the browser session."
         }
+    },
+    "supportScreen": {
+        "sections": {
+            "faq": "FREQUENTLY ASKED QUESTIONS",
+            "contact": "CONTACT",
+            "feedback": "COMPLAINT & SUGGESTION",
+            "bugReport": "BUG REPORT"
+        },
+        "faqItems": [
+            {
+                "question": "How does vehicle analysis work?",
+                "answer": "Upload photos of your vehicle and the AI system will automatically analyze the vehicle details and present the results to you."
+            },
+            {
+                "question": "How can I buy credits?",
+                "answer": "Go to the credit packages section from your profile page, choose the most suitable package, and complete the purchase. Purchased credits are added to your account instantly."
+            },
+            {
+                "question": "How reliable are the analysis results?",
+                "answer": "AI analysis results are provided for reference purposes. They do not replace a professional inspection, but they do offer a fast general overview."
+            },
+            {
+                "question": "How can I delete my account?",
+                "answer": "You can close your account from Profile > Account Settings > Delete Account. This action cannot be undone."
+            },
+            {
+                "question": "Is my data secure?",
+                "answer": "Yes. All of your data is stored in encrypted form. You can read our privacy policy from the Privacy Policy section on the Profile page."
+            }
+        ],
+        "contact": {
+            "emailTitle": "Contact by Email"
+        },
+        "feedbackCard": {
+            "title": "Send a complaint or suggestion",
+            "description": "Share your feedback directly in the app to help us improve the experience.",
+            "button": "Open Form"
+        },
+        "bugReportCard": {
+            "title": "Report a Bug",
+            "description": "If you encountered a problem, let us know. Device information is added automatically.",
+            "button": "Send Email"
+        },
+        "bugReportSubject": "AutoLensly - Bug Report",
+        "subjectLabel": "Subject",
+        "deviceInfo": {
+            "heading": "Device Information",
+            "device": "Device",
+            "os": "OS",
+            "app": "App",
+            "unknown": "Unknown"
+        },
+        "mailFallbackTitle": "Mail app could not be opened",
+        "emailFallbackMessage": "support@autolensly.com was copied to the clipboard. You can paste it into any mail app.",
+        "bugReportFallbackMessage": "The support address and bug report draft were copied to the clipboard. You can paste them into any mail app.",
+        "mailFallbackCopyFailedMessage": "No mail app is available and copying the fallback text to the clipboard also failed."
+    },
+    "drawer": {
+        "homeScanner": "Home / Scanner",
+        "myGarage": "My Garage",
+        "subscription": "Subscription",
+        "proMember": "Pro Member"
     }
 }

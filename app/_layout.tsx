@@ -2,6 +2,7 @@ import { NotificationProvider } from "@/components/Notification";
 import i18n from "@/i18n";
 import AuthProvider from "@/providers/AuthProvider";
 import NetInfoProvider from "@/providers/NetInfoProviders";
+import { usePreferencesStore } from "@/store/usePreferences";
 import { queryClient } from "@/utils/queryClient";
 import {
   Manrope_400Regular,
@@ -33,14 +34,20 @@ export default function RootLayout() {
     Manrope_700Bold,
     Manrope_800ExtraBold,
   });
+  const hydrated = usePreferencesStore((state) => state.hydrated);
+  const hydratePreferences = usePreferencesStore((state) => state.hydrate);
 
   useEffect(() => {
-    if (fontsLoaded) {
+    void hydratePreferences();
+  }, [hydratePreferences]);
+
+  useEffect(() => {
+    if (fontsLoaded && hydrated) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, hydrated]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !hydrated) {
     return null;
   }
 

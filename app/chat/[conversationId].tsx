@@ -21,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
@@ -34,8 +35,12 @@ import {
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function getConversationName(conversation?: Conversation): string {
-  if (!conversation) return "Sohbet";
+function getConversationName(
+  conversation: Conversation | undefined,
+  fallbackTitle: string,
+  unknownUserTitle: string,
+): string {
+  if (!conversation) return fallbackTitle;
   const participant = conversation.participant;
   if (participant?.name && participant?.surname) {
     return `${participant.name} ${participant.surname}`;
@@ -43,7 +48,7 @@ function getConversationName(conversation?: Conversation): string {
   if (participant?.email) {
     return participant.email;
   }
-  return "Bilinmeyen Kullanıcı";
+  return unknownUserTitle;
 }
 
 export default function ChatDetailScreen() {
@@ -56,6 +61,7 @@ export default function ChatDetailScreen() {
   const queryClient = useQueryClient();
   const flatListRef = useRef<FlatList>(null);
   const t = tokens;
+  const { t: translate } = useTranslation();
   const isLoggedIn = auth.status === AuthStatusEnum.LOGGED_IN && !!auth.user;
 
   const [messageText, setMessageText] = useState("");
@@ -260,24 +266,28 @@ export default function ChatDetailScreen() {
                 {dayjs(item.createdAt).format("HH:mm")}
               </Text>
               {isMine && item.isRead && (
-                <Text style={styles.readIndicator}>• Görüldü</Text>
+                <Text style={styles.readIndicator}>• {translate("chatScreen.readIndicator")}</Text>
               )}
             </View>
           </View>
         </View>
       );
     },
-    [auth.user?.user.id],
+    [auth.user?.user.id, translate],
   );
 
-  const conversationName = getConversationName(conversation);
+  const conversationName = getConversationName(
+    conversation,
+    translate("chatScreen.defaultTitle"),
+    translate("chatScreen.unknownUser"),
+  );
 
   if (!isLoggedIn) {
     return (
       <LoginRequired
-        pageTitle="Mesajlar"
-        title="Sohbetlerinizi görmek için giriş yapın"
-        description="Mesajları görüntülemek ve yanıt vermek için hesabınıza giriş yapın."
+        pageTitle={translate("chatScreen.pageTitle")}
+        title={translate("chatScreen.loginTitle")}
+        description={translate("chatScreen.loginDescription")}
       />
     );
   }
@@ -317,7 +327,7 @@ export default function ChatDetailScreen() {
             {isConnected && (
               <View style={styles.onlineIndicator}>
                 <View style={styles.onlineDot} />
-                <Text style={styles.onlineText}>Çevrimiçi</Text>
+                <Text style={styles.onlineText}>{translate("chatScreen.online")}</Text>
               </View>
             )}
           </View>
@@ -331,7 +341,7 @@ export default function ChatDetailScreen() {
             ]}
           >
             <Text style={{ color: t.textSecondary, fontSize: 13 }}>
-              Depo: {conversation.relatedWarehouseId}
+              {translate("chatScreen.warehouseLabel")}: {conversation.relatedWarehouseId}
             </Text>
           </View>
         )}
@@ -350,7 +360,7 @@ export default function ChatDetailScreen() {
         {!messagesQuery.isLoading && !messagesQuery.data?.results?.length && (
           <View style={styles.emptyMessages}>
             <Text style={[styles.emptyMessagesText, { color: t.textTertiary }]}>
-              Henüz mesaj yok. İlk mesajı gönderin!
+              {translate("chatScreen.emptyMessages")}
             </Text>
           </View>
         )}
@@ -387,7 +397,7 @@ export default function ChatDetailScreen() {
             styles.textInput,
             { backgroundColor: t.bgSubtle, color: t.textPrimary },
           ]}
-          placeholder="Mesajınızı yazın..."
+          placeholder={translate("chatScreen.messagePlaceholder")}
           placeholderTextColor={t.textPlaceholder}
           value={messageText}
           onChangeText={setMessageText}

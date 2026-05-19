@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/store/useAuth";
+import { SOCKET_NAMESPACE, SOCKET_PATH, SOCKET_URL } from "@/utils/env";
 import type {
   ChatReadEventPayload,
   ChatSocketMessagePayload,
@@ -12,6 +13,12 @@ interface UseChatSocketOptions {
   onError?: (error: { message: string }) => void;
   onConnectError?: (error: Error) => void;
 }
+
+const socketConfig = {
+  origin: SOCKET_URL,
+  path: SOCKET_PATH,
+  namespace: SOCKET_NAMESPACE,
+};
 
 export function useChatSocket(options?: UseChatSocketOptions) {
   const auth = useAuthStore();
@@ -37,14 +44,6 @@ export function useChatSocket(options?: UseChatSocketOptions) {
     options?.onError,
     options?.onConnectError,
   ]);
-
-  const socketConfig = useMemo(() => {
-    return {
-      origin: "https://warehouse-api-mpxj.onrender.com",
-      path: "/socket.io",
-      namespace: "/chat",
-    };
-  }, []);
 
   useEffect(() => {
     const token = auth.user?.accessToken.token;
@@ -133,7 +132,7 @@ export function useChatSocket(options?: UseChatSocketOptions) {
       isInitializedRef.current = false;
       setIsConnected(false);
     };
-  }, [auth.user?.accessToken.token, socketConfig]);
+  }, [auth.user?.accessToken.token]);
 
   const emitRead = useCallback((conversationId: string) => {
     socketRef.current?.emit("message.read", { conversationId });

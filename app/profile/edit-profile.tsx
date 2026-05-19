@@ -14,6 +14,7 @@ import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActionSheetIOS,
   ActivityIndicator,
@@ -33,6 +34,7 @@ export default function EditProfileScreen() {
   const user = authStore.user?.user;
   const router = useRouter();
   const { notify } = useNotification();
+  const { t } = useTranslation();
   const patchUser = usePatchUsers();
   const uploadUrl = useUploadUrl();
   const confirmUpload = useConfirmUpload();
@@ -85,15 +87,15 @@ export default function EditProfileScreen() {
 
       notify({
         type: "success",
-        title: "Profil güncellendi",
+        title: t("editProfileScreen.saveSuccessTitle"),
       });
       router.back();
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Profil güncellenirken bir hata oluştu.",
+        fallbackMessage: t("editProfileScreen.saveErrorMessage"),
         notify,
-        title: "Güncelleme başarısız",
+        title: t("editProfileScreen.saveErrorTitle"),
       });
     }
   };
@@ -111,14 +113,22 @@ export default function EditProfileScreen() {
       if (source === "camera") {
         const perm = await ImagePicker.requestCameraPermissionsAsync();
         if (perm.status !== "granted") {
-          notify({ type: "error", title: "Kamera izni gerekli" });
+          notify({
+            type: "error",
+            title: t("scanScreen.alerts.permissionRequiredTitle"),
+            message: t("scanScreen.alerts.cameraPermissionMessage"),
+          });
           return;
         }
         result = await ImagePicker.launchCameraAsync(pickerOptions);
       } else {
         const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (perm.status !== "granted") {
-          notify({ type: "error", title: "Galeri izni gerekli" });
+          notify({
+            type: "error",
+            title: t("scanScreen.alerts.permissionRequiredTitle"),
+            message: t("scanScreen.alerts.galleryPermissionMessage"),
+          });
           return;
         }
         result = await ImagePicker.launchImageLibraryAsync(pickerOptions);
@@ -149,13 +159,13 @@ export default function EditProfileScreen() {
 
       mergeAuthenticatedUser({ photo: confirmResult.photo });
 
-      notify({ type: "success", title: "Fotoğraf güncellendi" });
+      notify({ type: "success", title: t("editProfileScreen.photoUpdated") });
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Lütfen tekrar deneyin.",
+        fallbackMessage: t("editProfileScreen.photoUploadFailedMessage"),
         notify,
-        title: "Fotoğraf yüklenemedi",
+        title: t("editProfileScreen.photoUploadFailedTitle"),
       });
     } finally {
       setIsUploadingPhoto(false);
@@ -175,13 +185,13 @@ export default function EditProfileScreen() {
 
       mergeAuthenticatedUser({ photo: null });
 
-      notify({ type: "success", title: "Fotoğraf silindi" });
+      notify({ type: "success", title: t("editProfileScreen.photoDeleted") });
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Lütfen tekrar deneyin.",
+        fallbackMessage: t("editProfileScreen.photoDeleteFailedMessage"),
         notify,
-        title: "Fotoğraf silinemedi",
+        title: t("editProfileScreen.photoDeleteFailedTitle"),
       });
     } finally {
       setIsUploadingPhoto(false);
@@ -189,9 +199,13 @@ export default function EditProfileScreen() {
   };
 
   const showPhotoOptions = () => {
+    const takePhotoLabel = t("editProfileScreen.photoOptions.takePhoto");
+    const chooseFromGalleryLabel = t("editProfileScreen.photoOptions.chooseFromGallery");
+    const deletePhotoLabel = t("editProfileScreen.photoOptions.deletePhoto");
+    const cancelLabel = t("editProfileScreen.photoOptions.cancel");
     const options = user?.photo
-      ? ["Fotoğraf Çek", "Galeriden Seç", "Fotoğrafı Sil", "İptal"]
-      : ["Fotoğraf Çek", "Galeriden Seç", "İptal"];
+      ? [takePhotoLabel, chooseFromGalleryLabel, deletePhotoLabel, cancelLabel]
+      : [takePhotoLabel, chooseFromGalleryLabel, cancelLabel];
     const cancelIndex = options.length - 1;
     const destructiveIndex = user?.photo ? 2 : undefined;
 
@@ -209,32 +223,32 @@ export default function EditProfileScreen() {
         },
       );
     } else {
-      Alert.alert("Profil Fotoğrafı", "Bir seçenek belirleyin", [
-        { text: "Fotoğraf Çek", onPress: () => pickAndUploadImage("camera") },
+      Alert.alert(t("editProfileScreen.photoOptions.title"), t("editProfileScreen.photoOptions.message"), [
+        { text: takePhotoLabel, onPress: () => pickAndUploadImage("camera") },
         {
-          text: "Galeriden Seç",
+          text: chooseFromGalleryLabel,
           onPress: () => pickAndUploadImage("library"),
         },
         ...(user?.photo
           ? [
             {
-              text: "Fotoğrafı Sil",
+              text: deletePhotoLabel,
               style: "destructive" as const,
               onPress: handleDeletePhoto,
             },
           ]
           : []),
-        { text: "İptal", style: "cancel" as const },
+        { text: cancelLabel, style: "cancel" as const },
       ]);
     }
   };
 
   if (!user) {
     return (
-      <ScreenContainer title="Kişisel Bilgilerim" showBackButton>
+      <ScreenContainer title={t("editProfileScreen.title")} showBackButton>
         <View style={styles.emptyState}>
           <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
-          <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+          <Text style={styles.emptyText}>{t("settings.noUser")}</Text>
         </View>
       </ScreenContainer>
     );
@@ -242,7 +256,7 @@ export default function EditProfileScreen() {
 
   return (
     <ScreenContainer
-      title="Kişisel Bilgilerim"
+      title={t("editProfileScreen.title")}
       showBackButton
       headerRight={
         <TouchableOpacity
@@ -263,7 +277,7 @@ export default function EditProfileScreen() {
                 (!hasChanges || !isValid) && styles.saveHeaderBtnTextDisabled,
               ]}
             >
-              Kaydet
+              {t("editProfileScreen.saveHeader")}
             </Text>
           )}
         </TouchableOpacity>
@@ -296,7 +310,7 @@ export default function EditProfileScreen() {
             )}
           </TouchableOpacity>
           <Text style={styles.avatarHint}>
-            Profil fotoğrafınızı değiştirmek için dokunun
+            {t("editProfileScreen.avatarHint")}
           </Text>
         </View>
 
@@ -304,65 +318,65 @@ export default function EditProfileScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <MaterialIcons name="person" size={20} color={Colors.primary} />
-            <Text style={styles.cardTitle}>Kişisel Bilgiler</Text>
+            <Text style={styles.cardTitle}>{t("editProfileScreen.personalInfoTitle")}</Text>
           </View>
           <View style={styles.cardDivider} />
 
           <View style={styles.cardBody}>
             {/* Name */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Ad *</Text>
+              <Text style={styles.fieldLabel}>{t("editProfileScreen.fields.name.label")}</Text>
               <TextInput
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
-                placeholder="Adınızı girin"
+                placeholder={t("editProfileScreen.fields.name.placeholder")}
                 placeholderTextColor={tokens.textPlaceholder}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
               {name.length === 0 && (
-                <Text style={styles.errorText}>Ad alanı zorunludur</Text>
+                <Text style={styles.errorText}>{t("editProfileScreen.fields.name.required")}</Text>
               )}
             </View>
 
             {/* Surname */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Soyad *</Text>
+              <Text style={styles.fieldLabel}>{t("editProfileScreen.fields.surname.label")}</Text>
               <TextInput
                 style={styles.input}
                 value={surname}
                 onChangeText={setSurname}
-                placeholder="Soyadınızı girin"
+                placeholder={t("editProfileScreen.fields.surname.placeholder")}
                 placeholderTextColor={tokens.textPlaceholder}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
               {surname.length === 0 && (
-                <Text style={styles.errorText}>Soyad alanı zorunludur</Text>
+                <Text style={styles.errorText}>{t("editProfileScreen.fields.surname.required")}</Text>
               )}
             </View>
 
             {/* Email (read-only) */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>E-posta</Text>
+              <Text style={styles.fieldLabel}>{t("editProfileScreen.fields.email.label")}</Text>
               <View style={styles.readOnlyField}>
                 <MaterialIcons name="lock" size={16} color={tokens.textPlaceholder} />
                 <Text style={styles.readOnlyText}>{user.email}</Text>
               </View>
               <Text style={styles.helperText}>
-                E-posta adresinizi değiştirmek için destek ile iletişime geçin
+                {t("editProfileScreen.fields.email.helper")}
               </Text>
             </View>
 
             {/* Phone */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Telefon</Text>
+              <Text style={styles.fieldLabel}>{t("editProfileScreen.fields.phone.label")}</Text>
               <TextInput
                 style={styles.input}
                 value={phone}
                 onChangeText={setPhone}
-                placeholder="Telefon numaranız"
+                placeholder={t("editProfileScreen.fields.phone.placeholder")}
                 placeholderTextColor={tokens.textPlaceholder}
                 keyboardType="phone-pad"
                 returnKeyType="done"
@@ -387,7 +401,7 @@ export default function EditProfileScreen() {
           ) : (
             <>
               <MaterialIcons name="check" size={20} color={tokens.textInverse} />
-              <Text style={styles.saveButtonText}>Değişiklikleri Kaydet</Text>
+              <Text style={styles.saveButtonText}>{t("editProfileScreen.saveButton")}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -398,7 +412,7 @@ export default function EditProfileScreen() {
           onPress={() => router.back()}
           activeOpacity={0.7}
         >
-          <Text style={styles.cancelButtonText}>İptal</Text>
+          <Text style={styles.cancelButtonText}>{t("editProfileScreen.cancel")}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />

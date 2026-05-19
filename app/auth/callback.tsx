@@ -16,6 +16,7 @@ import { SECURE_STORE_KEY, useAuthStore } from "../../store/useAuth";
 import { UserResponseData } from "../../types/auth";
 import {
   AUTH_CALLBACK_ACTIONS,
+  hasAuthCallbackPayload,
   parseAuthCallbackFromUrl,
 } from "../../utils/parseSessionFromUrl";
 
@@ -60,21 +61,6 @@ function buildCallbackUrlFromParams(params: {
   const query = callbackParams.toString();
 
   return query ? `?${query}` : null;
-}
-
-function hasCallbackPayload(url: string) {
-  try {
-    const urlObj = url.includes("://")
-      ? new URL(url)
-      : new URL(url, "https://aicar.local");
-
-    return (
-      urlObj.searchParams.has("session") ||
-      urlObj.searchParams.has("action")
-    );
-  } catch {
-    return false;
-  }
 }
 
 export default function AuthCallback() {
@@ -161,7 +147,7 @@ export default function AuthCallback() {
         return;
       }
 
-      if (url && hasCallbackPayload(url)) {
+      if (url && hasAuthCallbackPayload(url)) {
         setErrorMessage(
           t("auth.callback.unreadableSession"),
         );

@@ -16,16 +16,26 @@ export type AuthCallbackResult =
       email?: string;
     };
 
-function buildUrlObject(url: string) {
+function getSearchParams(url: string) {
   if (url.includes("://")) {
-    return new URL(url);
+    return new URL(url).searchParams;
   }
 
-  return new URL(url, "https://aicar.local");
+  if (url.startsWith("?")) {
+    return new URLSearchParams(url.slice(1));
+  }
+
+  const queryIndex = url.indexOf("?");
+
+  if (queryIndex >= 0) {
+    return new URLSearchParams(url.slice(queryIndex + 1));
+  }
+
+  return new URLSearchParams();
 }
 
-function parseSession(urlObj: URL): UserResponseData | null {
-  const sessionParam = urlObj.searchParams.get("session");
+function parseSession(searchParams: URLSearchParams): UserResponseData | null {
+  const sessionParam = searchParams.get("session");
 
   if (!sessionParam) {
     return null;
@@ -59,8 +69,8 @@ export function parseAuthCallbackFromUrl(
   url: string,
 ): AuthCallbackResult | null {
   try {
-    const urlObj = buildUrlObject(url);
-    const session = parseSession(urlObj);
+    const searchParams = getSearchParams(url);
+    const session = parseSession(searchParams);
 
     if (session) {
       return {
@@ -69,18 +79,24 @@ export function parseAuthCallbackFromUrl(
       };
     }
 
-    const action = urlObj.searchParams.get("action");
+    const action = searchParams.get("action");
 
     if (action) {
       return {
         type: "intent",
         action,
-        reason: urlObj.searchParams.get("reason") || undefined,
-        email: urlObj.searchParams.get("email") || undefined,
+        reason: searchParams.get("reason") || undefined,
+        email: searchParams.get("email") || undefined,
       };
     }
   } catch (error) {
     console.error("Session parse error:", error);
   }
   return null;
+}
+
+export function hasAuthCallbackPayload(url: string) {
+  const searchParams = getSearchParams(url);
+
+  return searchParams.has("session") || searchParams.has("action");
 }

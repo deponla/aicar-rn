@@ -10,9 +10,12 @@ import { useAuthStore } from "@/store/useAuth";
 import { Session, SessionPlatform } from "@/types/session";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import "dayjs/locale/de";
+import "dayjs/locale/en";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/tr";
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -23,7 +26,13 @@ import {
 } from "react-native";
 
 dayjs.extend(relativeTime);
-dayjs.locale("tr");
+
+function resolveDayjsLocale(language?: string): string {
+  if (!language) return "en";
+  if (language.startsWith("tr")) return "tr";
+  if (language.startsWith("de")) return "de";
+  return "en";
+}
 
 function getPlatformIcon(
   platform: SessionPlatform,
@@ -46,7 +55,7 @@ function getPlatformIcon(
   }
 }
 
-function getPlatformLabel(platform: SessionPlatform): string {
+function getPlatformLabel(platform: SessionPlatform, unknownLabel: string): string {
   switch (platform) {
     case "IOS":
       return "iOS";
@@ -61,7 +70,7 @@ function getPlatformLabel(platform: SessionPlatform): string {
     case "LINUX":
       return "Linux";
     default:
-      return "Bilinmiyor";
+      return unknownLabel;
   }
 }
 
@@ -74,7 +83,11 @@ const SessionCard = React.memo(function SessionCard({
   onRevoke: (id: string) => void;
   isRevoking: boolean;
 }) {
-  const lastActive = dayjs(session.lastActiveAt).fromNow();
+  const { t, i18n } = useTranslation();
+  const unknownLabel = t("activeSessionsScreen.unknownPlatform");
+  const lastActive = dayjs(session.lastActiveAt)
+    .locale(resolveDayjsLocale(i18n.language))
+    .fromNow();
   const cardStyle = useMemo(
     () => [
       styles.sessionCard,
@@ -130,19 +143,21 @@ const SessionCard = React.memo(function SessionCard({
         <View style={styles.sessionInfo}>
           <View style={styles.sessionTitleRow}>
             <Text style={deviceNameStyle} numberOfLines={1}>
-              {session.deviceName || getPlatformLabel(session.platform)}
+              {session.deviceName || getPlatformLabel(session.platform, unknownLabel)}
             </Text>
             {session.isCurrent ? (
               <View style={styles.currentBadge}>
-                <Text style={styles.currentBadgeText}>Bu cihaz</Text>
+                <Text style={styles.currentBadgeText}>{t("activeSessionsScreen.currentDevice")}</Text>
               </View>
             ) : null}
           </View>
           <Text style={sessionMetaStyle} numberOfLines={1}>
-            {getPlatformLabel(session.platform)}
+            {getPlatformLabel(session.platform, unknownLabel)}
             {session.location ? ` · ${session.location}` : ""}
           </Text>
-          <Text style={sessionMetaStyle}>Son aktiflik: {lastActive}</Text>
+          <Text style={sessionMetaStyle}>
+            {t("activeSessionsScreen.lastActive")}: {lastActive}
+          </Text>
         </View>
       </View>
 
@@ -169,7 +184,7 @@ const SessionCard = React.memo(function SessionCard({
           ) : (
             <>
               <MaterialIcons name="logout" size={16} color={tokens.dangerText} />
-              <Text style={revokeButtonTextStyle}>Oturumu kapat</Text>
+              <Text style={revokeButtonTextStyle}>{t("activeSessionsScreen.revokeButton")}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -183,6 +198,7 @@ function ListSeparator() {
 }
 
 export default function ActiveSessionsScreen() {
+  const { t } = useTranslation();
   const authStore = useAuthStore();
   const { notify } = useNotification();
   const { data: sessions, error, isError, isLoading, refetch } =
@@ -208,22 +224,22 @@ export default function ActiveSessionsScreen() {
   const handleRevoke = useCallback(
     (id: string) => {
       Alert.alert(
-        "Oturumu kapat",
-        "Bu cihazdaki oturum sonlandırılacak. Devam etmek istiyor musunuz?",
+        t("activeSessionsScreen.confirmTitle"),
+        t("activeSessionsScreen.confirmMessage"),
         [
-          { text: "Vazgeç", style: "cancel" },
+          { text: t("activeSessionsScreen.cancel"), style: "cancel" },
           {
-            text: "Oturumu Kapat",
+            text: t("activeSessionsScreen.confirmAction"),
             style: "destructive",
             onPress: async () => {
               try {
                 await revokeSession.mutateAsync(id);
-                notify({ type: "success", title: "Oturum kapatıldı" });
+                notify({ type: "success", title: t("activeSessionsScreen.revokeSuccess") });
               } catch {
                 notify({
                   type: "error",
-                  title: "Oturum kapatılamadı",
-                  message: "Lütfen tekrar deneyin.",
+                  title: t("activeSessionsScreen.revokeErrorTitle"),
+                  message: t("activeSessionsScreen.revokeErrorMessage"),
                 });
               }
             },
@@ -231,22 +247,22 @@ export default function ActiveSessionsScreen() {
         ],
       );
     },
-    [notify, revokeSession],
+    [notify, revokeSession, t],
   );
 
   const handleRevokeAll = useCallback(() => {
     if (otherSessions.length === 0) {
-      notify({ type: "info", title: "Başka aktif oturum yok" });
+      notify({ type: "info", title: t("activeSessionsScreen.noOtherSessions") });
       return;
     }
 
     Alert.alert(
-      "Tüm oturumları kapat",
-      `Bu cihaz hariç ${otherSessions.length} oturum sonlandırılacak. Devam etmek istiyor musunuz?`,
+      t("activeSessionsScreen.revokeAllTitle"),
+      t("activeSessionsScreen.revokeAllMessage", { count: otherSessions.length }),
       [
-        { text: "Vazgeç", style: "cancel" },
+        { text: t("activeSessionsScreen.cancel"), style: "cancel" },
         {
-          text: "Tümünü Kapat",
+          text: t("activeSessionsScreen.revokeAllAction"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -255,20 +271,20 @@ export default function ActiveSessionsScreen() {
               );
               notify({
                 type: "success",
-                title: "Tüm oturumlar kapatıldı",
+                title: t("activeSessionsScreen.revokeAllSuccess"),
               });
             } catch {
               notify({
                 type: "error",
-                title: "Bazı oturumlar kapatılamadı",
-                message: "Lütfen sayfayı yenileyip tekrar deneyin.",
+                title: t("activeSessionsScreen.revokeAllErrorTitle"),
+                message: t("activeSessionsScreen.revokeAllErrorMessage"),
               });
             }
           },
         },
       ],
     );
-  }, [notify, otherSessions, revokeSession]);
+  }, [notify, otherSessions, revokeSession, t]);
 
   const keyExtractor = useCallback((item: Session) => item.id, []);
   const renderItem = useCallback(
@@ -286,23 +302,20 @@ export default function ActiveSessionsScreen() {
     () => (
       <View style={styles.infoCard}>
         <MaterialIcons name="security" size={20} color={tokens.infoText} />
-        <Text style={styles.infoText}>
-          Hesabınızda aktif olan tüm oturumları buradan görüntüleyebilir ve
-          yönetebilirsiniz.
-        </Text>
+        <Text style={styles.infoText}>{t("activeSessionsScreen.infoText")}</Text>
       </View>
     ),
-    [],
+    [t],
   );
 
   const emptyState = useMemo(
     () => (
       <View style={styles.emptyState}>
         <MaterialIcons name="devices" size={48} color={tokens.textPlaceholder} />
-        <Text style={styles.emptyText}>Aktif oturum bulunamadı</Text>
+        <Text style={styles.emptyText}>{t("activeSessionsScreen.emptyTitle")}</Text>
       </View>
     ),
-    [],
+    [t],
   );
 
   const listFooter = useMemo(
@@ -317,7 +330,9 @@ export default function ActiveSessionsScreen() {
           >
             <MaterialIcons name="logout" size={18} color={tokens.textInverse} />
             <Text style={styles.revokeAllButtonText}>
-              Diğer Tüm Oturumları Kapat ({otherSessionCount})
+              {t("activeSessionsScreen.revokeOtherSessions", {
+                count: otherSessionCount,
+              })}
             </Text>
           </TouchableOpacity>
         ) : null}
@@ -329,7 +344,7 @@ export default function ActiveSessionsScreen() {
 
   return (
     <ScreenContainer
-      title="Aktif Oturumlar"
+      title={t("settings.activeSessions")}
       showBackButton
       scrollable={false}
       contentContainerStyle={styles.screenContent}
@@ -341,11 +356,11 @@ export default function ActiveSessionsScreen() {
       ) : isError ? (
         <View style={styles.emptyState}>
           <MaterialIcons name="error-outline" size={48} color={tokens.dangerText} />
-          <Text style={styles.errorTitle}>Oturumlar yüklenemedi</Text>
+          <Text style={styles.errorTitle}>{t("activeSessionsScreen.loadErrorTitle")}</Text>
           <Text style={styles.emptySubtext}>
             {error instanceof Error
               ? error.message
-              : "Lütfen sayfayı yenileyip tekrar deneyin."}
+              : t("activeSessionsScreen.loadErrorFallback")}
           </Text>
         </View>
       ) : (

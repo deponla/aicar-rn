@@ -1,6 +1,10 @@
 import { DevicePermissions } from "@/types/device";
 import { UserGetResponse, UserUpdateRequest } from "@/types/user";
 import { CarResponse, UpdateCarRequest } from "@/types/car";
+import {
+  CarReminderResponse,
+  UpdateCarReminderRequest,
+} from "@/types/car-reminder";
 import { instance } from "./config";
 
 export async function patchUsers(
@@ -26,4 +30,11 @@ export async function patchCar(
   payload: UpdateCarRequest,
 ): Promise<CarResponse> {
   return instance.patch(`v1/cars/${id}`, payload).then((r) => r.data);
+}
+
+export async function patchCarReminder(
+  id: string,
+  payload: UpdateCarReminderRequest,
+): Promise<CarReminderResponse> {
+  return instance.patch(`v1/car-reminders/${id}`, payload).then((r) => r.data);
 }

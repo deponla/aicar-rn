@@ -3,6 +3,10 @@
         "loading": "Yükleniyor...",
         "requestFailed": "İstek başarısız oldu",
         "retry": "Yeniden Dene",
+        "close": "Kapat",
+        "searchLocation": "Konum ara...",
+        "offline": "İnternet bağlantısı yok",
+        "online": "İnternet bağlantısı sağlandı",
         "languages": {
             "de": "Almanca",
             "en": "İngilizce",
@@ -38,7 +42,7 @@
         "sections": {
             "personal": "KİŞİSEL BİLGİLER",
             "security": "GÜVENLİK",
-            "preferences": "TERCİHLER",
+            "appSettings": "UYGULAMA AYARLARI",
             "account": "HESAP"
         },
         "editProfile": "Profili Düzenle",
@@ -47,9 +51,30 @@
         "changePassword": "Şifre Değiştir",
         "activeSessions": "Aktif Oturumlar",
         "language": "Dil",
+        "textSize": "Yazı Boyutu",
         "notificationPreferences": "Bildirim Tercihleri",
         "freezeAccount": "Hesabı Dondur",
         "deleteAccount": "Hesabı Kapat"
+    },
+    "textSize": {
+        "title": "Yazı Boyutu",
+        "description": "Uygulamadaki başlık ve metin boyutlarını hemen değiştirin. Seçiminiz bu cihazda saklanır.",
+        "previewLabel": "Canlı Önizleme",
+        "previewTitle": "Başlıklar ve gövde metinleri birlikte ölçeklenir",
+        "previewBody": "Bu önizleme, seçtiğiniz boyutun ekran genelindeki başlıkları, açıklamaları ve kısa bilgileri nasıl etkileyeceğini gösterir.",
+        "previewCaption": "Yeni boyut hemen tüm uygulamaya uygulanır.",
+        "options": {
+            "small": "Küçük",
+            "medium": "Orta",
+            "large": "Büyük",
+            "extraLarge": "Çok Büyük"
+        },
+        "descriptions": {
+            "small": "Daha kompakt bir görünüm sağlar.",
+            "medium": "Varsayılan ve dengeli görünüm.",
+            "large": "Okunabilirliği artırır.",
+            "extraLarge": "Maksimum görünürlük için daha büyük metinler kullanır."
+        }
     },
     "language": {
         "title": "Dil",
@@ -118,6 +143,76 @@
         },
         "stats": {
             "total": "Toplam"
+        },
+        "dashboard": {
+            "pageTitle": "İstatistikler ve Analizler",
+            "periods": {
+                "weekly": "Haftalık",
+                "monthly": "Aylık",
+                "yearly": "Yıllık"
+            },
+            "forecast": {
+                "label": "Yapay Zeka Öngörüsü",
+                "message": "{{type}} için önerilen bakım zamanı: {{due}}.",
+                "emptyMessage": "Aktif bakım planı bulunmuyor. Araç kullanımınıza göre yeni bir plan oluşturun.",
+                "noTargetMessage": "{{type}} için bakım planı hazır, ancak hedef tarih veya kilometre henüz belirlenmedi.",
+                "lastScan": "Son Tarama",
+                "currentMileage": "Mevcut Kilometre",
+                "noScans": "Henüz tarama yok",
+                "noMileage": "Kilometre eklenmedi",
+                "cta": "Bakım Planla",
+                "mileageRemaining": "{{mileage}} km {{qualifier}}",
+                "mileageQualifierRemaining": "kaldı",
+                "mileageQualifierOverdue": "aşıldı"
+            },
+            "activity": {
+                "title": "Tarama Aktivitesi",
+                "active": "Aktif",
+                "idle": "Hazır"
+            },
+            "findings": {
+                "title": "Sık Karşılaşılan Bulgular",
+                "empty": "Bu dönem için sınıflandırılabilir bulgu bulunamadı.",
+                "categories": {
+                    "powertrain": "Motor & Emisyon",
+                    "electronics": "Elektronik Sistemler",
+                    "fluids": "Sıvı Seviyeleri",
+                    "tires": "Lastik & Fren"
+                }
+            },
+            "reminderTypes": {
+                "oil_change": "Yağ Değişimi",
+                "periodic_maintenance": "Genel Kontrol",
+                "inspection": "Detaylı İnceleme"
+            },
+            "emptyTitle": "Bu araç için henüz analiz verisi yok",
+            "emptyDescription": "Yeni bir tarama başlatın, sonuçlar burada dönemsel özetler halinde görünsün.",
+            "noVehicleTitle": "Önce bir araç seçin",
+            "noVehicleDescription": "Insights ekranını doldurmak için garajınıza en az bir araç ekleyin.",
+            "goToGarage": "Garaja Git",
+            "scanCta": "Yeni Tarama Başlat"
+        },
+        "reminderPlanner": {
+            "title": "Bakım Planlayıcı",
+            "subtitle": "Seçili aracınız için yaklaşan bakım adımını planlayın ve hatırlatma eşiğini belirleyin.",
+            "currentMileage": "Güncel kilometre",
+            "typeLabel": "Bakım türü",
+            "intervalLabel": "Hedef zaman aralığı",
+            "intervalMonths": "{{count}} ay",
+            "previewLabel": "Tahmini hedef tarihi",
+            "nextMileageLabel": "Hedef kilometre (opsiyonel)",
+            "nextMileagePlaceholder": "Örn. 128500",
+            "remindDaysLabel": "Kaç gün önce hatırlat",
+            "remindMileageLabel": "Kaç km önce hatırlat",
+            "notesLabel": "Notlar",
+            "notesPlaceholder": "Bakım sırasında dikkat edilmesi gereken noktaları ekleyin.",
+            "save": "Planı Kaydet",
+            "saveSuccessTitle": "Bakım planı kaydedildi",
+            "saveSuccessMessage": "Insights ekranı en güncel bakım verisiyle yenilendi.",
+            "saveErrorTitle": "Bakım planı kaydedilemedi",
+            "saveErrorMessage": "Lütfen alanları kontrol edip tekrar deneyin.",
+            "missingCarTitle": "Araç bilgisi eksik",
+            "missingCarMessage": "Bakım planı oluşturmak için önce bir araç seçmeniz gerekiyor."
         }
     },
     "scanScreen": {
@@ -189,6 +284,18 @@
         "engineCcPlaceholder": "Örn. 1600",
         "mileageLabel": "Kilometre (km)",
         "mileagePlaceholder": "Örn. 128500",
+        "nicknameLabel": "Araç Başlığı",
+        "nicknamePlaceholder": "Örn. Şehir Arabam",
+        "licensePlateLabel": "Plaka",
+        "licensePlatePlaceholder": "Örn. 34 ABC 123",
+        "colorLabel": "Renk",
+        "colorPlaceholder": "Örn. Gece Mavisi",
+        "notesLabel": "Notlar",
+        "notesPlaceholder": "Bakım, sigorta veya kişisel notlarınızı ekleyin",
+        "purchaseDateLabel": "Satın Alma Tarihi",
+        "purchaseDatePlaceholder": "Tarih seçin",
+        "purchaseDateClear": "Tarihi temizle",
+        "cancel": "Vazgeç",
         "save": "Kaydet",
         "fuel": {
             "gasoline": "Benzin",
@@ -200,6 +307,39 @@
         "transmission": {
             "manual": "Manuel",
             "automatic": "Otomatik"
+        }
+    },
+    "garageScreen": {
+        "title": "Garajım",
+        "loginTitle": "Araçlarınızı yönetin",
+        "loginDescription": "Araçlarınızı eklemek ve analiz sonuçlarını takip etmek için giriş yapın.",
+        "odometerLabel": "KİLOMETRE",
+        "emptyTitle": "Henüz araç eklemediniz",
+        "emptySubtitle": "Garajınıza araç ekleyerek analiz sonuçlarını takip edebilirsiniz.",
+        "emptyAction": "Araç Ekle",
+        "recentScansTitle": "Geçmiş Taramalar",
+        "seeAll": "Tümünü Gör",
+        "noScans": "Henüz tarama yapılmadı",
+        "deleteTitle": "Aracı Sil",
+        "deleteMessage": "Bu aracı silmek istediğinize emin misiniz?",
+        "deleteAction": "Sil",
+        "deleteSuccess": "Araç silindi",
+        "deleteError": "Araç silinemedi",
+        "addCar": {
+            "title": "Yeni Araç Ekle",
+            "subtitle": "Aracınızın temel bilgilerini ekleyin, garajınızı düzenleyin ve sonraki analizleri doğru araca bağlayın.",
+            "previewTitle": "Canlı Önizleme",
+            "previewDescription": "Girilen bilgilere göre kartınız burada şekillenir.",
+            "previewFallback": "Araç Başlığı",
+            "primarySectionTitle": "Temel Bilgiler",
+            "secondarySectionTitle": "Ek Detaylar",
+            "notesSectionTitle": "Kişisel Notlar",
+            "photoSectionTitle": "Fotoğraf",
+            "photoPlaceholderTitle": "Araç fotoğrafı yakında",
+            "photoPlaceholderDescription": "Bu alanda yakında galeri veya kamera ile araç görseli ekleyebileceksiniz.",
+            "cta": "Aracı Kaydet",
+            "success": "Araç başarıyla eklendi",
+            "error": "Araç eklenemedi"
         }
     },
     "deleteAccount": {
@@ -225,7 +365,7 @@
         "description": "Hesabınızı daha önce dondurduysanız, e-posta adresiniz ve şifrenizle tekrar etkinleştirebilirsiniz.",
         "frozenDescription": "Giriş sırasında hesabınızın dondurulduğunu fark ettik. Devam etmek için e-posta adresinizi ve şifrenizi doğrulayın.",
         "emailLabel": "E-posta",
-        "emailPlaceholder": "ornek@aicar.com",
+        "emailPlaceholder": "ornek@autolensly.com",
         "passwordLabel": "Şifre",
         "passwordPlaceholder": "Şifreniz",
         "button": "Hesabımı yeniden aç",
@@ -250,7 +390,7 @@
             "privacy": "Gizlilik Politikası",
             "openSource": "Açık Kaynak Lisansları"
         },
-        "copyright": "© {{year}} AiCar. Tüm hakları saklıdır."
+        "copyright": "© {{year}} AutoLensly. Tüm hakları saklıdır."
     },
     "feedbackScreen": {
         "title": "Şikayet ve Öneri",
@@ -280,6 +420,203 @@
         "submitErrorTitle": "Geri bildirim gönderilemedi",
         "submitErrorMessage": "Lütfen daha sonra tekrar deneyin."
     },
+    "feedbackHistory": {
+        "infoText": "Gönderdiğiniz şikayet ve önerilerin durumlarını buradan takip edebilirsiniz.",
+        "createButton": "Yeni Geri Bildirim",
+        "emptyTitle": "Henüz geri bildirim yok",
+        "emptyText": "İlk şikayet veya önerinizi göndererek ekiple doğrudan iletişime geçebilirsiniz.",
+        "emptyAction": "Geri Bildirim Oluştur",
+        "latestRecords": "En son {{count}} kayıt gösteriliyor.",
+        "loadErrorTitle": "Geri bildirimler yüklenemedi",
+        "loadErrorFallback": "Lütfen sayfayı yenileyip tekrar deneyin.",
+        "reviewNote": "İnceleme notu",
+        "lastUpdated": "Son durum tarihi",
+        "status": {
+            "new": "Yeni",
+            "in_review": "İnceleniyor",
+            "resolved": "Çözüldü",
+            "closed": "Kapatıldı"
+        }
+    },
+    "permissionsScreen": {
+        "status": {
+            "active": "Aktif",
+            "inactive": "Kapalı"
+        },
+        "actions": {
+            "manage": "Ayarları Yönet",
+            "allow": "İzin Ver"
+        },
+        "cards": {
+            "notifications": {
+                "label": "Bildirimler",
+                "description": "Rezervasyon güncellemeleri ve önemli bildirimleri almak için kullanılır"
+            },
+            "camera": {
+                "label": "Kamera",
+                "description": "Araç fotoğrafı çekebilmek için kullanılır"
+            },
+            "media": {
+                "label": "Galeri ve Medya",
+                "description": "Araç fotoğrafı ve videolarını galeriden seçebilmek için kullanılır"
+            }
+        },
+        "footer": {
+            "description": "Tüm izinleri cihaz ayarlarından da yönetebilirsiniz.",
+            "openSettings": "Ayarları Aç"
+        }
+    },
+    "changePasswordScreen": {
+        "title": "Şifrenizi değiştirin",
+        "subtitle": "Güvenliğiniz için mevcut şifrenizi girerek yeni bir şifre belirleyin.",
+        "oauthTitle": "Şifre değiştirme kullanılamaz",
+        "oauthMessage": "Hesabınız {{provider}} ile oluşturulduğu için şifre değiştirme özelliği kullanılamaz. Hesap güvenliğinizi sağlayıcınız üzerinden yönetebilirsiniz.",
+        "strength": {
+            "veryWeak": "Çok zayıf",
+            "weak": "Zayıf",
+            "medium": "Orta",
+            "strong": "Güçlü",
+            "veryStrong": "Çok güçlü"
+        },
+        "requirements": {
+            "minLength": "En az 8 karakter",
+            "uppercase": "Büyük harf (A-Z)",
+            "lowercase": "Küçük harf (a-z)",
+            "number": "Rakam (0-9)",
+            "special": "Özel karakter (!@#$...)"
+        },
+        "fields": {
+            "current": {
+                "label": "Mevcut şifre",
+                "placeholder": "Mevcut şifreniz"
+            },
+            "next": {
+                "label": "Yeni şifre",
+                "placeholder": "Yeni şifreniz"
+            },
+            "confirm": {
+                "label": "Yeni şifre tekrar",
+                "placeholder": "Yeni şifrenizi tekrar girin"
+            }
+        },
+        "passwordMismatch": "Şifreler eşleşmiyor",
+        "submit": "Şifreyi Değiştir",
+        "successTitle": "Şifre değiştirildi",
+        "successMessage": "Yeni şifreniz başarıyla kaydedildi.",
+        "errorTitle": "Şifre değiştirilemedi",
+        "errorMessage": "Lütfen daha sonra tekrar deneyin."
+    },
+    "freezeAccount": {
+        "confirmTitle": "Hesabı dondur",
+        "confirmMessage": "Hesabınız geçici olarak dondurulacak ve tüm oturumlarınız sonlandırılacak. Daha sonra giriş yaptığınızda hesabınızı e-posta ve şifrenizle yeniden etkinleştirebilirsiniz.",
+        "cancel": "Vazgeç",
+        "confirmAction": "Hesabı dondur",
+        "successTitle": "Hesap donduruldu",
+        "successMessage": "Tekrar giriş yaptığınızda hesabınızı yeniden etkinleştirebilirsiniz.",
+        "errorTitle": "Hesap dondurulamadı",
+        "errorMessage": "Lütfen daha sonra tekrar deneyin.",
+        "warningTitle": "Bu işlem geri alınabilir",
+        "warningText": "Hesabınız dondurulduğunda mevcut oturumlarınız kapanır ve korumalı alanlara erişemezsiniz. Bir sonraki girişinizde hesabınızı yeniden etkinleştirebilirsiniz.",
+        "accountTitle": "Dondurulacak hesap",
+        "button": "Hesabımı dondur"
+    },
+    "activeSessionsScreen": {
+        "unknownPlatform": "Bilinmiyor",
+        "currentDevice": "Bu cihaz",
+        "lastActive": "Son aktiflik",
+        "revokeButton": "Oturumu kapat",
+        "confirmTitle": "Oturumu kapat",
+        "confirmMessage": "Bu cihazdaki oturum sonlandırılacak. Devam etmek istiyor musunuz?",
+        "cancel": "Vazgeç",
+        "confirmAction": "Oturumu Kapat",
+        "revokeSuccess": "Oturum kapatıldı",
+        "revokeErrorTitle": "Oturum kapatılamadı",
+        "revokeErrorMessage": "Lütfen tekrar deneyin.",
+        "noOtherSessions": "Başka aktif oturum yok",
+        "revokeAllTitle": "Tüm oturumları kapat",
+        "revokeAllMessage": "Bu cihaz hariç {{count}} oturum sonlandırılacak. Devam etmek istiyor musunuz?",
+        "revokeAllAction": "Tümünü Kapat",
+        "revokeAllSuccess": "Tüm oturumlar kapatıldı",
+        "revokeAllErrorTitle": "Bazı oturumlar kapatılamadı",
+        "revokeAllErrorMessage": "Lütfen sayfayı yenileyip tekrar deneyin.",
+        "infoText": "Hesabınızda aktif olan tüm oturumları buradan görüntüleyebilir ve yönetebilirsiniz.",
+        "emptyTitle": "Aktif oturum bulunamadı",
+        "revokeOtherSessions": "Diğer Tüm Oturumları Kapat ({{count}})",
+        "loadErrorTitle": "Oturumlar yüklenemedi",
+        "loadErrorFallback": "Lütfen sayfayı yenileyip tekrar deneyin."
+    },
+    "emailAddressScreen": {
+        "title": "Kayıtlı e-posta",
+        "subtitle": "E-posta değişikliği yaptığınızda doğrulama durumunuz sıfırlanır.",
+        "label": "E-posta adresi",
+        "placeholder": "ornek@mail.com",
+        "statusLabel": "Durum",
+        "saveButton": "E-postayı kaydet",
+        "verificationButton": "Doğrulama e-postası gönder",
+        "updateSuccessTitle": "E-posta güncellendi",
+        "updateSuccessMessage": "Yeni adresinizi doğrulamanız gerekiyor.",
+        "updateErrorTitle": "E-posta güncellenemedi",
+        "verificationSuccessTitle": "Doğrulama e-postası gönderildi",
+        "verificationErrorTitle": "E-posta gönderilemedi",
+        "errorMessage": "Lütfen daha sonra tekrar deneyin."
+    },
+    "editProfileScreen": {
+        "title": "Kişisel Bilgilerim",
+        "saveHeader": "Kaydet",
+        "avatarHint": "Profil fotoğrafınızı değiştirmek için dokunun",
+        "personalInfoTitle": "Kişisel Bilgiler",
+        "saveButton": "Değişiklikleri Kaydet",
+        "cancel": "İptal",
+        "saveSuccessTitle": "Profil güncellendi",
+        "saveErrorTitle": "Güncelleme başarısız",
+        "saveErrorMessage": "Profil güncellenirken bir hata oluştu.",
+        "photoUpdated": "Fotoğraf güncellendi",
+        "photoUploadFailedTitle": "Fotoğraf yüklenemedi",
+        "photoUploadFailedMessage": "Lütfen tekrar deneyin.",
+        "photoDeleted": "Fotoğraf silindi",
+        "photoDeleteFailedTitle": "Fotoğraf silinemedi",
+        "photoDeleteFailedMessage": "Lütfen tekrar deneyin.",
+        "photoOptions": {
+            "title": "Profil Fotoğrafı",
+            "message": "Bir seçenek belirleyin",
+            "takePhoto": "Fotoğraf Çek",
+            "chooseFromGallery": "Galeriden Seç",
+            "deletePhoto": "Fotoğrafı Sil",
+            "cancel": "İptal"
+        },
+        "fields": {
+            "name": {
+                "label": "Ad *",
+                "placeholder": "Adınızı girin",
+                "required": "Ad alanı zorunludur"
+            },
+            "surname": {
+                "label": "Soyad *",
+                "placeholder": "Soyadınızı girin",
+                "required": "Soyad alanı zorunludur"
+            },
+            "email": {
+                "label": "E-posta",
+                "helper": "E-posta adresinizi değiştirmek için destek ile iletişime geçin"
+            },
+            "phone": {
+                "label": "Telefon",
+                "placeholder": "Telefon numaranız"
+            }
+        }
+    },
+    "chatScreen": {
+        "pageTitle": "Mesajlar",
+        "defaultTitle": "Sohbet",
+        "unknownUser": "Bilinmeyen Kullanıcı",
+        "readIndicator": "Görüldü",
+        "loginTitle": "Sohbetlerinizi görmek için giriş yapın",
+        "loginDescription": "Mesajları görüntülemek ve yanıt vermek için hesabınıza giriş yapın.",
+        "online": "Çevrimiçi",
+        "warehouseLabel": "Depo",
+        "emptyMessages": "Henüz mesaj yok. İlk mesajı gönderin!",
+        "messagePlaceholder": "Mesajınızı yazın..."
+    },
     "profileScreen": {
         "guestTitle": "Hesabınıza giriş yapın",
         "guestDescription": "Profilinizi yönetin, garajınıza erişin ve tüm özellikleri kullanın.",
@@ -308,5 +645,67 @@
             "additionalActionRequired": "Hesabınız için ek bir işlem gerekiyor. Lütfen tekrar deneyin.",
             "browserSessionFailed": "Tarayıcı oturumu başlatılırken bir sorun oluştu."
         }
+    },
+    "supportScreen": {
+        "sections": {
+            "faq": "SIK SORULAN SORULAR",
+            "contact": "İLETİŞİM",
+            "feedback": "ŞİKAYET VE ÖNERİ",
+            "bugReport": "HATA BİLDİRİMİ"
+        },
+        "faqItems": [
+            {
+                "question": "Araç analizi nasıl çalışır?",
+                "answer": "Aracınızın fotoğraflarını çekip yükleyin, yapay zeka sistemi otomatik olarak araç detaylarını analiz edecek ve sonuçları size sunacaktır."
+            },
+            {
+                "question": "Kredi nasıl satın alırım?",
+                "answer": "Profil sayfanızdan kredi paketleri bölümüne giderek uygun paketi seçip satın alabilirsiniz. Satın alınan krediler hesabınıza anında yüklenir."
+            },
+            {
+                "question": "Analiz sonuçları ne kadar güvenilir?",
+                "answer": "Yapay zeka analiz sonuçları referans amaçlı sunulmaktadır. Profesyonel bir değerlendirme yerine geçmez, ancak hızlı bir genel bakış sağlar."
+            },
+            {
+                "question": "Hesabımı nasıl silebilirim?",
+                "answer": "Profil > Hesap Ayarları > Hesap İptali bölümünden hesabınızı kapatabilirsiniz. Bu işlem geri alınamaz."
+            },
+            {
+                "question": "Verilerim güvende mi?",
+                "answer": "Evet, tüm verileriniz şifreli olarak saklanır. Gizlilik politikamızı Profil sayfasındaki Gizlilik Politikası bölümünden okuyabilirsiniz."
+            }
+        ],
+        "contact": {
+            "emailTitle": "E-posta ile İletişim"
+        },
+        "feedbackCard": {
+            "title": "Şikayet veya öneri gönder",
+            "description": "Deneyiminizi geliştirmemize yardımcı olacak görüşlerinizi doğrudan uygulama içinden iletin.",
+            "button": "Forma Git"
+        },
+        "bugReportCard": {
+            "title": "Hata Bildir",
+            "description": "Bir sorunla karşılaştıysanız bize bildirin. Cihaz bilgileri otomatik olarak eklenir.",
+            "button": "E-posta Gönder"
+        },
+        "bugReportSubject": "AutoLensly - Hata Bildirimi",
+        "subjectLabel": "Konu",
+        "deviceInfo": {
+            "heading": "Cihaz Bilgileri",
+            "device": "Cihaz",
+            "os": "OS",
+            "app": "Uygulama",
+            "unknown": "Bilinmiyor"
+        },
+        "mailFallbackTitle": "E-posta uygulaması açılamadı",
+        "emailFallbackMessage": "support@autolensly.com adresi panoya kopyalandı. Uygun bir e-posta uygulamasına yapıştırabilirsiniz.",
+        "bugReportFallbackMessage": "Destek adresi ve hata bildirim taslağı panoya kopyalandı. Uygun bir e-posta uygulamasına yapıştırabilirsiniz.",
+        "mailFallbackCopyFailedMessage": "E-posta uygulaması kullanılamıyor ve panoya kopyalama işlemi de başarısız oldu."
+    },
+    "drawer": {
+        "homeScanner": "Ana Sayfa / Tarayıcı",
+        "myGarage": "Garajım",
+        "subscription": "Abonelik",
+        "proMember": "Pro Üye"
     }
 }

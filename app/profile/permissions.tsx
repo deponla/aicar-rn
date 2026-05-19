@@ -3,6 +3,7 @@ import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import * as ImagePicker from "expo-image-picker";
 import * as Notifications from "expo-notifications";
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Linking,
   Platform,
@@ -27,6 +28,8 @@ function PermissionCard({
   granted,
   onPress,
 }: PermissionCardProps) {
+  const { t } = useTranslation();
+
   return (
     <View
       style={[
@@ -67,7 +70,9 @@ function PermissionCard({
               },
             ]}
           >
-            {granted ? "Aktif" : "Kapalı"}
+            {granted
+              ? t("permissionsScreen.status.active")
+              : t("permissionsScreen.status.inactive")}
           </Text>
         </View>
       </View>
@@ -96,7 +101,9 @@ function PermissionCard({
             { color: granted ? tokens.textSecondary : tokens.textInverse },
           ]}
         >
-          {granted ? "Ayarları Yönet" : "İzin Ver"}
+          {granted
+            ? t("permissionsScreen.actions.manage")
+            : t("permissionsScreen.actions.allow")}
         </Text>
       </TouchableOpacity>
     </View>
@@ -118,6 +125,7 @@ function toPermissionStatus(status: string): PermissionStatus {
 }
 
 export default function PermissionsScreen() {
+  const { t } = useTranslation();
   const [cameraGranted, setCameraGranted] = useState(false);
   const [photosGranted, setPhotosGranted] = useState(false);
   const [notificationsGranted, setNotificationsGranted] = useState(false);
@@ -181,23 +189,23 @@ export default function PermissionsScreen() {
   }, [notificationsGranted]);
 
   return (
-    <ScreenContainer title="İzinler" showBackButton>
+    <ScreenContainer title={t("profileScreen.permissions")} showBackButton>
       <View style={styles.cardsContainer}>
         <PermissionCard
-          label="Bildirimler"
-          description="Rezervasyon güncellemeleri ve önemli bildirimleri almak için kullanılır"
+          label={t("permissionsScreen.cards.notifications.label")}
+          description={t("permissionsScreen.cards.notifications.description")}
           granted={notificationsGranted}
           onPress={handleNotifications}
         />
         <PermissionCard
-          label="Kamera"
-          description="Araç fotoğrafı çekebilmek için kullanılır"
+          label={t("permissionsScreen.cards.camera.label")}
+          description={t("permissionsScreen.cards.camera.description")}
           granted={cameraGranted}
           onPress={handleCamera}
         />
         <PermissionCard
-          label="Galeri ve Medya"
-          description="Araç fotoğrafı ve videolarını galeriden seçebilmek için kullanılır"
+          label={t("permissionsScreen.cards.media.label")}
+          description={t("permissionsScreen.cards.media.description")}
           granted={photosGranted}
           onPress={handlePhotos}
         />
@@ -209,10 +217,10 @@ export default function PermissionsScreen() {
         onPress={openAppSettings}
       >
         <Text style={[styles.footerText, { color: tokens.textTertiary }]}>
-          Tüm izinleri cihaz ayarlarından da yönetebilirsiniz.
+          {t("permissionsScreen.footer.description")}
         </Text>
         <Text style={[styles.footerLink, { color: Colors.primary }]}>
-          Ayarları Aç
+          {t("permissionsScreen.footer.openSettings")}
         </Text>
       </TouchableOpacity>
     </ScreenContainer>

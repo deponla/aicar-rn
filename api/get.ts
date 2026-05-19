@@ -15,14 +15,17 @@ import {
 import { FeedbackListResponse, FeedbackQuery } from "@/types/feedback";
 import { Session, SessionResponse } from "@/types/session";
 import { CarListResponse, CarQuery, CarResponse } from "@/types/car";
-import { AicarListResponse, AicarQuery, AicarResponse } from "@/types/aicar";
 import {
   NotificationListResponse,
   NotificationQuery,
 } from "@/types/notification";
 import { LegalDocument } from "@/types/legal";
-import { ActivityListResponse, ActivityQuery } from "@/types/activity";
 import { AnalyzeMediaLog } from "@/types/ai";
+import {
+  CarReminderListResponse,
+  CarReminderQuery,
+  CarReminderResponse,
+} from "@/types/car-reminder";
 import { instance } from "./config";
 
 export async function getMe({ token }: { token: string }): Promise<MeResponse> {
@@ -85,27 +88,17 @@ export async function getCar(id: string): Promise<CarResponse> {
   return instance.get(`v1/cars/${id}`).then((r) => r.data);
 }
 
-// Aicars (listings)
-export async function getMyAicars(
-  filters?: AicarQuery,
-): Promise<AicarListResponse> {
-  return instance.get("v1/aicars", { params: filters }).then((r) => r.data);
-}
-
-export async function getAicar(id: string): Promise<AicarResponse> {
-  return instance.get(`v1/aicars/${id}`).then((r) => r.data);
-}
-
-export async function getPublicAicars(
-  filters?: AicarQuery,
-): Promise<AicarListResponse> {
+// Car Reminders
+export async function getCarReminders(
+  filters?: CarReminderQuery,
+): Promise<CarReminderListResponse> {
   return instance
-    .get("v1/aicars/public", { params: filters })
+    .get("v1/car-reminders", { params: filters })
     .then((r) => r.data);
 }
 
-export async function getPublicAicar(id: string): Promise<AicarResponse> {
-  return instance.get(`v1/aicars/${id}/public`).then((r) => r.data);
+export async function getCarReminder(id: string): Promise<CarReminderResponse> {
+  return instance.get(`v1/car-reminders/${id}`).then((r) => r.data);
 }
 
 // Notifications
@@ -151,18 +144,6 @@ export async function getLegalDocuments({
   return instance.get("v1/legal", { params: { language } }).then((r) => r.data);
 }
 
-export async function getLegalDocument({
-  type,
-  language,
-}: {
-  type: string;
-  language?: string;
-}): Promise<LegalDocument> {
-  return instance
-    .get(`v1/legal/${type}`, { params: { language } })
-    .then((r) => r.data);
-}
-
 // Analysis Logs
 export async function getAnalysisLogs(filters?: {
   limit?: number;
@@ -178,11 +159,4 @@ export async function getAnalysisLogs(filters?: {
   return instance
     .get("v1/analysis-logs", { params: filters })
     .then((r) => r.data);
-}
-
-// Activities
-export async function getActivities(
-  filters?: ActivityQuery,
-): Promise<ActivityListResponse> {
-  return instance.get("v1/activities", { params: filters }).then((r) => r.data);
 }

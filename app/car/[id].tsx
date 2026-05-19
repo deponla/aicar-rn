@@ -14,6 +14,9 @@ import {
   TransmissionEnum,
   UpdateCarRequest,
 } from "@/types/car";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -22,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -165,9 +169,52 @@ const EditCarModal = React.memo(function EditCarModal({
   const [currentMileage, setCurrentMileage] = useState(
     car.currentMileage != null ? String(car.currentMileage) : "",
   );
+  const [nickname, setNickname] = useState(car.nickname ?? "");
+  const [licensePlate, setLicensePlate] = useState(car.licensePlate ?? "");
+  const [color, setColor] = useState(car.color ?? "");
+  const [notes, setNotes] = useState(car.notes ?? "");
+  const [purchaseDate, setPurchaseDate] = useState<string | undefined>(
+    car.purchaseDate,
+  );
+  const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
+
+  const parsedYear = parseInt(year, 10);
+  const submitDisabled =
+    isLoading || !brand.trim() || !model.trim() || Number.isNaN(parsedYear);
+
+  const purchaseDateValue = useMemo(() => {
+    if (!purchaseDate) {
+      return new Date();
+    }
+
+    return new Date(purchaseDate);
+  }, [purchaseDate]);
+
+  const formattedPurchaseDate = purchaseDate
+    ? dayjs(purchaseDate).format("DD.MM.YYYY")
+    : t("carDetail.purchaseDatePlaceholder");
+
+  const normalizedLicensePlate = useMemo(
+    () => licensePlate.trim().replace(/\s+/g, " ").toUpperCase(),
+    [licensePlate],
+  );
+
+  const handlePurchaseDateChange = useCallback(
+    (event: DateTimePickerEvent, selectedDate?: Date) => {
+      if (Platform.OS === "android") {
+        setShowPurchaseDatePicker(false);
+      }
+
+      if (event.type === "dismissed" || !selectedDate) {
+        return;
+      }
+
+      setPurchaseDate(dayjs(selectedDate).format("YYYY-MM-DD"));
+    },
+    [],
+  );
 
   const handleSubmit = useCallback(() => {
-    const parsedYear = parseInt(year, 10);
     if (!brand.trim() || !model.trim() || Number.isNaN(parsedYear)) {
       return;
     }
@@ -180,14 +227,25 @@ const EditCarModal = React.memo(function EditCarModal({
       transmission,
       engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
       currentMileage: currentMileage ? parseInt(currentMileage, 10) : undefined,
+      nickname: nickname.trim() || undefined,
+      licensePlate: normalizedLicensePlate || undefined,
+      color: color.trim() || undefined,
+      notes: notes.trim() || undefined,
+      purchaseDate,
     });
   }, [
     brand,
+    color,
     currentMileage,
     engineCC,
     fuelType,
+    nickname,
+    normalizedLicensePlate,
+    notes,
     model,
     onSubmit,
+    parsedYear,
+    purchaseDate,
     transmission,
     year,
   ]);
@@ -211,6 +269,15 @@ const EditCarModal = React.memo(function EditCarModal({
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
+          <Text style={styles.inputLabel}>{t("carDetail.nicknameLabel")}</Text>
+          <TextInput
+            style={styles.input}
+            value={nickname}
+            onChangeText={setNickname}
+            placeholder={t("carDetail.nicknamePlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+          />
+
           <Text style={styles.inputLabel}>{t("carDetail.brandLabel")}</Text>
           <TextInput
             style={styles.input}
@@ -238,6 +305,69 @@ const EditCarModal = React.memo(function EditCarModal({
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
+
+          <Text style={styles.inputLabel}>{t("carDetail.licensePlateLabel")}</Text>
+          <TextInput
+            style={styles.input}
+            value={licensePlate}
+            onChangeText={setLicensePlate}
+            placeholder={t("carDetail.licensePlatePlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+            autoCapitalize="characters"
+          />
+
+          <Text style={styles.inputLabel}>{t("carDetail.colorLabel")}</Text>
+          <TextInput
+            style={styles.input}
+            value={color}
+            onChangeText={setColor}
+            placeholder={t("carDetail.colorPlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+          />
+
+          <Text style={styles.inputLabel}>{t("carDetail.purchaseDateLabel")}</Text>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowPurchaseDatePicker((current) => !current)}
+            activeOpacity={0.85}
+          >
+            <Text
+              style={[
+                styles.dateInputText,
+                !purchaseDate && styles.dateInputTextPlaceholder,
+              ]}
+            >
+              {formattedPurchaseDate}
+            </Text>
+            <MaterialIcons name="calendar-today" size={18} color={tokens.textSecondary} />
+          </TouchableOpacity>
+
+          {purchaseDate ? (
+            <TouchableOpacity
+              style={styles.dateClearButton}
+              onPress={() => {
+                setPurchaseDate(undefined);
+                setShowPurchaseDatePicker(false);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.dateClearButtonText}>
+                {t("carDetail.purchaseDateClear")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {showPurchaseDatePicker ? (
+            <View style={styles.datePickerWrapper}>
+              <DateTimePicker
+                value={purchaseDateValue}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                maximumDate={new Date()}
+                onChange={handlePurchaseDateChange}
+              />
+            </View>
+          ) : null}
 
           <Text style={styles.inputLabel}>{t("carDetail.fuelTypeLabel")}</Text>
           <View style={styles.chipRow}>
@@ -311,18 +441,26 @@ const EditCarModal = React.memo(function EditCarModal({
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
+
+          <Text style={styles.inputLabel}>{t("carDetail.notesLabel")}</Text>
+          <TextInput
+            style={[styles.input, styles.notesInput]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder={t("carDetail.notesPlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+            multiline
+            textAlignVertical="top"
+          />
         </ScrollView>
         <View style={styles.modalFooter}>
           <TouchableOpacity
             style={[
               styles.submitButton,
-              (!brand.trim() || !model.trim() || !year.trim()) &&
-              styles.submitButtonDisabled,
+              submitDisabled && styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={
-              isLoading || !brand.trim() || !model.trim() || !year.trim()
-            }
+            disabled={submitDisabled}
             activeOpacity={0.85}
           >
             {isLoading ? (
@@ -414,6 +552,8 @@ export default function CarDetailScreen() {
   const listHeader = useMemo(() => {
     if (!car) return null;
 
+    const displayTitle = car.nickname?.trim() || `${car.brand} ${car.model}`;
+
     return (
       <>
         <View style={styles.carCard}>
@@ -423,9 +563,14 @@ export default function CarDetailScreen() {
               size={24}
               color={Colors.primary}
             />
-            <Text style={styles.carCardTitle}>
-              {car.brand} {car.model}
-            </Text>
+            <View style={styles.carCardHeaderText}>
+              <Text style={styles.carCardTitle}>{displayTitle}</Text>
+              {car.nickname?.trim() ? (
+                <Text style={styles.carCardSubtitle}>
+                  {car.brand} {car.model}
+                </Text>
+              ) : null}
+            </View>
           </View>
           <View style={styles.detailsRow}>
             <View style={styles.detailChip}>
@@ -482,12 +627,50 @@ export default function CarDetailScreen() {
                 </Text>
               </View>
             ) : null}
+            {car.licensePlate ? (
+              <View style={styles.detailChip}>
+                <MaterialIcons
+                  name="badge"
+                  size={14}
+                  color={tokens.textSecondary}
+                />
+                <Text style={styles.detailText}>{car.licensePlate}</Text>
+              </View>
+            ) : null}
+            {car.color ? (
+              <View style={styles.detailChip}>
+                <MaterialIcons
+                  name="palette"
+                  size={14}
+                  color={tokens.textSecondary}
+                />
+                <Text style={styles.detailText}>{car.color}</Text>
+              </View>
+            ) : null}
+            {car.purchaseDate ? (
+              <View style={styles.detailChip}>
+                <MaterialIcons
+                  name="event"
+                  size={14}
+                  color={tokens.textSecondary}
+                />
+                <Text style={styles.detailText}>
+                  {dayjs(car.purchaseDate).format("DD.MM.YYYY")}
+                </Text>
+              </View>
+            ) : null}
           </View>
           <Text style={styles.dateText}>
             {t("carDetail.addedOn", {
               date: dayjs(car.createdAt).format("DD.MM.YYYY"),
             })}
           </Text>
+          {car.notes?.trim() ? (
+            <View style={styles.notesCard}>
+              <Text style={styles.notesCardLabel}>{t("carDetail.notesLabel")}</Text>
+              <Text style={styles.notesCardText}>{car.notes}</Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.sectionHeader}>
@@ -553,7 +736,7 @@ export default function CarDetailScreen() {
 
   return (
     <ScreenContainer
-      title={`${car.brand} ${car.model}`}
+      title={car.nickname?.trim() || `${car.brand} ${car.model}`}
       showBackButton
       scrollable={false}
       contentContainerStyle={styles.screenContent}
@@ -641,13 +824,22 @@ const styles = StyleSheet.create({
   },
   carCardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 10,
+  },
+  carCardHeaderText: {
+    flex: 1,
+    gap: 2,
   },
   carCardTitle: {
     fontSize: 18,
     fontFamily: FontFamily.bold,
     color: tokens.textPrimary,
+  },
+  carCardSubtitle: {
+    fontSize: 13,
+    color: tokens.textSecondary,
+    fontFamily: FontFamily.medium,
   },
   detailsRow: {
     flexDirection: "row",
@@ -671,6 +863,23 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 12,
     color: tokens.textTertiary,
+  },
+  notesCard: {
+    marginTop: 2,
+    borderRadius: 12,
+    backgroundColor: tokens.bgSubtle,
+    padding: 12,
+    gap: 6,
+  },
+  notesCardLabel: {
+    fontSize: 12,
+    color: tokens.textTertiary,
+    fontFamily: FontFamily.semiBold,
+  },
+  notesCardText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.textPrimary,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -807,6 +1016,41 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.borderDefault,
   },
+  dateInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: tokens.bgSubtle,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: tokens.borderDefault,
+  },
+  dateInputText: {
+    fontSize: 15,
+    color: tokens.textPrimary,
+    fontFamily: FontFamily.regular,
+  },
+  dateInputTextPlaceholder: {
+    color: tokens.textPlaceholder,
+  },
+  dateClearButton: {
+    alignSelf: "flex-start",
+    marginTop: 10,
+  },
+  dateClearButtonText: {
+    fontSize: 13,
+    color: Colors.primary,
+    fontFamily: FontFamily.semiBold,
+  },
+  datePickerWrapper: {
+    alignItems: "center",
+    marginTop: 10,
+    borderRadius: 18,
+    overflow: "hidden",
+    backgroundColor: tokens.bgSubtle,
+  },
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -831,6 +1075,10 @@ const styles = StyleSheet.create({
   },
   selectChipTextActive: {
     color: "#FFFFFF",
+  },
+  notesInput: {
+    minHeight: 120,
+    paddingTop: 14,
   },
   submitButton: {
     backgroundColor: tokens.primary,

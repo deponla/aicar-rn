@@ -1,6 +1,7 @@
 import { FontFamily, tokens } from "@/constants/theme";
 import { useAuthStore } from "@/store/useAuth";
 import { useCreditsStore } from "@/store/useCredits";
+import { useHamburgerDrawerStore } from "@/store/useHamburgerDrawer";
 import { AuthStatusEnum } from "@/types/auth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -20,8 +21,10 @@ export default function HomeHeader({
   const router = useRouter();
   const { user, status } = useAuthStore();
   const credits = useCreditsStore((s) => s.credits);
+  const toggleDrawer = useHamburgerDrawerStore((state) => state.toggle);
   const isLoggedIn = status === AuthStatusEnum.LOGGED_IN;
   const userPhoto = isLoggedIn ? user?.user?.photo : undefined;
+  const handleMenuPress = onMenuPress ?? toggleDrawer;
 
   const headerContent = (
     <View
@@ -32,14 +35,14 @@ export default function HomeHeader({
     >
       <View style={styles.left}>
         <TouchableOpacity
-          onPress={onMenuPress}
+          onPress={handleMenuPress}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           activeOpacity={0.7}
           style={styles.menuButton}
         >
           <MaterialIcons name="menu" size={24} color={tokens.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.brandTitle}>AutoSense AI</Text>
+        <Text style={styles.brandTitle}>AutoLensly</Text>
       </View>
 
       <View style={styles.right}>
@@ -108,6 +111,8 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   left: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -120,6 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   brandTitle: {
+    flexShrink: 1,
     fontFamily: FontFamily.bold,
     fontSize: 22,
     color: tokens.textPrimary,
@@ -129,6 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    flexShrink: 0,
   },
   avatarButton: {
     width: 40,

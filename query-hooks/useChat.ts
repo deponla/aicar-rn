@@ -1,16 +1,11 @@
 import { getChatConversations, getChatMessages } from "@/api/get";
-import {
-  postMarkConversationRead,
-  postSendMessage,
-  postStartConversation,
-} from "@/api/post";
+import { postMarkConversationRead, postSendMessage } from "@/api/post";
 import type {
   Conversation,
   ConversationQuery,
   Message,
   MessageQuery,
   SendMessageRequest,
-  StartConversationRequest,
 } from "@/types/chat";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -52,19 +47,6 @@ export const useGetChatMessages = ({
         filters,
       }),
     enabled: enabled && !!conversationId,
-  });
-};
-
-export const useStartChatConversation = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: StartConversationRequest) =>
-      postStartConversation(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [ChatQueryKeys.CONVERSATIONS],
-      });
-    },
   });
 };
 

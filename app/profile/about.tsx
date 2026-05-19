@@ -1,6 +1,11 @@
 import { useNotification } from "@/components/Notification";
 import ScreenContainer from "@/components/ScreenContainer";
 import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
+import {
+    OPEN_SOURCE_LICENSES_URL,
+    PRIVACY_URL,
+    TERMS_URL,
+} from "@/utils/env";
 import { postCheckAppVersion } from "@/api/post";
 import { MaterialIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
@@ -15,6 +20,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    useColorScheme,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -129,9 +135,12 @@ export default function AboutScreen() {
         setWebViewUrl(null);
     };
 
+    const colorScheme = useColorScheme();
+
     const openInAppBrowser = (title: string, url: string) => {
+        const sep = url.includes("?") ? "&" : "?";
         setWebViewTitle(title);
-        setWebViewUrl(url);
+        setWebViewUrl(`${url}${sep}theme=${colorScheme === "dark" ? "dark" : "light"}`);
     };
 
     const webViewModal = (
@@ -193,7 +202,7 @@ export default function AboutScreen() {
                         <MaterialIcons name="directions-car" size={40} color={tokens.textInverse} />
                     )}
                 </View>
-                <Text style={[styles.appName, { color: t.textPrimary }]}>AiCar</Text>
+                <Text style={[styles.appName, { color: t.textPrimary }]}>AutoLensly</Text>
                 <Text style={[styles.appTagline, { color: t.textTertiary }]}>
                     {translate("about.tagline")}
                 </Text>
@@ -250,7 +259,7 @@ export default function AboutScreen() {
                     onPress={() => {
                         openInAppBrowser(
                             translate("about.links.terms"),
-                            "https://deponla.com/terms"
+                            TERMS_URL
                         );
                     }}
                 />
@@ -260,7 +269,7 @@ export default function AboutScreen() {
                     onPress={() => {
                         openInAppBrowser(
                             translate("about.links.privacy"),
-                            "https://deponla.com/privacy"
+                            PRIVACY_URL
                         );
                     }}
                 />
@@ -270,7 +279,7 @@ export default function AboutScreen() {
                     onPress={() => {
                         openInAppBrowser(
                             translate("about.links.openSource"),
-                            "https://deponla.com/open-source-licenses"
+                            OPEN_SOURCE_LICENSES_URL
                         );
                     }}
                 />

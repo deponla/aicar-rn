@@ -5,6 +5,7 @@ import {
   isUnauthorizedStatus,
   triggerUnauthorizedHandler,
 } from "@/api/auth-session";
+import { API_URL } from "@/utils/env";
 
 interface ApiErrorResponse extends Partial<ErrorResponse> {
   message?: string;
@@ -47,7 +48,7 @@ function getRequestFailedMessage() {
 }
 
 export const instance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },

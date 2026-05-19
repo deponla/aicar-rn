@@ -2,6 +2,7 @@ import {
   AuthCallbackResult,
   parseAuthCallbackFromUrl,
 } from "@/utils/parseSessionFromUrl";
+import { FRONTEND_URL } from "@/utils/env";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
@@ -33,7 +34,7 @@ export function buildAuthSessionConfig(
   type: AuthFlowType,
   frontendUrlMissingMessage: string,
 ): AuthSessionConfig {
-  const frontendUrl = process.env.EXPO_PUBLIC_FRONTEND_URL;
+  const frontendUrl = FRONTEND_URL;
 
   if (!frontendUrl) {
     throw new Error(frontendUrlMissingMessage);

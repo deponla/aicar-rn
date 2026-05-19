@@ -1,5 +1,6 @@
 import NetInfo from "@react-native-community/netinfo";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Animated, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,6 +12,7 @@ export default function NetInfoProvider({
   children: React.ReactNode;
 }>) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [banner, setBanner] = useState<BannerState>("hidden");
   const translateY = useRef(new Animated.Value(-100)).current;
   const wasOffline = useRef(false);
@@ -81,8 +83,8 @@ export default function NetInfoProvider({
   const isOffline = banner === "offline";
   const backgroundColor = isOffline ? "#E53935" : "#43A047";
   const message = isOffline
-    ? "İnternet bağlantısı yok"
-    : "İnternet bağlantısı sağlandı";
+    ? t("common.offline")
+    : t("common.online");
 
   return (
     <>

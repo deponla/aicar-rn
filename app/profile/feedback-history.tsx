@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -17,25 +18,21 @@ import {
 
 const STATUS_META: Record<
   FeedbackStatus,
-  { label: string; bg: string; text: string }
+  { bg: string; text: string }
 > = {
   [FeedbackStatus.NEW]: {
-    label: "Yeni",
     bg: tokens.infoBg,
     text: tokens.infoText,
   },
   [FeedbackStatus.IN_REVIEW]: {
-    label: "İnceleniyor",
     bg: tokens.warningBg,
     text: tokens.warningText,
   },
   [FeedbackStatus.RESOLVED]: {
-    label: "Çözüldü",
     bg: tokens.successBg,
     text: tokens.successText,
   },
   [FeedbackStatus.CLOSED]: {
-    label: "Kapatıldı",
     bg: tokens.bgMuted,
     text: tokens.textSecondary,
   },
@@ -43,21 +40,26 @@ const STATUS_META: Record<
 
 const TYPE_META: Record<
   FeedbackType,
-  { label: string; icon: keyof typeof MaterialIcons.glyphMap }
+  { icon: keyof typeof MaterialIcons.glyphMap }
 > = {
   [FeedbackType.COMPLAINT]: {
-    label: "Şikayet",
     icon: "report-problem",
   },
   [FeedbackType.SUGGESTION]: {
-    label: "Öneri",
     icon: "lightbulb-outline",
   },
 };
 
 const FeedbackCard = React.memo(function FeedbackCard({ item }: { item: Feedback }) {
+  const { t } = useTranslation();
   const status = STATUS_META[item.status];
   const type = TYPE_META[item.type];
+  const statusLabel = t(`feedbackHistory.status.${item.status}`);
+  const typeLabel = t(
+    item.type === FeedbackType.COMPLAINT
+      ? "feedbackScreen.types.complaint.title"
+      : "feedbackScreen.types.suggestion.title",
+  );
   const statusBadgeStyle = useMemo(
     () => [styles.statusBadge, { backgroundColor: status.bg }],
     [status.bg],
@@ -73,10 +75,10 @@ const FeedbackCard = React.memo(function FeedbackCard({ item }: { item: Feedback
         <View style={styles.badgeRow}>
           <View style={styles.typeBadge}>
             <MaterialIcons name={type.icon} size={14} color={Colors.primary} />
-            <Text style={styles.typeBadgeText}>{type.label}</Text>
+            <Text style={styles.typeBadgeText}>{typeLabel}</Text>
           </View>
           <View style={statusBadgeStyle}>
-            <Text style={statusBadgeTextStyle}>{status.label}</Text>
+            <Text style={statusBadgeTextStyle}>{statusLabel}</Text>
           </View>
         </View>
         <Text style={styles.dateText}>
@@ -89,14 +91,14 @@ const FeedbackCard = React.memo(function FeedbackCard({ item }: { item: Feedback
 
       {item.adminNotes ? (
         <View style={styles.noteBox}>
-          <Text style={styles.noteLabel}>İnceleme notu</Text>
+          <Text style={styles.noteLabel}>{t("feedbackHistory.reviewNote")}</Text>
           <Text style={styles.noteText}>{item.adminNotes}</Text>
         </View>
       ) : null}
 
       {item.resolvedAt ? (
         <Text style={styles.resolvedText}>
-          Son durum tarihi: {dayjs(item.resolvedAt).format("DD.MM.YYYY HH:mm")}
+          {t("feedbackHistory.lastUpdated")}: {dayjs(item.resolvedAt).format("DD.MM.YYYY HH:mm")}
         </Text>
       ) : null}
     </View>
@@ -109,6 +111,7 @@ function ListSeparator() {
 
 export default function FeedbackHistoryScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { data, error, isError, isLoading, refetch } = useGetFeedbacks({
     page: 0,
     limit: 50,
@@ -129,10 +132,7 @@ export default function FeedbackHistoryScreen() {
       <View style={styles.infoCard}>
         <View style={styles.infoContent}>
           <MaterialIcons name="history" size={20} color={tokens.infoText} />
-          <Text style={styles.infoText}>
-            Gönderdiğiniz şikayet ve önerilerin durumlarını buradan takip
-            edebilirsiniz.
-          </Text>
+          <Text style={styles.infoText}>{t("feedbackHistory.infoText")}</Text>
         </View>
         <TouchableOpacity
           style={styles.createButton}
@@ -140,32 +140,29 @@ export default function FeedbackHistoryScreen() {
           activeOpacity={0.85}
         >
           <MaterialIcons name="add" size={16} color={tokens.textInverse} />
-          <Text style={styles.createButtonText}>Yeni Geri Bildirim</Text>
+          <Text style={styles.createButtonText}>{t("feedbackHistory.createButton")}</Text>
         </TouchableOpacity>
       </View>
     ),
-    [openCreate],
+    [openCreate, t],
   );
 
   const emptyState = useMemo(
     () => (
       <View style={styles.emptyState}>
         <MaterialIcons name="inbox" size={48} color={tokens.textPlaceholder} />
-        <Text style={styles.emptyTitle}>Henüz geri bildirim yok</Text>
-        <Text style={styles.emptyText}>
-          İlk şikayet veya önerinizi göndererek ekiple doğrudan iletişime
-          geçebilirsiniz.
-        </Text>
+        <Text style={styles.emptyTitle}>{t("feedbackHistory.emptyTitle")}</Text>
+        <Text style={styles.emptyText}>{t("feedbackHistory.emptyText")}</Text>
         <TouchableOpacity
           style={styles.emptyAction}
           onPress={openCreate}
           activeOpacity={0.85}
         >
-          <Text style={styles.emptyActionText}>Geri Bildirim Oluştur</Text>
+          <Text style={styles.emptyActionText}>{t("feedbackHistory.emptyAction")}</Text>
         </TouchableOpacity>
       </View>
     ),
-    [openCreate],
+    [openCreate, t],
   );
 
   const listFooter = useMemo(
@@ -173,18 +170,18 @@ export default function FeedbackHistoryScreen() {
       <>
         {typeof data?.count === "number" && data.count > feedbacks.length ? (
           <Text style={styles.helperText}>
-            En son {feedbacks.length} kayıt gösteriliyor.
+            {t("feedbackHistory.latestRecords", { count: feedbacks.length })}
           </Text>
         ) : null}
         <View style={styles.footerSpacing} />
       </>
     ),
-    [data?.count, feedbacks.length],
+    [data?.count, feedbacks.length, t],
   );
 
   return (
     <ScreenContainer
-      title="Geri Bildirimlerim"
+      title={t("profileScreen.feedbackHistory")}
       showBackButton
       scrollable={false}
       contentContainerStyle={styles.screenContent}
@@ -200,11 +197,11 @@ export default function FeedbackHistoryScreen() {
             size={48}
             color={tokens.dangerText}
           />
-          <Text style={styles.emptyTitle}>Geri bildirimler yüklenemedi</Text>
+          <Text style={styles.emptyTitle}>{t("feedbackHistory.loadErrorTitle")}</Text>
           <Text style={styles.emptyText}>
             {error instanceof Error
               ? error.message
-              : "Lütfen sayfayı yenileyip tekrar deneyin."}
+              : t("feedbackHistory.loadErrorFallback")}
           </Text>
         </View>
       ) : (

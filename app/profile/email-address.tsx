@@ -6,6 +6,7 @@ import { mergeAuthenticatedUser, useAuthStore } from "@/store/useAuth";
 import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -19,6 +20,7 @@ export default function EmailAddressScreen() {
   const authStore = useAuthStore();
   const user = authStore.user?.user;
   const { notify } = useNotification();
+  const { t } = useTranslation();
   const patchUser = usePatchUsers();
   const sendEmailVerification = useSendEmailVerification();
   const [email, setEmail] = useState(user?.email || "");
@@ -29,10 +31,10 @@ export default function EmailAddressScreen() {
 
   if (!user) {
     return (
-      <ScreenContainer title="E-posta adresim" showBackButton>
+      <ScreenContainer title={t("settings.emailAddress")} showBackButton>
         <View style={styles.emptyState}>
           <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
-          <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+          <Text style={styles.emptyText}>{t("settings.noUser")}</Text>
         </View>
       </ScreenContainer>
     );
@@ -56,15 +58,15 @@ export default function EmailAddressScreen() {
 
       notify({
         type: "success",
-        title: "E-posta güncellendi",
-        message: "Yeni adresinizi doğrulamanız gerekiyor.",
+        title: t("emailAddressScreen.updateSuccessTitle"),
+        message: t("emailAddressScreen.updateSuccessMessage"),
       });
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        fallbackMessage: t("emailAddressScreen.errorMessage"),
         notify,
-        title: "E-posta güncellenemedi",
+        title: t("emailAddressScreen.updateErrorTitle"),
       });
     }
   };
@@ -74,41 +76,41 @@ export default function EmailAddressScreen() {
       const response = await sendEmailVerification.mutateAsync();
       notify({
         type: "success",
-        title: "Doğrulama e-postası gönderildi",
+        title: t("emailAddressScreen.verificationSuccessTitle"),
         message: response.message,
       });
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        fallbackMessage: t("emailAddressScreen.errorMessage"),
         notify,
-        title: "E-posta gönderilemedi",
+        title: t("emailAddressScreen.verificationErrorTitle"),
       });
     }
   };
 
   return (
-    <ScreenContainer title="E-posta adresim" showBackButton>
+    <ScreenContainer title={t("settings.emailAddress")} showBackButton>
       <View style={styles.card}>
-        <Text style={styles.title}>Kayıtlı e-posta</Text>
-        <Text style={styles.subtitle}>
-          E-posta değişikliği yaptığınızda doğrulama durumunuz sıfırlanır.
-        </Text>
+        <Text style={styles.title}>{t("emailAddressScreen.title")}</Text>
+        <Text style={styles.subtitle}>{t("emailAddressScreen.subtitle")}</Text>
 
-        <Text style={styles.label}>E-posta adresi</Text>
+        <Text style={styles.label}>{t("emailAddressScreen.label")}</Text>
         <TextInput
           style={styles.input}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
-          placeholder="ornek@mail.com"
+          placeholder={t("emailAddressScreen.placeholder")}
           placeholderTextColor={tokens.textPlaceholder}
         />
 
         <Text style={styles.statusText}>
-          Durum:{" "}
-          {user.emailVerified && !isDirty ? "Doğrulandı" : "Doğrulanmadı"}
+          {t("emailAddressScreen.statusLabel")}: {" "}
+          {user.emailVerified && !isDirty
+            ? t("common.status.verified")
+            : t("common.status.unverified")}
         </Text>
 
         <TouchableOpacity
@@ -120,7 +122,7 @@ export default function EmailAddressScreen() {
           {patchUser.isPending ? (
             <ActivityIndicator color={tokens.textInverse} />
           ) : (
-            <Text style={styles.primaryButtonText}>E-postayı kaydet</Text>
+            <Text style={styles.primaryButtonText}>{t("emailAddressScreen.saveButton")}</Text>
           )}
         </TouchableOpacity>
 
@@ -134,7 +136,7 @@ export default function EmailAddressScreen() {
             <ActivityIndicator color={Colors.primary} />
           ) : (
             <Text style={styles.secondaryButtonText}>
-              Doğrulama e-postası gönder
+              {t("emailAddressScreen.verificationButton")}
             </Text>
           )}
         </TouchableOpacity>

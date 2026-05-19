@@ -23,6 +23,11 @@ export interface Car {
   transmission?: TransmissionEnum;
   engineCC?: number;
   currentMileage?: number;
+  nickname?: string;
+  licensePlate?: string;
+  color?: string;
+  notes?: string;
+  purchaseDate?: string;
   vin?: string;
   createdAt: string;
   updatedAt: string;
@@ -38,6 +43,11 @@ export interface CreateCarRequest {
   transmission?: TransmissionEnum;
   engineCC?: number;
   currentMileage?: number;
+  nickname?: string;
+  licensePlate?: string;
+  color?: string;
+  notes?: string;
+  purchaseDate?: string;
 }
 
 export type UpdateCarRequest = Partial<CreateCarRequest>;

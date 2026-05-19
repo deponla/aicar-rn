@@ -3,6 +3,10 @@
         "loading": "Wird geladen...",
         "requestFailed": "Anfrage fehlgeschlagen",
         "retry": "Erneut versuchen",
+        "close": "Schließen",
+        "searchLocation": "Ort suchen...",
+        "offline": "Keine Internetverbindung",
+        "online": "Internetverbindung wiederhergestellt",
         "languages": {
             "de": "Deutsch",
             "en": "Englisch",
@@ -38,7 +42,7 @@
         "sections": {
             "personal": "PERSÖNLICHE DATEN",
             "security": "SICHERHEIT",
-            "preferences": "EINSTELLUNGEN",
+            "appSettings": "APP-EINSTELLUNGEN",
             "account": "KONTO"
         },
         "editProfile": "Profil bearbeiten",
@@ -47,9 +51,30 @@
         "changePassword": "Passwort ändern",
         "activeSessions": "Aktive Sitzungen",
         "language": "Sprache",
+        "textSize": "Textgröße",
         "notificationPreferences": "Benachrichtigungseinstellungen",
         "freezeAccount": "Konto einfrieren",
         "deleteAccount": "Konto schließen"
+    },
+    "textSize": {
+        "title": "Textgröße",
+        "description": "Passen Sie Überschriften und Fließtext in der gesamten App sofort an. Ihre Auswahl wird auf diesem Gerät gespeichert.",
+        "previewLabel": "Live-Vorschau",
+        "previewTitle": "Überschriften und Fließtext werden gemeinsam skaliert",
+        "previewBody": "Diese Vorschau zeigt, wie sich die gewählte Größe auf Titel, Beschreibungen und ergänzende Texte in der App auswirkt.",
+        "previewCaption": "Die neue Größe wird sofort in der gesamten App angewendet.",
+        "options": {
+            "small": "Klein",
+            "medium": "Mittel",
+            "large": "Groß",
+            "extraLarge": "Sehr Groß"
+        },
+        "descriptions": {
+            "small": "Sorgt für eine kompaktere Darstellung.",
+            "medium": "Die ausgewogene Standarddarstellung.",
+            "large": "Verbessert die Lesbarkeit.",
+            "extraLarge": "Verwendet größere Texte für maximale Sichtbarkeit."
+        }
     },
     "language": {
         "title": "Sprache",
@@ -118,6 +143,76 @@
         },
         "stats": {
             "total": "Gesamt"
+        },
+        "dashboard": {
+            "pageTitle": "Statistiken und Analysen",
+            "periods": {
+                "weekly": "Wöchentlich",
+                "monthly": "Monatlich",
+                "yearly": "Jährlich"
+            },
+            "forecast": {
+                "label": "KI-Prognose",
+                "message": "Empfohlenes Wartungsfenster für {{type}}: {{due}}.",
+                "emptyMessage": "Es gibt noch keinen aktiven Wartungsplan. Erstellen Sie einen basierend auf der Nutzung des Fahrzeugs.",
+                "noTargetMessage": "Für {{type}} gibt es bereits einen Wartungsplan, aber noch kein Ziel für Datum oder Kilometer.",
+                "lastScan": "Letzter Scan",
+                "currentMileage": "Aktueller Kilometerstand",
+                "noScans": "Noch keine Scans",
+                "noMileage": "Kein Kilometerstand hinterlegt",
+                "cta": "Wartung planen",
+                "mileageRemaining": "{{mileage}} km {{qualifier}}",
+                "mileageQualifierRemaining": "verbleibend",
+                "mileageQualifierOverdue": "überfällig"
+            },
+            "activity": {
+                "title": "Scan-Aktivität",
+                "active": "Aktiv",
+                "idle": "Bereit"
+            },
+            "findings": {
+                "title": "Häufigste Befunde",
+                "empty": "Für diesen Zeitraum wurden keine klassifizierbaren Befunde gefunden.",
+                "categories": {
+                    "powertrain": "Motor & Emissionen",
+                    "electronics": "Elektronische Systeme",
+                    "fluids": "Flüssigkeitsstände",
+                    "tires": "Reifen & Bremsen"
+                }
+            },
+            "reminderTypes": {
+                "oil_change": "Ölwechsel",
+                "periodic_maintenance": "Allgemeine Kontrolle",
+                "inspection": "Detaillierte Prüfung"
+            },
+            "emptyTitle": "Für dieses Fahrzeug liegen noch keine Analysedaten vor",
+            "emptyDescription": "Starten Sie einen neuen Scan und dieser Bildschirm füllt sich mit periodenbasierten Zusammenfassungen.",
+            "noVehicleTitle": "Wählen Sie zuerst ein Fahrzeug aus",
+            "noVehicleDescription": "Fügen Sie Ihrer Garage mindestens ein Fahrzeug hinzu, um das Insights-Dashboard zu nutzen.",
+            "goToGarage": "Zur Garage",
+            "scanCta": "Neuen Scan starten"
+        },
+        "reminderPlanner": {
+            "title": "Wartungsplaner",
+            "subtitle": "Planen Sie den nächsten Wartungsschritt für Ihr ausgewähltes Fahrzeug und definieren Sie die Erinnerungsschwelle.",
+            "currentMileage": "Aktueller Kilometerstand",
+            "typeLabel": "Wartungsart",
+            "intervalLabel": "Zielzeitraum",
+            "intervalMonths": "{{count}} Mon.",
+            "previewLabel": "Voraussichtliches Zieldatum",
+            "nextMileageLabel": "Zielkilometerstand (optional)",
+            "nextMileagePlaceholder": "z. B. 128500",
+            "remindDaysLabel": "So viele Tage vorher erinnern",
+            "remindMileageLabel": "So viele km vorher erinnern",
+            "notesLabel": "Notizen",
+            "notesPlaceholder": "Ergänzen Sie Punkte, auf die beim Service geachtet werden soll.",
+            "save": "Plan speichern",
+            "saveSuccessTitle": "Wartungsplan gespeichert",
+            "saveSuccessMessage": "Der Insights-Bildschirm wurde mit den neuesten Wartungsdaten aktualisiert.",
+            "saveErrorTitle": "Wartungsplan konnte nicht gespeichert werden",
+            "saveErrorMessage": "Bitte prüfen Sie die Eingaben und versuchen Sie es erneut.",
+            "missingCarTitle": "Fahrzeuginformation fehlt",
+            "missingCarMessage": "Sie müssen zuerst ein Fahrzeug auswählen, bevor Sie einen Wartungsplan erstellen können."
         }
     },
     "scanScreen": {
@@ -189,6 +284,18 @@
         "engineCcPlaceholder": "z. B. 1600",
         "mileageLabel": "Kilometerstand (km)",
         "mileagePlaceholder": "z. B. 128500",
+        "nicknameLabel": "Fahrzeugtitel",
+        "nicknamePlaceholder": "z. B. Stadtflitzer",
+        "licensePlateLabel": "Kennzeichen",
+        "licensePlatePlaceholder": "z. B. B AB 123",
+        "colorLabel": "Farbe",
+        "colorPlaceholder": "z. B. Nachtblau",
+        "notesLabel": "Notizen",
+        "notesPlaceholder": "Fügen Sie Wartungs-, Versicherungs- oder persönliche Notizen hinzu",
+        "purchaseDateLabel": "Kaufdatum",
+        "purchaseDatePlaceholder": "Datum auswählen",
+        "purchaseDateClear": "Datum löschen",
+        "cancel": "Abbrechen",
         "save": "Speichern",
         "fuel": {
             "gasoline": "Benzin",
@@ -200,6 +307,39 @@
         "transmission": {
             "manual": "Manuell",
             "automatic": "Automatik"
+        }
+    },
+    "garageScreen": {
+        "title": "Garage",
+        "loginTitle": "Verwalten Sie Ihre Fahrzeuge",
+        "loginDescription": "Melden Sie sich an, um Fahrzeuge hinzuzufügen und Analyseergebnisse nachzuverfolgen.",
+        "odometerLabel": "KILOMETERSTAND",
+        "emptyTitle": "Sie haben noch kein Fahrzeug hinzugefügt",
+        "emptySubtitle": "Fügen Sie Ihrer Garage ein Fahrzeug hinzu, um Analyseergebnisse nachzuverfolgen.",
+        "emptyAction": "Fahrzeug hinzufügen",
+        "recentScansTitle": "Letzte Scans",
+        "seeAll": "Alle anzeigen",
+        "noScans": "Noch keine Scans",
+        "deleteTitle": "Fahrzeug löschen",
+        "deleteMessage": "Möchten Sie dieses Fahrzeug wirklich löschen?",
+        "deleteAction": "Löschen",
+        "deleteSuccess": "Fahrzeug gelöscht",
+        "deleteError": "Fahrzeug konnte nicht gelöscht werden",
+        "addCar": {
+            "title": "Neues Fahrzeug hinzufügen",
+            "subtitle": "Speichern Sie die wichtigsten Fahrzeugdaten, organisieren Sie Ihre Garage und verknüpfen Sie kommende Analysen mit dem richtigen Fahrzeug.",
+            "previewTitle": "Live-Vorschau",
+            "previewDescription": "Ihre Karte formt sich hier, während Sie das Formular ausfüllen.",
+            "previewFallback": "Fahrzeugtitel",
+            "primarySectionTitle": "Kerndaten",
+            "secondarySectionTitle": "Weitere Details",
+            "notesSectionTitle": "Persönliche Notizen",
+            "photoSectionTitle": "Foto",
+            "photoPlaceholderTitle": "Fahrzeugfoto bald verfügbar",
+            "photoPlaceholderDescription": "Hier können Sie bald ein Fahrzeugbild aus Kamera oder Galerie hinzufügen.",
+            "cta": "Fahrzeug speichern",
+            "success": "Fahrzeug erfolgreich hinzugefügt",
+            "error": "Fahrzeug konnte nicht hinzugefügt werden"
         }
     },
     "deleteAccount": {
@@ -225,7 +365,7 @@
         "description": "Wenn Sie Ihr Konto zuvor eingefroren haben, können Sie es mit Ihrer E-Mail-Adresse und Ihrem Passwort wieder aktivieren.",
         "frozenDescription": "Wir haben während der Anmeldung festgestellt, dass Ihr Konto eingefroren ist. Bestätigen Sie Ihre E-Mail-Adresse und Ihr Passwort, um fortzufahren.",
         "emailLabel": "E-Mail",
-        "emailPlaceholder": "beispiel@aicar.com",
+        "emailPlaceholder": "beispiel@autolensly.com",
         "passwordLabel": "Passwort",
         "passwordPlaceholder": "Ihr Passwort",
         "button": "Mein Konto reaktivieren",
@@ -250,7 +390,7 @@
             "privacy": "Datenschutzrichtlinie",
             "openSource": "Open-Source-Lizenzen"
         },
-        "copyright": "© {{year}} AiCar. Alle Rechte vorbehalten."
+        "copyright": "© {{year}} AutoLensly. Alle Rechte vorbehalten."
     },
     "feedbackScreen": {
         "title": "Beschwerde & Vorschlag",
@@ -280,6 +420,203 @@
         "submitErrorTitle": "Feedback konnte nicht gesendet werden",
         "submitErrorMessage": "Bitte versuchen Sie es später erneut."
     },
+    "feedbackHistory": {
+        "infoText": "Hier können Sie den Status Ihrer gesendeten Beschwerden und Vorschläge verfolgen.",
+        "createButton": "Neues Feedback",
+        "emptyTitle": "Noch kein Feedback vorhanden",
+        "emptyText": "Senden Sie Ihre erste Beschwerde oder Ihren ersten Vorschlag, um direkt mit dem Team in Kontakt zu treten.",
+        "emptyAction": "Feedback erstellen",
+        "latestRecords": "Die neuesten {{count}} Einträge werden angezeigt.",
+        "loadErrorTitle": "Feedback konnte nicht geladen werden",
+        "loadErrorFallback": "Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+        "reviewNote": "Prüfnotiz",
+        "lastUpdated": "Letztes Statusdatum",
+        "status": {
+            "new": "Neu",
+            "in_review": "In Prüfung",
+            "resolved": "Gelöst",
+            "closed": "Geschlossen"
+        }
+    },
+    "permissionsScreen": {
+        "status": {
+            "active": "Aktiv",
+            "inactive": "Deaktiviert"
+        },
+        "actions": {
+            "manage": "Einstellungen verwalten",
+            "allow": "Erlauben"
+        },
+        "cards": {
+            "notifications": {
+                "label": "Benachrichtigungen",
+                "description": "Wird verwendet, um Reservierungsupdates und wichtige Benachrichtigungen zu erhalten"
+            },
+            "camera": {
+                "label": "Kamera",
+                "description": "Wird verwendet, um Fahrzeugfotos aufzunehmen"
+            },
+            "media": {
+                "label": "Galerie & Medien",
+                "description": "Wird verwendet, um Fahrzeugfotos und Videos aus Ihrer Galerie auszuwählen"
+            }
+        },
+        "footer": {
+            "description": "Sie können alle Berechtigungen auch in den Geräteeinstellungen verwalten.",
+            "openSettings": "Einstellungen öffnen"
+        }
+    },
+    "changePasswordScreen": {
+        "title": "Passwort ändern",
+        "subtitle": "Geben Sie aus Sicherheitsgründen Ihr aktuelles Passwort ein und legen Sie ein neues fest.",
+        "oauthTitle": "Passwortänderung nicht verfügbar",
+        "oauthMessage": "Da Ihr Konto mit {{provider}} erstellt wurde, können Sie Ihr Passwort hier nicht ändern. Sie können Ihre Kontosicherheit über Ihren Anbieter verwalten.",
+        "strength": {
+            "veryWeak": "Sehr schwach",
+            "weak": "Schwach",
+            "medium": "Mittel",
+            "strong": "Stark",
+            "veryStrong": "Sehr stark"
+        },
+        "requirements": {
+            "minLength": "Mindestens 8 Zeichen",
+            "uppercase": "Großbuchstabe (A-Z)",
+            "lowercase": "Kleinbuchstabe (a-z)",
+            "number": "Zahl (0-9)",
+            "special": "Sonderzeichen (!@#$...)"
+        },
+        "fields": {
+            "current": {
+                "label": "Aktuelles Passwort",
+                "placeholder": "Ihr aktuelles Passwort"
+            },
+            "next": {
+                "label": "Neues Passwort",
+                "placeholder": "Ihr neues Passwort"
+            },
+            "confirm": {
+                "label": "Neues Passwort bestätigen",
+                "placeholder": "Geben Sie Ihr neues Passwort erneut ein"
+            }
+        },
+        "passwordMismatch": "Passwörter stimmen nicht überein",
+        "submit": "Passwort ändern",
+        "successTitle": "Passwort geändert",
+        "successMessage": "Ihr neues Passwort wurde erfolgreich gespeichert.",
+        "errorTitle": "Passwort konnte nicht geändert werden",
+        "errorMessage": "Bitte versuchen Sie es später erneut."
+    },
+    "freezeAccount": {
+        "confirmTitle": "Konto einfrieren",
+        "confirmMessage": "Ihr Konto wird vorübergehend eingefroren und alle Sitzungen werden beendet. Bei Ihrer nächsten Anmeldung können Sie Ihr Konto mit Ihrer E-Mail-Adresse und Ihrem Passwort wieder aktivieren.",
+        "cancel": "Abbrechen",
+        "confirmAction": "Konto einfrieren",
+        "successTitle": "Konto eingefroren",
+        "successMessage": "Sie können Ihr Konto bei Ihrer nächsten Anmeldung wieder aktivieren.",
+        "errorTitle": "Konto konnte nicht eingefroren werden",
+        "errorMessage": "Bitte versuchen Sie es später erneut.",
+        "warningTitle": "Diese Aktion kann rückgängig gemacht werden",
+        "warningText": "Wenn Ihr Konto eingefroren wird, werden Ihre aktuellen Sitzungen geschlossen und Sie verlieren den Zugriff auf geschützte Bereiche. Bei Ihrer nächsten Anmeldung können Sie Ihr Konto wieder aktivieren.",
+        "accountTitle": "Einzufrierendes Konto",
+        "button": "Mein Konto einfrieren"
+    },
+    "activeSessionsScreen": {
+        "unknownPlatform": "Unbekannt",
+        "currentDevice": "Dieses Gerät",
+        "lastActive": "Zuletzt aktiv",
+        "revokeButton": "Sitzung beenden",
+        "confirmTitle": "Sitzung beenden",
+        "confirmMessage": "Die Sitzung auf diesem Gerät wird beendet. Möchten Sie fortfahren?",
+        "cancel": "Abbrechen",
+        "confirmAction": "Sitzung beenden",
+        "revokeSuccess": "Sitzung beendet",
+        "revokeErrorTitle": "Sitzung konnte nicht beendet werden",
+        "revokeErrorMessage": "Bitte versuchen Sie es erneut.",
+        "noOtherSessions": "Es gibt keine weiteren aktiven Sitzungen",
+        "revokeAllTitle": "Alle Sitzungen beenden",
+        "revokeAllMessage": "{{count}} Sitzungen außer diesem Gerät werden beendet. Möchten Sie fortfahren?",
+        "revokeAllAction": "Alle beenden",
+        "revokeAllSuccess": "Alle Sitzungen wurden beendet",
+        "revokeAllErrorTitle": "Einige Sitzungen konnten nicht beendet werden",
+        "revokeAllErrorMessage": "Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+        "infoText": "Hier können Sie alle aktiven Sitzungen Ihres Kontos anzeigen und verwalten.",
+        "emptyTitle": "Keine aktiven Sitzungen gefunden",
+        "revokeOtherSessions": "Alle anderen Sitzungen beenden ({{count}})",
+        "loadErrorTitle": "Sitzungen konnten nicht geladen werden",
+        "loadErrorFallback": "Bitte aktualisieren Sie die Seite und versuchen Sie es erneut."
+    },
+    "emailAddressScreen": {
+        "title": "Registrierte E-Mail",
+        "subtitle": "Wenn Sie Ihre E-Mail-Adresse ändern, wird Ihr Verifizierungsstatus zurückgesetzt.",
+        "label": "E-Mail-Adresse",
+        "placeholder": "beispiel@mail.com",
+        "statusLabel": "Status",
+        "saveButton": "E-Mail speichern",
+        "verificationButton": "Bestätigungs-E-Mail senden",
+        "updateSuccessTitle": "E-Mail aktualisiert",
+        "updateSuccessMessage": "Sie müssen Ihre neue Adresse bestätigen.",
+        "updateErrorTitle": "E-Mail konnte nicht aktualisiert werden",
+        "verificationSuccessTitle": "Bestätigungs-E-Mail gesendet",
+        "verificationErrorTitle": "E-Mail konnte nicht gesendet werden",
+        "errorMessage": "Bitte versuchen Sie es später erneut."
+    },
+    "editProfileScreen": {
+        "title": "Meine persönlichen Daten",
+        "saveHeader": "Speichern",
+        "avatarHint": "Tippen Sie hier, um Ihr Profilfoto zu ändern",
+        "personalInfoTitle": "Persönliche Daten",
+        "saveButton": "Änderungen speichern",
+        "cancel": "Abbrechen",
+        "saveSuccessTitle": "Profil aktualisiert",
+        "saveErrorTitle": "Aktualisierung fehlgeschlagen",
+        "saveErrorMessage": "Beim Aktualisieren des Profils ist ein Fehler aufgetreten.",
+        "photoUpdated": "Foto aktualisiert",
+        "photoUploadFailedTitle": "Foto konnte nicht hochgeladen werden",
+        "photoUploadFailedMessage": "Bitte versuchen Sie es erneut.",
+        "photoDeleted": "Foto gelöscht",
+        "photoDeleteFailedTitle": "Foto konnte nicht gelöscht werden",
+        "photoDeleteFailedMessage": "Bitte versuchen Sie es erneut.",
+        "photoOptions": {
+            "title": "Profilfoto",
+            "message": "Wählen Sie eine Option",
+            "takePhoto": "Foto aufnehmen",
+            "chooseFromGallery": "Aus Galerie wählen",
+            "deletePhoto": "Foto löschen",
+            "cancel": "Abbrechen"
+        },
+        "fields": {
+            "name": {
+                "label": "Vorname *",
+                "placeholder": "Geben Sie Ihren Vornamen ein",
+                "required": "Vorname ist erforderlich"
+            },
+            "surname": {
+                "label": "Nachname *",
+                "placeholder": "Geben Sie Ihren Nachnamen ein",
+                "required": "Nachname ist erforderlich"
+            },
+            "email": {
+                "label": "E-Mail",
+                "helper": "Kontaktieren Sie den Support, um Ihre E-Mail-Adresse zu ändern"
+            },
+            "phone": {
+                "label": "Telefon",
+                "placeholder": "Ihre Telefonnummer"
+            }
+        }
+    },
+    "chatScreen": {
+        "pageTitle": "Nachrichten",
+        "defaultTitle": "Chat",
+        "unknownUser": "Unbekannter Benutzer",
+        "readIndicator": "Gesehen",
+        "loginTitle": "Melden Sie sich an, um Ihre Chats zu sehen",
+        "loginDescription": "Melden Sie sich an, um Nachrichten anzusehen und zu beantworten.",
+        "online": "Online",
+        "warehouseLabel": "Lager",
+        "emptyMessages": "Es gibt noch keine Nachrichten. Senden Sie die erste!",
+        "messagePlaceholder": "Schreiben Sie Ihre Nachricht..."
+    },
     "profileScreen": {
         "guestTitle": "Melden Sie sich in Ihrem Konto an",
         "guestDescription": "Verwalten Sie Ihr Profil, greifen Sie auf Ihre Garage zu und nutzen Sie alle Funktionen.",
@@ -308,5 +645,67 @@
             "additionalActionRequired": "Für Ihr Konto ist eine zusätzliche Aktion erforderlich. Bitte versuchen Sie es erneut.",
             "browserSessionFailed": "Beim Starten der Browser-Sitzung ist ein Problem aufgetreten."
         }
+    },
+    "supportScreen": {
+        "sections": {
+            "faq": "HÄUFIG GESTELLTE FRAGEN",
+            "contact": "KONTAKT",
+            "feedback": "BESCHWERDE & VORSCHLAG",
+            "bugReport": "FEHLERBERICHT"
+        },
+        "faqItems": [
+            {
+                "question": "Wie funktioniert die Fahrzeuganalyse?",
+                "answer": "Laden Sie Fotos Ihres Fahrzeugs hoch. Das KI-System analysiert die Fahrzeugdetails automatisch und stellt Ihnen die Ergebnisse zur Verfügung."
+            },
+            {
+                "question": "Wie kann ich Credits kaufen?",
+                "answer": "Gehen Sie auf Ihrer Profilseite zum Bereich der Credit-Pakete, wählen Sie das passende Paket aus und schließen Sie den Kauf ab. Gekaufte Credits werden Ihrem Konto sofort gutgeschrieben."
+            },
+            {
+                "question": "Wie zuverlässig sind die Analyseergebnisse?",
+                "answer": "Die KI-Analyseergebnisse dienen nur als Orientierung. Sie ersetzen keine professionelle Begutachtung, geben aber einen schnellen allgemeinen Überblick."
+            },
+            {
+                "question": "Wie kann ich mein Konto löschen?",
+                "answer": "Sie können Ihr Konto unter Profil > Kontoeinstellungen > Konto löschen schließen. Dieser Vorgang kann nicht rückgängig gemacht werden."
+            },
+            {
+                "question": "Sind meine Daten sicher?",
+                "answer": "Ja. Alle Ihre Daten werden verschlüsselt gespeichert. Unsere Datenschutzerklärung finden Sie im Bereich Datenschutz auf der Profilseite."
+            }
+        ],
+        "contact": {
+            "emailTitle": "Per E-Mail kontaktieren"
+        },
+        "feedbackCard": {
+            "title": "Beschwerde oder Vorschlag senden",
+            "description": "Teilen Sie uns Ihr Feedback direkt in der App mit, damit wir das Erlebnis weiter verbessern können.",
+            "button": "Formular öffnen"
+        },
+        "bugReportCard": {
+            "title": "Fehler melden",
+            "description": "Wenn Sie auf ein Problem gestoßen sind, teilen Sie es uns mit. Geräteinformationen werden automatisch hinzugefügt.",
+            "button": "E-Mail senden"
+        },
+        "bugReportSubject": "AutoLensly - Fehlerbericht",
+        "subjectLabel": "Betreff",
+        "deviceInfo": {
+            "heading": "Geräteinformationen",
+            "device": "Gerät",
+            "os": "OS",
+            "app": "App",
+            "unknown": "Unbekannt"
+        },
+        "mailFallbackTitle": "E-Mail-App konnte nicht geöffnet werden",
+        "emailFallbackMessage": "support@autolensly.com wurde in die Zwischenablage kopiert. Sie können die Adresse in jede E-Mail-App einfügen.",
+        "bugReportFallbackMessage": "Die Support-Adresse und der Fehlerberichtsentwurf wurden in die Zwischenablage kopiert. Sie können ihn in jede E-Mail-App einfügen.",
+        "mailFallbackCopyFailedMessage": "Es ist keine E-Mail-App verfügbar und auch das Kopieren in die Zwischenablage ist fehlgeschlagen."
+    },
+    "drawer": {
+        "homeScanner": "Start / Scanner",
+        "myGarage": "Meine Garage",
+        "subscription": "Abonnement",
+        "proMember": "Pro-Mitglied"
     }
 }

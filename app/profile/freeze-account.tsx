@@ -5,6 +5,7 @@ import { useFreezeAccount } from "@/query-hooks/useUser";
 import { useAuthStore } from "@/store/useAuth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Alert,
@@ -15,6 +16,7 @@ import {
 } from "react-native";
 
 export default function FreezeAccountScreen() {
+    const { t } = useTranslation();
     const authStore = useAuthStore();
     const user = authStore.user?.user;
     const router = useRouter();
@@ -23,12 +25,12 @@ export default function FreezeAccountScreen() {
 
     const handleFreeze = () => {
         Alert.alert(
-            "Hesabı dondur",
-            "Hesabınız geçici olarak dondurulacak ve tüm oturumlarınız sonlandırılacak. Daha sonra giriş yaptığınızda hesabınızı e-posta ve şifrenizle yeniden etkinleştirebilirsiniz.",
+            t("freezeAccount.confirmTitle"),
+            t("freezeAccount.confirmMessage"),
             [
-                { text: "Vazgeç", style: "cancel" },
+                { text: t("freezeAccount.cancel"), style: "cancel" },
                 {
-                    text: "Hesabı dondur",
+                    text: t("freezeAccount.confirmAction"),
                     style: "destructive",
                     onPress: async () => {
                         try {
@@ -36,17 +38,17 @@ export default function FreezeAccountScreen() {
                             await authStore.logout();
                             notify({
                                 type: "success",
-                                title: "Hesap donduruldu",
-                                message: "Tekrar giriş yaptığınızda hesabınızı yeniden etkinleştirebilirsiniz.",
+                                title: t("freezeAccount.successTitle"),
+                                message: t("freezeAccount.successMessage"),
                             });
                             router.replace("/(tabs)/profile");
                         } catch (error: unknown) {
                             notify({
                                 type: "error",
-                                title: "Hesap dondurulamadı",
+                                title: t("freezeAccount.errorTitle"),
                                 message:
                                     (error instanceof Error ? error.message : undefined) ||
-                                    "Lütfen daha sonra tekrar deneyin.",
+                                    t("freezeAccount.errorMessage"),
                             });
                         }
                     },
@@ -57,28 +59,25 @@ export default function FreezeAccountScreen() {
 
     if (!user) {
         return (
-            <ScreenContainer title="Hesabı dondur" showBackButton>
+            <ScreenContainer title={t("settings.freezeAccount")} showBackButton>
                 <View style={styles.emptyState}>
                     <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
-                    <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+                    <Text style={styles.emptyText}>{t("settings.noUser")}</Text>
                 </View>
             </ScreenContainer>
         );
     }
 
     return (
-        <ScreenContainer title="Hesabı dondur" showBackButton>
+        <ScreenContainer title={t("settings.freezeAccount")} showBackButton>
             <View style={styles.warningCard}>
                 <MaterialIcons name="pause-circle-outline" size={36} color={tokens.warningText} />
-                <Text style={styles.warningTitle}>Bu işlem geri alınabilir</Text>
-                <Text style={styles.warningText}>
-                    Hesabınız dondurulduğunda mevcut oturumlarınız kapanır ve korumalı
-                    alanlara erişemezsiniz. Bir sonraki girişinizde hesabınızı yeniden etkinleştirebilirsiniz.
-                </Text>
+                <Text style={styles.warningTitle}>{t("freezeAccount.warningTitle")}</Text>
+                <Text style={styles.warningText}>{t("freezeAccount.warningText")}</Text>
             </View>
 
             <View style={styles.detailCard}>
-                <Text style={styles.detailTitle}>Dondurulacak hesap</Text>
+                <Text style={styles.detailTitle}>{t("freezeAccount.accountTitle")}</Text>
                 <Text style={styles.detailText}>{user.email}</Text>
                 <Text style={styles.detailText}>
                     {user.name} {user.surname}
@@ -96,7 +95,7 @@ export default function FreezeAccountScreen() {
                 ) : (
                     <>
                         <MaterialIcons name="pause-circle-outline" size={20} color={tokens.textInverse} />
-                        <Text style={styles.freezeButtonText}>Hesabımı dondur</Text>
+                        <Text style={styles.freezeButtonText}>{t("freezeAccount.button")}</Text>
                     </>
                 )}
             </TouchableOpacity>

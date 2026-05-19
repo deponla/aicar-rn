@@ -45,6 +45,8 @@ export interface UserCredits {
   remaining: number;
   total: number;
   lastUpdated: string;
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
 }
 
 export interface CreditBalanceResponse {

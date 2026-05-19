@@ -6,7 +6,8 @@ import { useAuthStore } from "@/store/useAuth";
 import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     StyleSheet,
@@ -18,6 +19,7 @@ import {
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 function PasswordStrengthBar({ password }: { password: string }) {
+    const { t } = useTranslation();
     const checks = [
         password.length >= 8,
         /[A-Z]/.test(password),
@@ -36,11 +38,11 @@ function PasswordStrengthBar({ password }: { password: string }) {
     };
 
     const getLabel = () => {
-        if (passed <= 1) return "Çok zayıf";
-        if (passed <= 2) return "Zayıf";
-        if (passed <= 3) return "Orta";
-        if (passed <= 4) return "Güçlü";
-        return "Çok güçlü";
+        if (passed <= 1) return t("changePasswordScreen.strength.veryWeak");
+        if (passed <= 2) return t("changePasswordScreen.strength.weak");
+        if (passed <= 3) return t("changePasswordScreen.strength.medium");
+        if (passed <= 4) return t("changePasswordScreen.strength.strong");
+        return t("changePasswordScreen.strength.veryStrong");
     };
 
     if (password.length === 0) return null;
@@ -73,6 +75,7 @@ export default function ChangePasswordScreen() {
     const router = useRouter();
     const { notify } = useNotification();
     const changePassword = useChangePassword();
+    const { t } = useTranslation();
 
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -81,12 +84,44 @@ export default function ChangePasswordScreen() {
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
+    const providerDisplayName = user?.authProvider === "google"
+        ? "Google"
+        : user?.authProvider === "apple"
+            ? "Apple"
+            : user?.authProvider;
+
+    const passwordChecks = useMemo(
+        () => [
+            {
+                label: t("changePasswordScreen.requirements.minLength"),
+                met: newPassword.length >= 8,
+            },
+            {
+                label: t("changePasswordScreen.requirements.uppercase"),
+                met: /[A-Z]/.test(newPassword),
+            },
+            {
+                label: t("changePasswordScreen.requirements.lowercase"),
+                met: /[a-z]/.test(newPassword),
+            },
+            {
+                label: t("changePasswordScreen.requirements.number"),
+                met: /[0-9]/.test(newPassword),
+            },
+            {
+                label: t("changePasswordScreen.requirements.special"),
+                met: /[^A-Za-z0-9]/.test(newPassword),
+            },
+        ],
+        [newPassword, t],
+    );
+
     if (!user) {
         return (
-            <ScreenContainer title="Şifre Değiştir" showBackButton>
+            <ScreenContainer title={t("settings.changePassword")} showBackButton>
                 <View style={styles.emptyState}>
                     <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
-                    <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+                    <Text style={styles.emptyText}>{t("settings.noUser")}</Text>
                 </View>
             </ScreenContainer>
         );
@@ -94,27 +129,19 @@ export default function ChangePasswordScreen() {
 
     if (user.authProvider !== "local") {
         return (
-            <ScreenContainer title="Şifre Değiştir" showBackButton>
+            <ScreenContainer title={t("settings.changePassword")} showBackButton>
                 <View style={styles.oauthCard}>
                     <MaterialIcons name="info-outline" size={40} color={tokens.info} />
-                    <Text style={styles.oauthTitle}>Şifre değiştirme kullanılamaz</Text>
+                    <Text style={styles.oauthTitle}>{t("changePasswordScreen.oauthTitle")}</Text>
                     <Text style={styles.oauthText}>
-                        Hesabınız {user.authProvider === "google" ? "Google" : user.authProvider === "apple" ? "Apple" : user.authProvider} ile
-                        oluşturulduğu için şifre değiştirme özelliği kullanılamaz. Hesap
-                        güvenliğinizi sağlayıcınız üzerinden yönetebilirsiniz.
+                        {t("changePasswordScreen.oauthMessage", {
+                            provider: providerDisplayName,
+                        })}
                     </Text>
                 </View>
             </ScreenContainer>
         );
     }
-
-    const passwordChecks = [
-        { label: "En az 8 karakter", met: newPassword.length >= 8 },
-        { label: "Büyük harf (A-Z)", met: /[A-Z]/.test(newPassword) },
-        { label: "Küçük harf (a-z)", met: /[a-z]/.test(newPassword) },
-        { label: "Rakam (0-9)", met: /[0-9]/.test(newPassword) },
-        { label: "Özel karakter (!@#$...)", met: /[^A-Za-z0-9]/.test(newPassword) },
-    ];
 
     const isNewPasswordStrong = passwordChecks.every((c) => c.met);
     const passwordsMatch = newPassword === confirmPassword;
@@ -135,40 +162,37 @@ export default function ChangePasswordScreen() {
 
             notify({
                 type: "success",
-                title: "Şifre değiştirildi",
-                message: "Yeni şifreniz başarıyla kaydedildi.",
+                title: t("changePasswordScreen.successTitle"),
+                message: t("changePasswordScreen.successMessage"),
             });
             router.back();
         } catch (error: unknown) {
             notifyApiError({
                 error,
-                fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+                fallbackMessage: t("changePasswordScreen.errorMessage"),
                 notify,
-                title: "Şifre değiştirilemedi",
+                title: t("changePasswordScreen.errorTitle"),
             });
         }
     };
 
     return (
-        <ScreenContainer title="Şifre Değiştir" showBackButton>
+        <ScreenContainer title={t("settings.changePassword")} showBackButton>
             <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
                 <View style={styles.card}>
-                    <Text style={styles.title}>Şifrenizi değiştirin</Text>
-                    <Text style={styles.subtitle}>
-                        Güvenliğiniz için mevcut şifrenizi girerek yeni bir şifre
-                        belirleyin.
-                    </Text>
+                    <Text style={styles.title}>{t("changePasswordScreen.title")}</Text>
+                    <Text style={styles.subtitle}>{t("changePasswordScreen.subtitle")}</Text>
 
                     {/* Current Password */}
                     <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Mevcut şifre</Text>
+                        <Text style={styles.label}>{t("changePasswordScreen.fields.current.label")}</Text>
                         <View style={styles.passwordRow}>
                             <TextInput
                                 style={styles.passwordInput}
                                 value={oldPassword}
                                 onChangeText={setOldPassword}
                                 secureTextEntry={!showOld}
-                                placeholder="Mevcut şifreniz"
+                                placeholder={t("changePasswordScreen.fields.current.placeholder")}
                                 placeholderTextColor={tokens.textPlaceholder}
                                 autoCapitalize="none"
                                 autoCorrect={false}
@@ -189,14 +213,14 @@ export default function ChangePasswordScreen() {
 
                     {/* New Password */}
                     <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Yeni şifre</Text>
+                        <Text style={styles.label}>{t("changePasswordScreen.fields.next.label")}</Text>
                         <View style={styles.passwordRow}>
                             <TextInput
                                 style={styles.passwordInput}
                                 value={newPassword}
                                 onChangeText={setNewPassword}
                                 secureTextEntry={!showNew}
-                                placeholder="Yeni şifreniz"
+                                placeholder={t("changePasswordScreen.fields.next.placeholder")}
                                 placeholderTextColor={tokens.textPlaceholder}
                                 autoCapitalize="none"
                                 autoCorrect={false}
@@ -241,14 +265,14 @@ export default function ChangePasswordScreen() {
 
                     {/* Confirm Password */}
                     <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Yeni şifre tekrar</Text>
+                        <Text style={styles.label}>{t("changePasswordScreen.fields.confirm.label")}</Text>
                         <View style={styles.passwordRow}>
                             <TextInput
                                 style={styles.passwordInput}
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                                 secureTextEntry={!showConfirm}
-                                placeholder="Yeni şifrenizi tekrar girin"
+                                placeholder={t("changePasswordScreen.fields.confirm.placeholder")}
                                 placeholderTextColor={tokens.textPlaceholder}
                                 autoCapitalize="none"
                                 autoCorrect={false}
@@ -266,7 +290,7 @@ export default function ChangePasswordScreen() {
                             </TouchableOpacity>
                         </View>
                         {confirmPassword.length > 0 && !passwordsMatch && (
-                            <Text style={styles.errorText}>Şifreler eşleşmiyor</Text>
+                            <Text style={styles.errorText}>{t("changePasswordScreen.passwordMismatch")}</Text>
                         )}
                     </View>
 
@@ -283,7 +307,7 @@ export default function ChangePasswordScreen() {
                         {changePassword.isPending ? (
                             <ActivityIndicator color={tokens.textInverse} />
                         ) : (
-                            <Text style={styles.primaryButtonText}>Şifreyi Değiştir</Text>
+                            <Text style={styles.primaryButtonText}>{t("changePasswordScreen.submit")}</Text>
                         )}
                     </TouchableOpacity>
                 </View>

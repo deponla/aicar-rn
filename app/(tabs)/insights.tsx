@@ -1,397 +1,536 @@
-import { LegendList } from "@legendapp/list";
-import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
 import HomeHeader from "@/components/HomeHeader";
 import LoginRequired from "@/components/LoginRequired";
+import { Colors, FontFamily, ambientShadow, tokens } from "@/constants/theme";
+import { normalizeLanguage } from "@/i18n";
+import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
+import { useGetCarReminders } from "@/query-hooks/useCarReminders";
+import { useGetCars } from "@/query-hooks/useCars";
 import { useAuthStore } from "@/store/useAuth";
+import { AnalyzeMediaLog } from "@/types/ai";
 import { AuthStatusEnum } from "@/types/auth";
-import { AnalyzeMediaLog, AiAnalysisType, AiUrgency } from "@/types/ai";
+import {
+  CarReminder,
+  CarReminderStatusEnum,
+  CarReminderTypeEnum,
+} from "@/types/car-reminder";
+import { Car } from "@/types/car";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import dayjs from "dayjs";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Modal,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const ANALYSIS_TYPE_ICONS: Record<AiAnalysisType, keyof typeof MaterialIcons.glyphMap> = {
-  [AiAnalysisType.DASHBOARD]: "dashboard",
-  [AiAnalysisType.WARNING_LIGHT]: "warning",
-  [AiAnalysisType.OBD_CODE]: "bluetooth-searching",
-  [AiAnalysisType.GENERAL]: "search",
+type DashboardPeriod = "weekly" | "monthly" | "yearly";
+type FindingCategoryKey = "powertrain" | "electronics" | "fluids" | "tires";
+
+type ActivityBucket = {
+  key: string;
+  label: string;
+  start: string;
+  end: string;
+  count: number;
 };
 
-function urgencyColors(urgency: AiUrgency) {
-  switch (urgency) {
-    case "critical":
-      return { bg: tokens.dangerBg, text: tokens.danger };
-    case "warning":
-      return { bg: tokens.warningBg, text: tokens.warning };
-    case "info":
-      return { bg: tokens.infoBg, text: Colors.primary };
+type FindingCategory = {
+  key: FindingCategoryKey;
+  label: string;
+  percentage: number;
+  count: number;
+};
+
+const LOCALE_TAGS = {
+  de: "de-DE",
+  en: "en-US",
+  tr: "tr-TR",
+} as const;
+
+const PERIODS: DashboardPeriod[] = ["weekly", "monthly", "yearly"];
+
+const FINDING_KEYWORDS: Record<FindingCategoryKey, string[]> = {
+  powertrain: [
+    "engine",
+    "motor",
+    "emission",
+    "emisyon",
+    "misfire",
+    "combustion",
+    "ignition",
+    "spark",
+    "egzoz",
+    "exhaust",
+    "silindir",
+  ],
+  electronics: [
+    "battery",
+    "akü",
+    "sensor",
+    "sensör",
+    "electronic",
+    "elektronik",
+    "module",
+    "modül",
+    "ecu",
+    "wiring",
+    "voltage",
+    "charging",
+  ],
+  fluids: [
+    "fluid",
+    "liquid",
+    "sıvı",
+    "coolant",
+    "antifreeze",
+    "oil",
+    "yağ",
+    "washer",
+    "hydraulic",
+    "soğutma",
+    "brake fluid",
+  ],
+  tires: [
+    "tire",
+    "tyre",
+    "lastik",
+    "brake",
+    "fren",
+    "pad",
+    "balata",
+    "rotor",
+    "alignment",
+    "pressure",
+  ],
+};
+
+function getLocaleTag(language: keyof typeof LOCALE_TAGS) {
+  return LOCALE_TAGS[language] ?? LOCALE_TAGS.en;
+}
+
+function formatCompactLabel(label: string) {
+  return label.replace(/\./g, "");
+}
+
+function formatNumber(value: number, localeTag: string) {
+  return new Intl.NumberFormat(localeTag).format(value);
+}
+
+function formatAbsoluteDate(date: string, localeTag: string) {
+  return new Intl.DateTimeFormat(localeTag, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+function formatRelativeDate(daysRemaining: number, localeTag: string) {
+  const formatter = new Intl.RelativeTimeFormat(localeTag, { numeric: "auto" });
+
+  if (Math.abs(daysRemaining) >= 60) {
+    return formatter.format(Math.round(daysRemaining / 30), "month");
   }
+
+  if (Math.abs(daysRemaining) >= 14) {
+    return formatter.format(Math.round(daysRemaining / 7), "week");
+  }
+
+  return formatter.format(daysRemaining, "day");
 }
 
-function statusColor(status: string) {
-  if (status === "completed") return tokens.success;
-  if (status === "failed") return tokens.danger;
-  return tokens.warning;
+function buildActivityBuckets(
+  period: DashboardPeriod,
+  localeTag: string,
+  logs: AnalyzeMediaLog[],
+): ActivityBucket[] {
+  const monthFormatter = new Intl.DateTimeFormat(localeTag, { month: "short" });
+  const weekFormatter = new Intl.DateTimeFormat(localeTag, { weekday: "short" });
+
+  if (period === "weekly") {
+    return Array.from({ length: 7 }, (_, index) => {
+      const start = dayjs().startOf("day").subtract(6 - index, "day");
+      const end = start.endOf("day");
+      const count = logs.filter((log) => {
+        const createdAt = dayjs(log.createdAt);
+        return createdAt.isAfter(start.subtract(1, "millisecond")) && createdAt.isBefore(end.add(1, "millisecond"));
+      }).length;
+
+      return {
+        key: `day-${start.toISOString()}`,
+        label: formatCompactLabel(weekFormatter.format(start.toDate())),
+        start: start.toISOString(),
+        end: end.toISOString(),
+        count,
+      };
+    });
+  }
+
+  if (period === "monthly") {
+    return Array.from({ length: 6 }, (_, index) => {
+      const start = dayjs().startOf("day").subtract((5 - index) * 7, "day");
+      const end = start.add(6, "day").endOf("day");
+      const count = logs.filter((log) => {
+        const createdAt = dayjs(log.createdAt);
+        return createdAt.isAfter(start.subtract(1, "millisecond")) && createdAt.isBefore(end.add(1, "millisecond"));
+      }).length;
+
+      return {
+        key: `week-${start.toISOString()}`,
+        label: `${start.format("DD")}-${end.format("DD")}`,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        count,
+      };
+    });
+  }
+
+  return Array.from({ length: 6 }, (_, index) => {
+    const start = dayjs().startOf("month").subtract(5 - index, "month");
+    const end = start.endOf("month");
+    const count = logs.filter((log) => {
+      const createdAt = dayjs(log.createdAt);
+      return createdAt.isAfter(start.subtract(1, "millisecond")) && createdAt.isBefore(end.add(1, "millisecond"));
+    }).length;
+
+    return {
+      key: `month-${start.toISOString()}`,
+      label: formatCompactLabel(monthFormatter.format(start.toDate())),
+      start: start.toISOString(),
+      end: end.toISOString(),
+      count,
+    };
+  });
 }
 
-function urgencyLabel(urgency: AiUrgency, t: (key: string) => string) {
-  if (urgency === "critical") return t("history.urgency.critical");
-  if (urgency === "warning") return t("history.urgency.warning");
-  if (urgency === "info") return t("history.urgency.info");
-  return urgency;
+function selectClosestReminder(reminders: CarReminder[], currentMileage?: number) {
+  return [...reminders].sort((left, right) => {
+    const leftScore = getReminderScore(left, currentMileage);
+    const rightScore = getReminderScore(right, currentMileage);
+    return leftScore - rightScore;
+  })[0] ?? null;
 }
 
-function statusLabel(status: string, t: (key: string) => string) {
-  if (status === "completed") return t("history.status.completed");
-  if (status === "failed") return t("history.status.failed");
-  if (status === "pending") return t("history.status.pending");
-  return status;
+function getReminderScore(reminder: CarReminder, currentMileage?: number) {
+  const reminderDaysBefore = reminder.remindDaysBefore ?? 7;
+  const reminderMileageBefore = reminder.remindMileageBefore ?? 500;
+  const daysRemaining = reminder.nextDueAt
+    ? dayjs(reminder.nextDueAt).startOf("day").diff(dayjs().startOf("day"), "day")
+    : Number.POSITIVE_INFINITY;
+  const mileageRemaining =
+    reminder.nextDueMileage != null && currentMileage != null
+      ? reminder.nextDueMileage - currentMileage
+      : Number.POSITIVE_INFINITY;
+
+  return Math.min(daysRemaining / Math.max(reminderDaysBefore, 1), mileageRemaining / Math.max(reminderMileageBefore, 1));
 }
 
-function analysisTypeIcon(
-  analysisType: string
-): keyof typeof MaterialIcons.glyphMap {
-  return ANALYSIS_TYPE_ICONS[analysisType as AiAnalysisType] ?? "search";
+function classifyFinding(text: string): FindingCategoryKey {
+  const haystack = text.toLowerCase();
+  const match = (Object.entries(FINDING_KEYWORDS) as [FindingCategoryKey, string[]][]).find(
+    ([, keywords]) => keywords.some((keyword) => haystack.includes(keyword)),
+  );
+
+  return match?.[0] ?? "electronics";
 }
 
-const AnalysisCard = React.memo(function AnalysisCard({
-  item,
+function buildFindingDistribution(
+  logs: AnalyzeMediaLog[],
+  labels: Record<FindingCategoryKey, string>,
+): FindingCategory[] {
+  const counts: Record<FindingCategoryKey, number> = {
+    powertrain: 0,
+    electronics: 0,
+    fluids: 0,
+    tires: 0,
+  };
+
+  for (const log of logs) {
+    const warningTexts =
+      log.aiResponse?.warnings?.map((warning) =>
+        [warning.name, warning.description, warning.recommendation]
+          .filter(Boolean)
+          .join(" "),
+      ) ?? [];
+
+    const sources = warningTexts.length > 0
+      ? warningTexts
+      : [
+        [
+          log.aiResponse?.title,
+          log.aiResponse?.summary,
+          log.aiResponse?.description,
+        ]
+          .filter(Boolean)
+          .join(" "),
+      ].filter(Boolean);
+
+    for (const source of sources) {
+      counts[classifyFinding(source)] += 1;
+    }
+  }
+
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+  return (Object.keys(counts) as FindingCategoryKey[])
+    .map((key) => ({
+      key,
+      label: labels[key],
+      count: counts[key],
+      percentage: total > 0 ? Math.round((counts[key] / total) * 100) : 0,
+    }))
+    .sort((left, right) => right.count - left.count);
+}
+
+function VehicleChip({
+  car,
+  isSelected,
   onPress,
 }: {
-  item: AnalyzeMediaLog;
-  onPress: (item: AnalyzeMediaLog) => void;
+  car: Car;
+  isSelected: boolean;
+  onPress: () => void;
 }) {
-  const { t } = useTranslation();
-  const urgency = item.aiResponse?.urgency;
-  const uColors = urgency ? urgencyColors(urgency) : null;
-  const icon = analysisTypeIcon(item.analysisType);
-
   return (
     <TouchableOpacity
-      style={styles.card}
-      onPress={() => onPress(item)}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={[styles.vehicleChip, isSelected && styles.vehicleChipActive]}
     >
-      <View style={styles.cardHeader}>
-        <View style={styles.cardTitleRow}>
-          <View style={styles.iconBadge}>
-            <MaterialIcons name={icon} size={18} color={Colors.primary} />
-          </View>
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.aiResponse?.title ?? item.analysisType}
-          </Text>
-        </View>
-        {urgency && uColors ? (
-          <View style={[styles.urgencyBadge, { backgroundColor: uColors.bg }]}>
-            <Text style={[styles.urgencyText, { color: uColors.text }]}>
-              {urgencyLabel(urgency, t)}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      {item.aiResponse?.summary ? (
-        <Text style={styles.summary} numberOfLines={2}>
-          {item.aiResponse.summary}
-        </Text>
-      ) : null}
-
-      <View style={styles.metaRow}>
-        <Text style={styles.metaText}>
-          {dayjs(item.createdAt).format("DD.MM.YYYY HH:mm")}
-        </Text>
-        <View style={styles.metaRight}>
-          {item.creditCost > 0 ? (
-            <View style={styles.creditChip}>
-              <MaterialIcons name="bolt" size={12} color={tokens.warning} />
-              <Text style={styles.creditText}>{item.creditCost}</Text>
-            </View>
-          ) : null}
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: statusColor(item.status) },
-            ]}
-          />
-          <Text style={[styles.metaText, { color: statusColor(item.status) }]}>
-            {statusLabel(item.status, t)}
-          </Text>
-        </View>
-      </View>
+      <Text style={[styles.vehicleChipText, isSelected && styles.vehicleChipTextActive]} numberOfLines={1}>
+        {car.brand} {car.model}
+      </Text>
+      <Text style={[styles.vehicleChipMeta, isSelected && styles.vehicleChipMetaActive]}>
+        {car.year}
+      </Text>
     </TouchableOpacity>
-  );
-});
-
-function AnalysisDetailModal({
-  item,
-  visible,
-  onClose,
-}: {
-  item: AnalyzeMediaLog | null;
-  visible: boolean;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-
-  if (!item) return null;
-  const ai = item.aiResponse;
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle} numberOfLines={1}>
-            {ai?.title ?? item.analysisType}
-          </Text>
-          <TouchableOpacity onPress={onClose}>
-            <MaterialIcons name="close" size={24} color={tokens.textPrimary} />
-          </TouchableOpacity>
-        </View>
-        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-          {item.status === "failed" && item.errorMessage ? (
-            <View style={styles.errorBox}>
-              <MaterialIcons name="error-outline" size={16} color={tokens.danger} />
-              <Text style={styles.errorText}>{item.errorMessage}</Text>
-            </View>
-          ) : null}
-          {ai ? (
-            <>
-              {ai.summary ? (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    {t("history.sections.summary")}
-                  </Text>
-                  <Text style={styles.sectionContent}>{ai.summary}</Text>
-                </View>
-              ) : null}
-              {ai.description ? (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    {t("history.sections.description")}
-                  </Text>
-                  <Text style={styles.sectionContent}>{ai.description}</Text>
-                </View>
-              ) : null}
-              {ai.recommendation ? (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    {t("history.sections.recommendation")}
-                  </Text>
-                  <Text style={styles.sectionContent}>{ai.recommendation}</Text>
-                </View>
-              ) : null}
-              {ai.warnings && ai.warnings.length > 0 ? (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    {t("history.sections.warnings")}
-                  </Text>
-                  {ai.warnings.map((warning, index) => (
-                    <View key={`${warning.name}-${index}`} style={styles.warningItem}>
-                      <Text style={styles.warningName}>{warning.name}</Text>
-                      <Text style={styles.warningDesc}>{warning.description}</Text>
-                      {warning.recommendation ? (
-                        <Text style={styles.warningRec}>{warning.recommendation}</Text>
-                      ) : null}
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-            </>
-          ) : null}
-          <View style={styles.modalFooterSpacing} />
-        </ScrollView>
-      </View>
-    </Modal>
   );
 }
 
-type UrgencyFilter = "all" | AiUrgency;
-
-// ── Stat Card ──
-const StatCard = React.memo(function StatCard({
-  icon,
-  iconBg,
-  iconColor,
-  label,
-  value,
-}: {
-  icon: keyof typeof MaterialIcons.glyphMap;
-  iconBg: string;
-  iconColor: string;
-  label: string;
-  value: number;
-}) {
-  return (
-    <View style={styles.statCard}>
-      <View style={[styles.statIcon, { backgroundColor: iconBg }]}>
-        <MaterialIcons name={icon} size={18} color={iconColor} />
-      </View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-});
-
 export default function InsightsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
-  const [selected, setSelected] = useState<AnalyzeMediaLog | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
-  const { data, isLoading, refetch } = useGetAnalysisLogs(undefined, {
-    enabled: isLoggedIn,
-  });
+  const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<DashboardPeriod>("yearly");
 
-  const filters = useMemo(
-    () => [
-      { key: "all" as const, label: t("history.filters.all") },
-      { key: "critical" as const, label: t("history.urgency.critical") },
-      { key: "warning" as const, label: t("history.urgency.warning") },
-      { key: "info" as const, label: t("history.urgency.info") },
-    ],
+  const language = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+  const localeTag = getLocaleTag(language);
+  const carsQuery = useGetCars(undefined, { enabled: isLoggedIn });
+  const cars = useMemo(() => carsQuery.data?.results ?? [], [carsQuery.data?.results]);
+
+  useEffect(() => {
+    if (cars.length === 0) {
+      setSelectedCarId(null);
+      return;
+    }
+
+    setSelectedCarId((current) => {
+      if (current && cars.some((car) => car.id === current)) {
+        return current;
+      }
+
+      return cars[0]?.id ?? null;
+    });
+  }, [cars]);
+
+  const selectedCar = useMemo(
+    () => cars.find((car) => car.id === selectedCarId) ?? null,
+    [cars, selectedCarId],
+  );
+
+  const analysisQuery = useGetAnalysisLogs(
+    selectedCarId
+      ? { carId: selectedCarId, limit: 120, sort: "createdAt:desc" }
+      : undefined,
+    { enabled: isLoggedIn && !!selectedCarId },
+  );
+  const remindersQuery = useGetCarReminders(
+    selectedCarId
+      ? {
+        carId: selectedCarId,
+        status: CarReminderStatusEnum.ACTIVE,
+        limit: 50,
+        sort: "nextDueAt:asc",
+      }
+      : undefined,
+    { enabled: isLoggedIn && !!selectedCarId },
+  );
+
+  const logs = useMemo(() => analysisQuery.data?.results ?? [], [analysisQuery.data?.results]);
+  const reminders = useMemo(
+    () => remindersQuery.data?.results ?? [],
+    [remindersQuery.data?.results],
+  );
+  const activeReminder = useMemo(
+    () => selectClosestReminder(reminders, selectedCar?.currentMileage),
+    [reminders, selectedCar?.currentMileage],
+  );
+  const latestScan = logs[0] ?? null;
+
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={carsQuery.isRefetching || analysisQuery.isRefetching || remindersQuery.isRefetching}
+        onRefresh={() => {
+          void Promise.all([
+            carsQuery.refetch(),
+            analysisQuery.refetch(),
+            remindersQuery.refetch(),
+          ]);
+        }}
+        tintColor={Colors.secondary}
+      />
+    ),
+    [analysisQuery, carsQuery, remindersQuery],
+  );
+
+  const activityBuckets = useMemo(
+    () => buildActivityBuckets(period, localeTag, logs),
+    [localeTag, logs, period],
+  );
+  const chartMax = useMemo(
+    () => Math.max(...activityBuckets.map((bucket) => bucket.count), 1),
+    [activityBuckets],
+  );
+
+  const currentRange = useMemo(() => {
+    if (activityBuckets.length === 0) {
+      return null;
+    }
+
+    return {
+      start: dayjs(activityBuckets[0].start),
+      end: dayjs(activityBuckets[activityBuckets.length - 1].end),
+    };
+  }, [activityBuckets]);
+
+  const periodLogs = useMemo(
+    () =>
+      currentRange
+        ? logs.filter((log) => {
+          const createdAt = dayjs(log.createdAt);
+          return createdAt.isAfter(currentRange.start.subtract(1, "millisecond"))
+            && createdAt.isBefore(currentRange.end.add(1, "millisecond"));
+        })
+        : [],
+    [currentRange, logs],
+  );
+
+  const findingLabels = useMemo<Record<FindingCategoryKey, string>>(
+    () => ({
+      powertrain: t("history.dashboard.findings.categories.powertrain"),
+      electronics: t("history.dashboard.findings.categories.electronics"),
+      fluids: t("history.dashboard.findings.categories.fluids"),
+      tires: t("history.dashboard.findings.categories.tires"),
+    }),
     [t],
   );
 
-  const logs = useMemo(() => data?.results ?? [], [data?.results]);
-  const filtered = useMemo(
-    () =>
-      urgencyFilter === "all"
-        ? logs
-        : logs.filter((log) => log.aiResponse?.urgency === urgencyFilter),
-    [logs, urgencyFilter],
+  const findings = useMemo(
+    () => buildFindingDistribution(periodLogs, findingLabels),
+    [findingLabels, periodLogs],
   );
 
-  const stats = useMemo(() => {
-    const total = logs.length;
-    let critical = 0;
-    let warning = 0;
-    let ok = 0;
-    for (const log of logs) {
-      const u = log.aiResponse?.urgency;
-      if (u === "critical") critical++;
-      else if (u === "warning") warning++;
-      else ok++;
+  const forecastMessage = useMemo(() => {
+    if (!activeReminder) {
+      return t("history.dashboard.forecast.emptyMessage");
     }
-    return { total, critical, warning, ok };
-  }, [logs]);
 
-  const handlePress = useCallback((item: AnalyzeMediaLog) => {
-    setSelected(item);
-    setModalVisible(true);
-  }, []);
+    const reminderType = t(`history.dashboard.reminderTypes.${activeReminder.type}`);
+    const daysRemaining = activeReminder.nextDueAt
+      ? dayjs(activeReminder.nextDueAt).startOf("day").diff(dayjs().startOf("day"), "day")
+      : null;
+    const mileageRemaining =
+      activeReminder.nextDueMileage != null && selectedCar?.currentMileage != null
+        ? activeReminder.nextDueMileage - selectedCar.currentMileage
+        : null;
 
-  const renderItem = useCallback(
-    ({ item }: { item: AnalyzeMediaLog }) => (
-      <AnalysisCard item={item} onPress={handlePress} />
-    ),
-    [handlePress],
-  );
+    const hasDateTarget = daysRemaining != null;
+    const hasMileageTarget = mileageRemaining != null;
 
-  const keyExtractor = useCallback((item: AnalyzeMediaLog) => item.id, []);
+    if (hasDateTarget && hasMileageTarget) {
+      const dateScore = daysRemaining / Math.max(activeReminder.remindDaysBefore ?? 7, 1);
+      const mileageScore = mileageRemaining / Math.max(activeReminder.remindMileageBefore ?? 500, 1);
 
-  const listHeader = useMemo(
-    () => (
-      <View>
-        {/* Stats row */}
-        <View style={styles.statsRow}>
-          <StatCard
-            icon="bar-chart"
-            iconBg={tokens.primaryLight}
-            iconColor={Colors.primary}
-            label={t("history.stats.total")}
-            value={stats.total}
-          />
-          <StatCard
-            icon="error"
-            iconBg={tokens.dangerBg}
-            iconColor={tokens.danger}
-            label={t("history.urgency.critical")}
-            value={stats.critical}
-          />
-          <StatCard
-            icon="flash-on"
-            iconBg={tokens.warningBg}
-            iconColor={tokens.warning}
-            label={t("history.urgency.warning")}
-            value={stats.warning}
-          />
-          <StatCard
-            icon="check-circle"
-            iconBg="#ECFDF5"
-            iconColor={tokens.success}
-            label="OK"
-            value={stats.ok}
-          />
-        </View>
+      if (dateScore <= mileageScore) {
+        return t("history.dashboard.forecast.message", {
+          type: reminderType,
+          due: formatRelativeDate(daysRemaining, localeTag),
+        });
+      }
 
-        {/* Section header + filter chips */}
-        <Text style={styles.sectionHeader}>{t("history.title")}</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterRow}
-          contentContainerStyle={styles.filterContent}
-        >
-          {filters.map((filter) => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[
-                styles.filterChip,
-                urgencyFilter === filter.key && styles.filterChipActive,
-              ]}
-              onPress={() => setUrgencyFilter(filter.key)}
-            >
-              <Text
-                style={[
-                  styles.filterChipText,
-                  urgencyFilter === filter.key && styles.filterChipTextActive,
-                ]}
-              >
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    ),
-    [filters, urgencyFilter, stats, t],
-  );
+      return t("history.dashboard.forecast.message", {
+        type: reminderType,
+        due: t("history.dashboard.forecast.mileageRemaining", {
+          mileage: formatNumber(Math.abs(mileageRemaining), localeTag),
+          qualifier:
+            mileageRemaining >= 0
+              ? t("history.dashboard.forecast.mileageQualifierRemaining")
+              : t("history.dashboard.forecast.mileageQualifierOverdue"),
+        }),
+      });
+    }
 
-  const emptyState = useMemo(
-    () => (
-      <View style={styles.emptyContainer}>
-        <MaterialIcons name="bar-chart" size={64} color={tokens.textTertiary} />
-        <Text style={styles.emptyTitle}>{t("history.emptyTitle")}</Text>
-        <Text style={styles.emptySubtitle}>
-          {urgencyFilter === "all"
-            ? t("history.emptyAll")
-            : t("history.emptyFiltered")}
-        </Text>
-      </View>
-    ),
-    [t, urgencyFilter],
-  );
+    if (hasDateTarget) {
+      return t("history.dashboard.forecast.message", {
+        type: reminderType,
+        due: formatRelativeDate(daysRemaining, localeTag),
+      });
+    }
+
+    if (hasMileageTarget) {
+      return t("history.dashboard.forecast.message", {
+        type: reminderType,
+        due: t("history.dashboard.forecast.mileageRemaining", {
+          mileage: formatNumber(Math.abs(mileageRemaining), localeTag),
+          qualifier:
+            mileageRemaining >= 0
+              ? t("history.dashboard.forecast.mileageQualifierRemaining")
+              : t("history.dashboard.forecast.mileageQualifierOverdue"),
+        }),
+      });
+    }
+
+    return t("history.dashboard.forecast.noTargetMessage", {
+      type: reminderType,
+    });
+  }, [activeReminder, localeTag, selectedCar?.currentMileage, t]);
+
+  const isLoading = carsQuery.isLoading
+    || (!!selectedCarId && analysisQuery.isLoading && analysisQuery.data === undefined);
+
+  const handleOpenPlanner = useCallback(() => {
+    if (!selectedCarId) {
+      router.push("/(tabs)/search");
+      return;
+    }
+
+    router.push({
+      pathname: "/maintenance-planner",
+      params: {
+        carId: selectedCarId,
+        ...(activeReminder?.id ? { reminderId: activeReminder.id } : {}),
+      },
+    });
+  }, [activeReminder?.id, router, selectedCarId]);
+
+  const handleStartScan = useCallback(() => {
+    router.push("/(tabs)");
+  }, [router]);
 
   if (!isLoggedIn) {
     return (
       <LoginRequired
-        pageTitle={t("history.title")}
+        pageTitle={t("history.dashboard.pageTitle")}
         title={t("history.loginRequiredTitle")}
         description={t("history.loginRequiredDescription")}
       />
@@ -402,39 +541,199 @@ export default function InsightsScreen() {
     <View style={styles.screen}>
       <HomeHeader />
 
-      {isLoading && data === undefined ? (
+      {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={Colors.secondary} />
         </View>
       ) : (
-        <LegendList
-          data={filtered}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          estimatedItemSize={120}
-          recycleItems
-          refreshing={isLoading}
-          onRefresh={refetch}
-          contentContainerStyle={styles.listContent}
-          style={styles.listView}
-          ListHeaderComponent={listHeader}
-          ListEmptyComponent={emptyState}
-          ItemSeparatorComponent={ListSeparator}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+        <>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={[
+              styles.contentContainer,
+              { paddingBottom: insets.bottom + 190 },
+            ]}
+            showsVerticalScrollIndicator={false}
+            refreshControl={refreshControl}
+          >
+            <Text style={styles.pageTitle}>{t("history.dashboard.pageTitle")}</Text>
 
-      <AnalysisDetailModal
-        item={selected}
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      />
+            {cars.length > 0 ? (
+              <>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.vehicleSelectorContent}
+                  style={styles.vehicleSelector}
+                >
+                  {cars.map((car) => (
+                    <VehicleChip
+                      key={car.id}
+                      car={car}
+                      isSelected={car.id === selectedCarId}
+                      onPress={() => setSelectedCarId(car.id)}
+                    />
+                  ))}
+                </ScrollView>
+
+                <View style={styles.segmentedControl}>
+                  {PERIODS.map((item) => {
+                    const isActive = item === period;
+
+                    return (
+                      <TouchableOpacity
+                        key={item}
+                        activeOpacity={0.85}
+                        onPress={() => setPeriod(item)}
+                        style={[styles.segmentButton, isActive && styles.segmentButtonActive]}
+                      >
+                        <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
+                          {t(`history.dashboard.periods.${item}`)}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.card}>
+                  <View style={styles.forecastHeader}>
+                    <View style={styles.forecastLabelRow}>
+                      <MaterialIcons name="auto-awesome" size={20} color="#1FC7FF" />
+                      <Text style={styles.forecastLabel}>{t("history.dashboard.forecast.label")}</Text>
+                    </View>
+                    {activeReminder ? (
+                      <View style={styles.forecastTypeBadge}>
+                        <MaterialIcons
+                          name={
+                            activeReminder.type === CarReminderTypeEnum.OIL_CHANGE
+                              ? "opacity"
+                              : activeReminder.type === CarReminderTypeEnum.INSPECTION
+                                ? "fact-check"
+                                : "build"
+                          }
+                          size={14}
+                          color={Colors.secondary}
+                        />
+                        <Text style={styles.forecastTypeText}>
+                          {t(`history.dashboard.reminderTypes.${activeReminder.type}`)}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  <Text style={styles.forecastTitle}>{forecastMessage}</Text>
+
+                  <View style={styles.forecastMetaBlock}>
+                    <Text style={styles.forecastMetaText}>
+                      {t("history.dashboard.forecast.lastScan")}: {latestScan ? formatAbsoluteDate(latestScan.createdAt, localeTag) : t("history.dashboard.forecast.noScans")}
+                    </Text>
+                    <Text style={styles.forecastMetaText}>
+                      {t("history.dashboard.forecast.currentMileage")}: {selectedCar?.currentMileage != null ? `${formatNumber(selectedCar.currentMileage, localeTag)} km` : t("history.dashboard.forecast.noMileage")}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity style={styles.forecastButton} activeOpacity={0.9} onPress={handleOpenPlanner}>
+                    <MaterialIcons name="calendar-month" size={18} color={tokens.textInverse} />
+                    <Text style={styles.forecastButtonText}>{t("history.dashboard.forecast.cta")}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.card}>
+                  <View style={styles.cardHeaderRow}>
+                    <Text style={styles.cardTitle}>{t("history.dashboard.activity.title")}</Text>
+                    <View style={styles.statusBadge}>
+                      <View style={styles.statusBadgeDot} />
+                      <Text style={styles.statusBadgeText}>
+                        {periodLogs.length > 0
+                          ? t("history.dashboard.activity.active")
+                          : t("history.dashboard.activity.idle")}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.chartArea}>
+                    {activityBuckets.map((bucket) => (
+                      <View key={bucket.key} style={styles.chartColumn}>
+                        <View style={styles.chartTrack}>
+                          <View
+                            style={[
+                              styles.chartFill,
+                              {
+                                height: `${Math.max((bucket.count / chartMax) * 100, bucket.count > 0 ? 10 : 0)}%`,
+                                opacity: bucket.count > 0 ? 1 : 0.22,
+                              },
+                            ]}
+                          />
+                        </View>
+                        <Text style={styles.chartLabel}>{bucket.label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>{t("history.dashboard.findings.title")}</Text>
+                  {findings.some((item) => item.count > 0) ? (
+                    <View style={styles.findingsList}>
+                      {findings.map((finding) => (
+                        <View key={finding.key} style={styles.findingRow}>
+                          <View style={styles.findingHeader}>
+                            <Text style={styles.findingLabel}>{finding.label}</Text>
+                            <Text style={styles.findingValue}>{finding.percentage}%</Text>
+                          </View>
+                          <View style={styles.findingTrack}>
+                            <View
+                              style={[
+                                styles.findingFill,
+                                { width: `${Math.max(finding.percentage, finding.count > 0 ? 8 : 0)}%` },
+                              ]}
+                            />
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.emptyCardText}>{t("history.dashboard.findings.empty")}</Text>
+                  )}
+                </View>
+
+                {logs.length === 0 ? (
+                  <View style={[styles.card, styles.helperCard]}>
+                    <Text style={styles.helperTitle}>{t("history.dashboard.emptyTitle")}</Text>
+                    <Text style={styles.helperDescription}>{t("history.dashboard.emptyDescription")}</Text>
+                  </View>
+                ) : null}
+              </>
+            ) : (
+              <View style={[styles.card, styles.helperCard]}>
+                <Text style={styles.helperTitle}>{t("history.dashboard.noVehicleTitle")}</Text>
+                <Text style={styles.helperDescription}>{t("history.dashboard.noVehicleDescription")}</Text>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  style={styles.secondaryButton}
+                  onPress={() => router.push("/(tabs)/search")}
+                >
+                  <Text style={styles.secondaryButtonText}>{t("history.dashboard.goToGarage")}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
+
+          <View
+            style={[
+              styles.floatingActionWrap,
+              { bottom: Math.max(insets.bottom + 94, 108) },
+            ]}
+          >
+            <TouchableOpacity style={styles.floatingActionButton} activeOpacity={0.92} onPress={handleStartScan}>
+              <MaterialIcons name="document-scanner" size={24} color={tokens.textInverse} />
+              <Text style={styles.floatingActionText}>{t("history.dashboard.scanCta")}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
-}
-
-function ListSeparator() {
-  return <View style={styles.listSeparator} />;
 }
 
 const styles = StyleSheet.create({
@@ -442,279 +741,306 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.bgBase,
   },
-  // ── Stats ──
-  statsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 20,
-  },
-  statCard: {
+  scrollView: {
     flex: 1,
-    backgroundColor: tokens.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 12,
-    alignItems: "center",
-    gap: 4,
-    ...ambientShadow,
   },
-  statIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 2,
-  },
-  statValue: {
-    fontFamily: FontFamily.extraBold,
-    fontSize: 22,
-    color: tokens.textPrimary,
-  },
-  statLabel: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 10,
-    color: tokens.textTertiary,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  sectionHeader: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 22,
-    lineHeight: 28,
-    letterSpacing: -0.22,
-    color: tokens.textPrimary,
-    marginBottom: 10,
-  },
-  // ── Filters ──
-  filterRow: {
-    marginBottom: 14,
-  },
-  filterContent: {
-    gap: 8,
-    paddingVertical: 2,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 9999,
-    backgroundColor: tokens.surfaceContainerLowest,
-    borderWidth: 1,
-    borderColor: tokens.borderSubtle,
-  },
-  filterChipActive: {
-    backgroundColor: tokens.primary,
-    borderColor: tokens.primary,
-  },
-  filterChipText: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 13,
-    color: tokens.textSecondary,
-  },
-  filterChipTextActive: {
-    color: "#FFFFFF",
+  contentContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 18,
+    gap: 18,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    paddingTop: 80,
+    justifyContent: "center",
   },
-  listView: {
-    flex: 1,
+  pageTitle: {
+    fontFamily: FontFamily.extraBold,
+    fontSize: 24,
+    lineHeight: 32,
+    letterSpacing: -0.6,
+    color: tokens.textPrimary,
   },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 100,
+  vehicleSelector: {
+    marginTop: -2,
   },
-  listSeparator: {
-    height: 10,
-  },
-  card: {
-    backgroundColor: tokens.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 16,
+  vehicleSelectorContent: {
     gap: 10,
+    paddingRight: 24,
+  },
+  vehicleChip: {
+    minWidth: 128,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: tokens.borderSubtle,
     ...ambientShadow,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  vehicleChipActive: {
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
   },
-  cardTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-    marginRight: 8,
-  },
-  iconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: `${Colors.secondaryContainer}18`,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardTitle: {
+  vehicleChipText: {
     fontFamily: FontFamily.semiBold,
-    fontSize: 16,
+    fontSize: 15,
     color: tokens.textPrimary,
-    flex: 1,
   },
-  urgencyBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+  vehicleChipTextActive: {
+    color: tokens.textInverse,
   },
-  urgencyText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 12,
-  },
-  summary: {
-    fontFamily: FontFamily.regular,
-    fontSize: 13,
-    color: tokens.textSecondary,
-    lineHeight: 18,
-  },
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  metaRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  metaText: {
+  vehicleChipMeta: {
+    marginTop: 2,
     fontFamily: FontFamily.medium,
     fontSize: 12,
     color: tokens.textTertiary,
   },
-  creditChip: {
+  vehicleChipMetaActive: {
+    color: "rgba(255,255,255,0.75)",
+  },
+  segmentedControl: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    backgroundColor: tokens.warningBg,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 6,
+    backgroundColor: "#F0EEEF",
+    borderRadius: 9999,
+    padding: 4,
+    ...ambientShadow,
   },
-  creditText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 11,
-    color: tokens.warningText,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    paddingTop: 80,
-    gap: 8,
-  },
-  emptyTitle: {
-    fontFamily: FontFamily.bold,
-    fontSize: 22,
-    color: tokens.textPrimary,
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontFamily: FontFamily.regular,
-    fontSize: 16,
-    lineHeight: 24,
-    color: tokens.textSecondary,
-    textAlign: "center",
-    paddingHorizontal: 32,
-  },
-  modalContainer: {
+  segmentButton: {
     flex: 1,
-    backgroundColor: tokens.bgBase,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
+    paddingVertical: 14,
   },
-  modalHeader: {
+  segmentButtonActive: {
+    backgroundColor: tokens.surfaceContainerLowest,
+  },
+  segmentText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 16,
+    color: tokens.textSecondary,
+  },
+  segmentTextActive: {
+    color: tokens.textPrimary,
+  },
+  card: {
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 28,
+    padding: 24,
+    gap: 18,
+    ...ambientShadow,
+  },
+  cardHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.borderSubtle,
-    backgroundColor: tokens.bgSurface,
+    gap: 12,
   },
-  modalTitle: {
+  cardTitle: {
     flex: 1,
-    marginRight: 12,
     fontFamily: FontFamily.bold,
     fontSize: 22,
     lineHeight: 28,
     color: tokens.textPrimary,
   },
-  modalBody: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  modalFooterSpacing: {
-    height: 40,
-  },
-  errorBox: {
+  forecastHeader: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  forecastLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
-    backgroundColor: tokens.dangerBg,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
   },
-  errorText: {
-    flex: 1,
-    fontFamily: FontFamily.regular,
-    color: tokens.dangerText,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  section: {
-    marginBottom: 16,
-    gap: 6,
-  },
-  sectionTitle: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 14,
-    color: tokens.textPrimary,
-    letterSpacing: 0.7,
-  },
-  sectionContent: {
-    fontFamily: FontFamily.regular,
-    fontSize: 16,
-    lineHeight: 24,
-    color: tokens.textSecondary,
-  },
-  warningItem: {
-    backgroundColor: tokens.surfaceContainerLowest,
-    borderRadius: 12,
-    padding: 12,
-    ...ambientShadow,
-    gap: 4,
-  },
-  warningName: {
+  forecastLabel: {
     fontFamily: FontFamily.bold,
     fontSize: 14,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: "#1FC7FF",
+  },
+  forecastTypeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: tokens.infoBg,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 9999,
+  },
+  forecastTypeText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 12,
+    color: Colors.secondary,
+  },
+  forecastTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 18,
+    lineHeight: 30,
     color: tokens.textPrimary,
   },
-  warningDesc: {
-    fontFamily: FontFamily.regular,
+  forecastMetaBlock: {
+    gap: 6,
+  },
+  forecastMetaText: {
+    fontFamily: FontFamily.medium,
     fontSize: 14,
     lineHeight: 20,
     color: tokens.textSecondary,
   },
-  warningRec: {
+  forecastButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: Colors.primaryDark,
+    borderRadius: 9999,
+    paddingVertical: 18,
+  },
+  forecastButtonText: {
+    fontFamily: FontFamily.bold,
+    fontSize: 18,
+    color: tokens.textInverse,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    backgroundColor: tokens.infoBg,
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  statusBadgeDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#1FC7FF",
+  },
+  statusBadgeText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    color: "#1FC7FF",
+  },
+  chartArea: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 12,
+    minHeight: 220,
+  },
+  chartColumn: {
+    flex: 1,
+    alignItems: "center",
+    gap: 12,
+  },
+  chartTrack: {
+    width: "100%",
+    height: 170,
+    justifyContent: "flex-end",
+    borderRadius: 18,
+    backgroundColor: tokens.bgSubtle,
+    overflow: "hidden",
+  },
+  chartFill: {
+    width: "100%",
+    backgroundColor: Colors.secondary,
+    borderRadius: 18,
+    minHeight: 4,
+  },
+  chartLabel: {
     fontFamily: FontFamily.medium,
-    fontSize: 12,
-    lineHeight: 18,
-    color: tokens.secondary,
+    fontSize: 14,
+    color: tokens.textSecondary,
+  },
+  findingsList: {
+    gap: 18,
+  },
+  findingRow: {
+    gap: 8,
+  },
+  findingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  findingLabel: {
+    flex: 1,
+    fontFamily: FontFamily.medium,
+    fontSize: 16,
+    color: tokens.textPrimary,
+  },
+  findingValue: {
+    fontFamily: FontFamily.bold,
+    fontSize: 16,
+    color: tokens.textPrimary,
+  },
+  findingTrack: {
+    height: 10,
+    borderRadius: 9999,
+    backgroundColor: tokens.bgSubtle,
+    overflow: "hidden",
+  },
+  findingFill: {
+    height: "100%",
+    borderRadius: 9999,
+    backgroundColor: Colors.primaryDark,
+  },
+  emptyCardText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 15,
+    lineHeight: 22,
+    color: tokens.textSecondary,
+  },
+  helperCard: {
+    alignItems: "flex-start",
+  },
+  helperTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: 20,
+    lineHeight: 26,
+    color: tokens.textPrimary,
+  },
+  helperDescription: {
+    fontFamily: FontFamily.regular,
+    fontSize: 15,
+    lineHeight: 24,
+    color: tokens.textSecondary,
+  },
+  secondaryButton: {
+    marginTop: 4,
+    backgroundColor: tokens.infoBg,
+    borderRadius: 9999,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  secondaryButtonText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 15,
+    color: Colors.secondary,
+  },
+  floatingActionWrap: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+  },
+  floatingActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    borderRadius: 9999,
+    backgroundColor: Colors.primaryDark,
+    paddingVertical: 20,
+    ...ambientShadow,
+  },
+  floatingActionText: {
+    fontFamily: FontFamily.bold,
+    fontSize: 18,
+    color: tokens.textInverse,
   },
 });

@@ -12,14 +12,19 @@ import {
   useDeleteCar,
 } from "@/query-hooks/useCars";
 import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import { Href, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -27,22 +32,34 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const FUEL_LABELS: Record<FuelTypeEnum, string> = {
-  [FuelTypeEnum.GASOLINE]: "Benzin",
-  [FuelTypeEnum.DIESEL]: "Dizel",
-  [FuelTypeEnum.LPG]: "LPG",
-  [FuelTypeEnum.ELECTRIC]: "Elektrik",
-  [FuelTypeEnum.HYBRID]: "Hibrit",
+const FUEL_LABEL_KEYS: Record<FuelTypeEnum, string> = {
+  [FuelTypeEnum.GASOLINE]: "carDetail.fuel.gasoline",
+  [FuelTypeEnum.DIESEL]: "carDetail.fuel.diesel",
+  [FuelTypeEnum.LPG]: "carDetail.fuel.lpg",
+  [FuelTypeEnum.ELECTRIC]: "carDetail.fuel.electric",
+  [FuelTypeEnum.HYBRID]: "carDetail.fuel.hybrid",
 };
 
-const TRANSMISSION_LABELS: Record<TransmissionEnum, string> = {
-  [TransmissionEnum.MANUAL]: "Manuel",
-  [TransmissionEnum.AUTOMATIC]: "Otomatik",
+const TRANSMISSION_LABEL_KEYS: Record<TransmissionEnum, string> = {
+  [TransmissionEnum.MANUAL]: "carDetail.transmission.manual",
+  [TransmissionEnum.AUTOMATIC]: "carDetail.transmission.automatic",
 };
 
 const FUEL_OPTIONS = Object.values(FuelTypeEnum);
 const TRANSMISSION_OPTIONS = Object.values(TransmissionEnum);
+
+function getFuelLabel(fuelType: FuelTypeEnum, t: (key: string) => string) {
+  return t(FUEL_LABEL_KEYS[fuelType]);
+}
+
+function getTransmissionLabel(
+  transmission: TransmissionEnum,
+  t: (key: string) => string,
+) {
+  return t(TRANSMISSION_LABEL_KEYS[transmission]);
+}
 
 function urgencyIcon(urgency?: AiUrgency): { name: keyof typeof MaterialIcons.glyphMap; bg: string; color: string } {
   switch (urgency) {
@@ -110,6 +127,8 @@ const CarHeroCard = React.memo(function CarHeroCard({
   onPress: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <TouchableOpacity
       style={styles.heroCard}
@@ -123,7 +142,7 @@ const CarHeroCard = React.memo(function CarHeroCard({
               {item.year} {item.brand} {item.model}
             </Text>
             <Text style={styles.heroSubtitle}>
-              {item.fuelType ? FUEL_LABELS[item.fuelType] : ""}{item.transmission ? ` • ${TRANSMISSION_LABELS[item.transmission]}` : ""}
+              {item.fuelType ? getFuelLabel(item.fuelType, t) : ""}{item.transmission ? ` • ${getTransmissionLabel(item.transmission, t)}` : ""}
               {item.engineCC ? ` • ${item.engineCC} cc` : ""}
             </Text>
           </View>
@@ -148,17 +167,18 @@ const CarHeroCard = React.memo(function CarHeroCard({
   );
 });
 
-const AddCarModal = React.memo(function AddCarModal({
-  visible,
+const AddCarComposer = React.memo(function AddCarComposer({
   onClose,
   onSubmit,
   isLoading,
+  bottomInset,
 }: {
-  visible: boolean;
   onClose: () => void;
   onSubmit: (data: CreateCarRequest) => void;
   isLoading: boolean;
+  bottomInset: number;
 }) {
+  const { t } = useTranslation();
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
@@ -168,9 +188,59 @@ const AddCarModal = React.memo(function AddCarModal({
   >();
   const [engineCC, setEngineCC] = useState("");
   const [currentMileage, setCurrentMileage] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [licensePlate, setLicensePlate] = useState("");
+  const [color, setColor] = useState("");
+  const [notes, setNotes] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState<string | undefined>();
+  const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
+
+  const parsedYear = parseInt(year, 10);
+  const submitDisabled =
+    isLoading || !brand.trim() || !model.trim() || Number.isNaN(parsedYear);
+
+  const previewTitle = useMemo(() => {
+    const title = [brand.trim(), model.trim()].filter(Boolean).join(" ");
+    if (!title && !year.trim()) {
+      return t("garageScreen.addCar.previewFallback");
+    }
+
+    return [year.trim(), title].filter(Boolean).join(" ");
+  }, [brand, model, t, year]);
+
+  const normalizedLicensePlate = useMemo(
+    () => licensePlate.trim().replace(/\s+/g, " ").toUpperCase(),
+    [licensePlate],
+  );
+
+  const purchaseDateValue = useMemo(() => {
+    if (!purchaseDate) {
+      return new Date();
+    }
+
+    return new Date(purchaseDate);
+  }, [purchaseDate]);
+
+  const formattedPurchaseDate = purchaseDate
+    ? dayjs(purchaseDate).format("DD.MM.YYYY")
+    : t("carDetail.purchaseDatePlaceholder");
+
+  const handlePurchaseDateChange = useCallback(
+    (event: DateTimePickerEvent, selectedDate?: Date) => {
+      if (Platform.OS === "android") {
+        setShowPurchaseDatePicker(false);
+      }
+
+      if (event.type === "dismissed" || !selectedDate) {
+        return;
+      }
+
+      setPurchaseDate(dayjs(selectedDate).format("YYYY-MM-DD"));
+    },
+    [],
+  );
 
   const handleSubmit = useCallback(() => {
-    const parsedYear = parseInt(year, 10);
     if (!brand.trim() || !model.trim() || Number.isNaN(parsedYear)) {
       return;
     }
@@ -183,78 +253,217 @@ const AddCarModal = React.memo(function AddCarModal({
       transmission,
       engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
       currentMileage: currentMileage ? parseInt(currentMileage, 10) : undefined,
+      nickname: nickname.trim() || undefined,
+      licensePlate: normalizedLicensePlate || undefined,
+      color: color.trim() || undefined,
+      notes: notes.trim() || undefined,
+      purchaseDate,
     });
   }, [
     brand,
+    color,
     currentMileage,
     engineCC,
     fuelType,
     model,
+    nickname,
+    normalizedLicensePlate,
+    notes,
     onSubmit,
+    parsedYear,
+    purchaseDate,
     transmission,
     year,
   ]);
 
-  const reset = useCallback(() => {
-    setBrand("");
-    setModel("");
-    setYear("");
-    setFuelType(undefined);
-    setTransmission(undefined);
-    setEngineCC("");
-    setCurrentMileage("");
-  }, []);
-
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-      onDismiss={reset}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Araç Ekle</Text>
-          <TouchableOpacity onPress={onClose}>
-            <MaterialIcons name="close" size={24} color={tokens.textPrimary} />
-          </TouchableOpacity>
+    <KeyboardAvoidingView behavior="padding" style={styles.addComposerContainer}>
+      <View style={styles.addComposerHeader}>
+        <TouchableOpacity
+          onPress={onClose}
+          style={styles.addComposerHeaderButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <MaterialIcons name="close" size={22} color={tokens.textPrimary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={onClose}
+          style={styles.addComposerHeaderTextButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Text style={styles.addComposerHeaderText}>{t("carDetail.cancel")}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        style={styles.addComposerScroll}
+        contentContainerStyle={[
+          styles.addComposerContent,
+          { paddingBottom: bottomInset + 120 },
+        ]}
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.addComposerTitle}>{t("garageScreen.addCar.title")}</Text>
+        <Text style={styles.addComposerSubtitle}>
+          {t("garageScreen.addCar.subtitle")}
+        </Text>
+
+        <View style={styles.previewCard}>
+          <Text style={styles.previewLabel}>{t("garageScreen.addCar.previewTitle")}</Text>
+          <View style={styles.previewShell}>
+            <View style={styles.previewOrbPrimary} />
+            <View style={styles.previewOrbSecondary} />
+            <View style={styles.previewTopRow}>
+              <Text style={styles.previewEyebrow} numberOfLines={1}>
+                {nickname.trim() || t("garageScreen.addCar.previewFallback")}
+              </Text>
+              {purchaseDate ? (
+                <View style={styles.previewBadge}>
+                  <MaterialIcons name="calendar-today" size={12} color="#D7E5FF" />
+                  <Text style={styles.previewBadgeText}>{formattedPurchaseDate}</Text>
+                </View>
+              ) : null}
+            </View>
+            <Text style={styles.previewTitleText}>{previewTitle}</Text>
+            <Text style={styles.previewDescription}>
+              {t("garageScreen.addCar.previewDescription")}
+            </Text>
+            <View style={styles.previewMetaRow}>
+              {normalizedLicensePlate ? (
+                <View style={styles.previewMetaChip}>
+                  <Text style={styles.previewMetaChipText}>{normalizedLicensePlate}</Text>
+                </View>
+              ) : null}
+              {fuelType ? (
+                <View style={styles.previewMetaChip}>
+                  <Text style={styles.previewMetaChipText}>{getFuelLabel(fuelType, t)}</Text>
+                </View>
+              ) : null}
+              {transmission ? (
+                <View style={styles.previewMetaChip}>
+                  <Text style={styles.previewMetaChipText}>
+                    {getTransmissionLabel(transmission, t)}
+                  </Text>
+                </View>
+              ) : null}
+              {color.trim() ? (
+                <View style={styles.previewMetaChip}>
+                  <Text style={styles.previewMetaChipText}>{color.trim()}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
         </View>
 
-        <ScrollView
-          style={styles.modalBody}
-          keyboardDismissMode="on-drag"
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.inputLabel}>Marka *</Text>
+        <View style={styles.formCard}>
+          <Text style={styles.formCardTitle}>{t("garageScreen.addCar.primarySectionTitle")}</Text>
+
+          <Text style={styles.inputLabel}>{t("carDetail.nicknameLabel")}</Text>
+          <TextInput
+            style={styles.input}
+            value={nickname}
+            onChangeText={setNickname}
+            placeholder={t("carDetail.nicknamePlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+          />
+
+          <Text style={styles.inputLabel}>{t("carDetail.brandLabel")}</Text>
           <TextInput
             style={styles.input}
             value={brand}
             onChangeText={setBrand}
-            placeholder="ör. Toyota"
+            placeholder={t("carDetail.brandPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
           />
 
-          <Text style={styles.inputLabel}>Model *</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.modelLabel")}</Text>
           <TextInput
             style={styles.input}
             value={model}
             onChangeText={setModel}
-            placeholder="ör. Corolla"
+            placeholder={t("carDetail.modelPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
           />
 
-          <Text style={styles.inputLabel}>Yıl *</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
           <TextInput
             style={styles.input}
             value={year}
             onChangeText={setYear}
-            placeholder="ör. 2020"
+            placeholder={t("carDetail.yearPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
+        </View>
 
-          <Text style={styles.inputLabel}>Yakıt Tipi</Text>
+        <View style={styles.formCard}>
+          <Text style={styles.formCardTitle}>{t("garageScreen.addCar.secondarySectionTitle")}</Text>
+
+          <Text style={styles.inputLabel}>{t("carDetail.licensePlateLabel")}</Text>
+          <TextInput
+            style={styles.input}
+            value={licensePlate}
+            onChangeText={setLicensePlate}
+            placeholder={t("carDetail.licensePlatePlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+            autoCapitalize="characters"
+          />
+
+          <Text style={styles.inputLabel}>{t("carDetail.colorLabel")}</Text>
+          <TextInput
+            style={styles.input}
+            value={color}
+            onChangeText={setColor}
+            placeholder={t("carDetail.colorPlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+          />
+
+          <Text style={styles.inputLabel}>{t("carDetail.purchaseDateLabel")}</Text>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowPurchaseDatePicker((current) => !current)}
+            activeOpacity={0.85}
+          >
+            <Text
+              style={[
+                styles.dateInputText,
+                !purchaseDate && styles.dateInputTextPlaceholder,
+              ]}
+            >
+              {formattedPurchaseDate}
+            </Text>
+            <MaterialIcons name="calendar-today" size={18} color={tokens.textSecondary} />
+          </TouchableOpacity>
+
+          {purchaseDate ? (
+            <TouchableOpacity
+              style={styles.dateClearButton}
+              onPress={() => {
+                setPurchaseDate(undefined);
+                setShowPurchaseDatePicker(false);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.dateClearButtonText}>
+                {t("carDetail.purchaseDateClear")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {showPurchaseDatePicker ? (
+            <View style={styles.datePickerWrapper}>
+              <DateTimePicker
+                value={purchaseDateValue}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                maximumDate={new Date()}
+                onChange={handlePurchaseDateChange}
+              />
+            </View>
+          ) : null}
+
+          <Text style={styles.inputLabel}>{t("carDetail.fuelTypeLabel")}</Text>
           <View style={styles.chipRow}>
             {FUEL_OPTIONS.map((fuelValue) => (
               <TouchableOpacity
@@ -273,13 +482,13 @@ const AddCarModal = React.memo(function AddCarModal({
                     fuelType === fuelValue && styles.selectChipTextActive,
                   ]}
                 >
-                  {FUEL_LABELS[fuelValue]}
+                  {getFuelLabel(fuelValue, t)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>Vites</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.transmissionLabel")}</Text>
           <View style={styles.chipRow}>
             {TRANSMISSION_OPTIONS.map((transmissionValue) => (
               <TouchableOpacity
@@ -290,7 +499,9 @@ const AddCarModal = React.memo(function AddCarModal({
                 ]}
                 onPress={() =>
                   setTransmission(
-                    transmission === transmissionValue ? undefined : transmissionValue,
+                    transmission === transmissionValue
+                      ? undefined
+                      : transmissionValue,
                   )
                 }
               >
@@ -301,64 +512,97 @@ const AddCarModal = React.memo(function AddCarModal({
                     styles.selectChipTextActive,
                   ]}
                 >
-                  {TRANSMISSION_LABELS[transmissionValue]}
+                  {getTransmissionLabel(transmissionValue, t)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>Motor Hacmi (cc)</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.engineCcLabel")}</Text>
           <TextInput
             style={styles.input}
             value={engineCC}
             onChangeText={setEngineCC}
-            placeholder="ör. 1600"
+            placeholder={t("carDetail.engineCcPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
 
-          <Text style={styles.inputLabel}>Kilometre (km)</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.mileageLabel")}</Text>
           <TextInput
             style={styles.input}
             value={currentMileage}
             onChangeText={setCurrentMileage}
-            placeholder="ör. 128500"
+            placeholder={t("carDetail.mileagePlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
             keyboardType="number-pad"
           />
-        </ScrollView>
-
-        <View style={styles.modalFooter}>
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              (!brand.trim() || !model.trim() || !year.trim()) &&
-              styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={
-              isLoading || !brand.trim() || !model.trim() || !year.trim()
-            }
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.submitButtonText}>Kaydet</Text>
-            )}
-          </TouchableOpacity>
         </View>
+
+        <View style={styles.formCard}>
+          <Text style={styles.formCardTitle}>{t("garageScreen.addCar.notesSectionTitle")}</Text>
+          <Text style={styles.inputLabel}>{t("carDetail.notesLabel")}</Text>
+          <TextInput
+            style={[styles.input, styles.notesInput]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder={t("carDetail.notesPlaceholder")}
+            placeholderTextColor={tokens.textPlaceholder}
+            multiline
+            textAlignVertical="top"
+          />
+        </View>
+
+        <View style={styles.formCard}>
+          <Text style={styles.formCardTitle}>{t("garageScreen.addCar.photoSectionTitle")}</Text>
+          <View style={styles.photoPlaceholderCard}>
+            <View style={styles.photoPlaceholderIconWrap}>
+              <MaterialIcons name="photo-library" size={26} color={Colors.primary} />
+            </View>
+            <Text style={styles.photoPlaceholderTitle}>
+              {t("garageScreen.addCar.photoPlaceholderTitle")}
+            </Text>
+            <Text style={styles.photoPlaceholderDescription}>
+              {t("garageScreen.addCar.photoPlaceholderDescription")}
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      <View
+        style={[
+          styles.addComposerFooter,
+          { paddingBottom: Math.max(bottomInset, 16) },
+        ]}
+      >
+        <TouchableOpacity
+          style={[
+            styles.addComposerButton,
+            submitDisabled && styles.submitButtonDisabled,
+          ]}
+          onPress={handleSubmit}
+          disabled={submitDisabled}
+          activeOpacity={0.85}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.submitButtonText}>{t("garageScreen.addCar.cta")}</Text>
+          )}
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </KeyboardAvoidingView>
   );
 });
 
 export default function GarageScreen() {
+  const { t } = useTranslation();
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
   const { notify } = useNotification();
   const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
+  const [isAddMode, setIsAddMode] = useState(false);
 
   const { data, isLoading } = useGetCars(undefined, { enabled: isLoggedIn });
   const analysisLogsQuery = useGetAnalysisLogs(undefined, {
@@ -371,12 +615,12 @@ export default function GarageScreen() {
   const primaryCar = cars[0] ?? null;
   const scanLogs = useMemo(() => (analysisLogsQuery.data?.results ?? []).slice(0, 4), [analysisLogsQuery.data?.results]);
 
-  const openModal = useCallback(() => {
-    setModalVisible(true);
+  const openAddMode = useCallback(() => {
+    setIsAddMode(true);
   }, []);
 
-  const closeModal = useCallback(() => {
-    setModalVisible(false);
+  const closeAddMode = useCallback(() => {
+    setIsAddMode(false);
   }, []);
 
   const handleOpenCar = useCallback(
@@ -390,37 +634,37 @@ export default function GarageScreen() {
     (payload: Parameters<typeof createCar.mutate>[0]) => {
       createCar.mutate(payload, {
         onSuccess: () => {
-          setModalVisible(false);
-          notify({ type: "success", title: "Araç başarıyla eklendi" });
+          setIsAddMode(false);
+          notify({ type: "success", title: t("garageScreen.addCar.success") });
         },
         onError: (error) => {
           notify({
             type: "error",
-            title: "Araç eklenemedi",
+            title: t("garageScreen.addCar.error"),
             message: error instanceof Error ? error.message : undefined,
           });
         },
       });
     },
-    [createCar, notify],
+    [createCar, notify, t],
   );
 
   const handleDelete = useCallback(
     (id: string) => {
-      Alert.alert("Aracı Sil", "Bu aracı silmek istediğinize emin misiniz?", [
-        { text: "İptal", style: "cancel" },
+      Alert.alert(t("garageScreen.deleteTitle"), t("garageScreen.deleteMessage"), [
+        { text: t("carDetail.cancel"), style: "cancel" },
         {
-          text: "Sil",
+          text: t("garageScreen.deleteAction"),
           style: "destructive",
           onPress: () => {
             removeCar.mutate(id, {
               onSuccess: () => {
-                notify({ type: "success", title: "Araç silindi" });
+                notify({ type: "success", title: t("garageScreen.deleteSuccess") });
               },
               onError: (error) => {
                 notify({
                   type: "error",
-                  title: "Araç silinemedi",
+                  title: t("garageScreen.deleteError"),
                   message: error instanceof Error ? error.message : undefined,
                 });
               },
@@ -429,7 +673,7 @@ export default function GarageScreen() {
         },
       ]);
     },
-    [notify, removeCar],
+    [notify, removeCar, t],
   );
 
   const handleOpenLog = useCallback((_item: AnalyzeMediaLog) => {
@@ -440,9 +684,9 @@ export default function GarageScreen() {
   if (!isLoggedIn) {
     return (
       <LoginRequired
-        pageTitle="Garajım"
-        title="Araçlarınızı yönetin"
-        description="Araçlarınızı eklemek ve analiz sonuçlarını takip etmek için giriş yapın."
+        pageTitle={t("garageScreen.title")}
+        title={t("garageScreen.loginTitle")}
+        description={t("garageScreen.loginDescription")}
       />
     );
   }
@@ -451,102 +695,103 @@ export default function GarageScreen() {
     <View style={styles.screen}>
       <HomeHeader />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {isLoading && data === undefined ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-          </View>
-        ) : primaryCar ? (
-          <>
-            <CarHeroCard
-              item={primaryCar}
-              onPress={handleOpenCar}
-              onDelete={handleDelete}
-            />
+      {isAddMode ? (
+        <AddCarComposer
+          onClose={closeAddMode}
+          onSubmit={handleCreate}
+          isLoading={createCar.isPending}
+          bottomInset={insets.bottom}
+        />
+      ) : (
+        <>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {isLoading && data === undefined ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+              </View>
+            ) : primaryCar ? (
+              <>
+                <CarHeroCard
+                  item={primaryCar}
+                  onPress={handleOpenCar}
+                  onDelete={handleDelete}
+                />
 
-            {/* Other cars */}
-            {cars.length > 1 ? (
-              <View style={styles.otherCarsSection}>
-                {cars.slice(1).map((car) => (
-                  <TouchableOpacity
-                    key={car.id}
-                    style={styles.otherCarChip}
-                    onPress={() => handleOpenCar(car.id)}
-                    activeOpacity={0.8}
-                  >
-                    <MaterialIcons name="directions-car" size={16} color={Colors.primary} />
-                    <Text style={styles.otherCarText}>
-                      {car.brand} {car.model} ({car.year})
-                    </Text>
+                {cars.length > 1 ? (
+                  <View style={styles.otherCarsSection}>
+                    {cars.slice(1).map((car) => (
+                      <TouchableOpacity
+                        key={car.id}
+                        style={styles.otherCarChip}
+                        onPress={() => handleOpenCar(car.id)}
+                        activeOpacity={0.8}
+                      >
+                        <MaterialIcons name="directions-car" size={16} color={Colors.primary} />
+                        <Text style={styles.otherCarText}>
+                          {car.brand} {car.model} ({car.year})
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : null}
+
+                <View style={styles.scansSectionHeader}>
+                  <Text style={styles.scansSectionTitle}>{t("garageScreen.recentScansTitle")}</Text>
+                  <TouchableOpacity onPress={() => router.push("/insights" as Href)}>
+                    <Text style={styles.scansSeeAll}>{t("garageScreen.seeAll")}</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-            ) : null}
+                </View>
 
-            {/* Past Scans Section */}
-            <View style={styles.scansSectionHeader}>
-              <Text style={styles.scansSectionTitle}>Gecmis Taramalar</Text>
-              <TouchableOpacity onPress={() => router.push("/insights" as Href)}>
-                <Text style={styles.scansSeeAll}>Tumunu Gor</Text>
-              </TouchableOpacity>
-            </View>
-
-            {scanLogs.length > 0 ? (
-              <View style={styles.scansList}>
-                {scanLogs.map((log) => (
-                  <ScanHistoryItem key={log.id} item={log} onPress={handleOpenLog} />
-                ))}
-              </View>
+                {scanLogs.length > 0 ? (
+                  <View style={styles.scansList}>
+                    {scanLogs.map((log) => (
+                      <ScanHistoryItem key={log.id} item={log} onPress={handleOpenLog} />
+                    ))}
+                  </View>
+                ) : (
+                  <View style={styles.noScansBox}>
+                    <Text style={styles.noScansText}>{t("garageScreen.noScans")}</Text>
+                  </View>
+                )}
+              </>
             ) : (
-              <View style={styles.noScansBox}>
-                <Text style={styles.noScansText}>Henuz tarama yapilmadi</Text>
+              <View style={styles.emptyContainer}>
+                <MaterialIcons
+                  name="directions-car"
+                  size={64}
+                  color={tokens.textTertiary}
+                />
+                <Text style={styles.emptyTitle}>{t("garageScreen.emptyTitle")}</Text>
+                <Text style={styles.emptySubtitle}>
+                  {t("garageScreen.emptySubtitle")}
+                </Text>
+                <TouchableOpacity
+                  style={styles.emptyAction}
+                  onPress={openAddMode}
+                  activeOpacity={0.85}
+                >
+                  <MaterialIcons name="add" size={18} color="#FFFFFF" />
+                  <Text style={styles.emptyActionText}>{t("garageScreen.emptyAction")}</Text>
+                </TouchableOpacity>
               </View>
             )}
-          </>
-        ) : (
-          <View style={styles.emptyContainer}>
-            <MaterialIcons
-              name="directions-car"
-              size={64}
-              color={tokens.textTertiary}
-            />
-            <Text style={styles.emptyTitle}>Henüz araç eklemediniz</Text>
-            <Text style={styles.emptySubtitle}>
-              Garajınıza araç ekleyerek analiz sonuçlarını takip edebilirsiniz.
-            </Text>
+          </ScrollView>
+
+          {primaryCar ? (
             <TouchableOpacity
-              style={styles.emptyAction}
-              onPress={openModal}
+              style={[styles.fab, { bottom: Math.max(insets.bottom, 20) }]}
+              onPress={openAddMode}
               activeOpacity={0.85}
             >
-              <MaterialIcons name="add" size={18} color="#FFFFFF" />
-              <Text style={styles.emptyActionText}>Araç Ekle</Text>
+              <MaterialIcons name="add" size={24} color="#FFFFFF" />
             </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* FAB for adding cars */}
-      {primaryCar ? (
-        <TouchableOpacity
-          style={[styles.fab, { bottom: 20 }]}
-          onPress={openModal}
-          activeOpacity={0.85}
-        >
-          <MaterialIcons name="add" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      ) : null}
-
-      <AddCarModal
-        visible={modalVisible}
-        onClose={closeModal}
-        onSubmit={handleCreate}
-        isLoading={createCar.isPending}
-      />
+          ) : null}
+        </>
+      )}
     </View>
   );
 }
@@ -563,6 +808,167 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 100,
+  },
+  addComposerContainer: {
+    flex: 1,
+  },
+  addComposerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  addComposerHeaderButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: tokens.surfaceContainerLow,
+  },
+  addComposerHeaderTextButton: {
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+  },
+  addComposerHeaderText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
+    color: tokens.textSecondary,
+  },
+  addComposerScroll: {
+    flex: 1,
+  },
+  addComposerContent: {
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    gap: 16,
+  },
+  addComposerTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.8,
+    color: tokens.textPrimary,
+  },
+  addComposerSubtitle: {
+    fontFamily: FontFamily.regular,
+    fontSize: 15,
+    lineHeight: 23,
+    color: tokens.textSecondary,
+    marginTop: -6,
+  },
+  previewCard: {
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 28,
+    padding: 18,
+    ...ambientShadow,
+  },
+  previewLabel: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 13,
+    color: tokens.textSecondary,
+    marginBottom: 12,
+  },
+  previewShell: {
+    overflow: "hidden",
+    borderRadius: 24,
+    padding: 20,
+    minHeight: 190,
+    backgroundColor: "#0F2F63",
+    justifyContent: "space-between",
+  },
+  previewOrbPrimary: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "rgba(101, 170, 255, 0.18)",
+    top: -40,
+    right: -30,
+  },
+  previewOrbSecondary: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    bottom: -10,
+    left: -10,
+  },
+  previewTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  previewEyebrow: {
+    flex: 1,
+    fontFamily: FontFamily.semiBold,
+    fontSize: 13,
+    color: "rgba(255,255,255,0.72)",
+    letterSpacing: 0.5,
+  },
+  previewBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  previewBadgeText: {
+    fontFamily: FontFamily.medium,
+    fontSize: 11,
+    color: "#F2F7FF",
+  },
+  previewTitleText: {
+    fontFamily: FontFamily.bold,
+    fontSize: 27,
+    lineHeight: 32,
+    letterSpacing: -0.7,
+    color: "#FFFFFF",
+    marginTop: 18,
+  },
+  previewDescription: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    lineHeight: 20,
+    color: "rgba(255,255,255,0.72)",
+    marginTop: 6,
+    maxWidth: "78%",
+  },
+  previewMetaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 18,
+  },
+  previewMetaChip: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "rgba(255,255,255,0.14)",
+  },
+  previewMetaChipText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 11,
+    color: "#FFFFFF",
+  },
+  formCard: {
+    backgroundColor: tokens.surfaceContainerLowest,
+    borderRadius: 24,
+    padding: 18,
+    ...ambientShadow,
+  },
+  formCardTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: 18,
+    lineHeight: 24,
+    color: tokens.textPrimary,
+    marginBottom: 2,
   },
   loadingContainer: {
     flex: 1,
@@ -784,37 +1190,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 0.7,
   },
-  listSeparator: {
-    height: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: tokens.bgSurface,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.borderSubtle,
-  },
-  modalTitle: {
-    fontFamily: FontFamily.bold,
-    fontSize: 22,
-    lineHeight: 28,
-    color: tokens.textPrimary,
-  },
-  modalBody: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  modalFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: tokens.borderSubtle,
-  },
   inputLabel: {
     fontFamily: FontFamily.semiBold,
     fontSize: 14,
@@ -832,6 +1207,41 @@ const styles = StyleSheet.create({
     color: tokens.textPrimary,
     borderWidth: 1,
     borderColor: tokens.borderSubtle,
+  },
+  dateInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: tokens.surfaceContainerLow,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: tokens.borderSubtle,
+  },
+  dateInputText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 16,
+    color: tokens.textPrimary,
+  },
+  dateInputTextPlaceholder: {
+    color: tokens.textPlaceholder,
+  },
+  dateClearButton: {
+    alignSelf: "flex-start",
+    marginTop: 10,
+  },
+  dateClearButtonText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 13,
+    color: tokens.secondary,
+  },
+  datePickerWrapper: {
+    alignItems: "center",
+    marginTop: 10,
+    borderRadius: 18,
+    overflow: "hidden",
+    backgroundColor: tokens.surfaceContainerLow,
   },
   chipRow: {
     flexDirection: "row",
@@ -857,6 +1267,59 @@ const styles = StyleSheet.create({
   },
   selectChipTextActive: {
     color: "#FFFFFF",
+  },
+  notesInput: {
+    minHeight: 120,
+    paddingTop: 14,
+  },
+  photoPlaceholderCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: tokens.borderSubtle,
+    backgroundColor: tokens.surfaceContainerLow,
+    paddingHorizontal: 18,
+    paddingVertical: 22,
+    alignItems: "center",
+  },
+  photoPlaceholderIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: tokens.primaryLight,
+    marginBottom: 12,
+  },
+  photoPlaceholderTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 16,
+    color: tokens.textPrimary,
+  },
+  photoPlaceholderDescription: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    lineHeight: 20,
+    color: tokens.textSecondary,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  addComposerFooter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    backgroundColor: tokens.bgBase,
+  },
+  addComposerButton: {
+    backgroundColor: tokens.primary,
+    paddingVertical: 16,
+    borderRadius: 9999,
+    alignItems: "center",
+    justifyContent: "center",
+    ...ambientShadow,
   },
   submitButton: {
     backgroundColor: tokens.primary,

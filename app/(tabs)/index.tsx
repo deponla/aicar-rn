@@ -75,6 +75,8 @@ function createCreditsSnapshot(balance: CreditBalanceResponse) {
       ? Math.max(existingCredits.total, balance.remainingCredits)
       : balance.remainingCredits,
     lastUpdated: new Date().toISOString(),
+    isPremium: balance.isPremium,
+    premiumExpiresAt: balance.premiumExpiresAt,
   };
 }
 

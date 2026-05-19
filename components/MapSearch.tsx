@@ -1,6 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ambientShadow, FontFamily, tokens } from "@/constants/theme";
+import {
+  GOOGLE_PLACES_API_KEY,
+  GOOGLE_PLACES_API_URL,
+} from "@/utils/env";
 import { useImperativeHandle, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Keyboard,
   StyleSheet,
@@ -33,9 +38,17 @@ interface MapSearchProps {
   }) => void;
 }
 
+function resolvePlacesLanguage(language?: string): string {
+  if (!language) return "en";
+  if (language.startsWith("tr")) return "tr";
+  if (language.startsWith("de")) return "de";
+  return "en";
+}
+
 export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
   const innerRef = useRef<GooglePlacesAutocompleteRef>(null);
   const [searchText, setSearchText] = useState("");
+  const { t, i18n } = useTranslation();
 
   useImperativeHandle(ref, () => ({
     blur: () => {
@@ -68,7 +81,7 @@ export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
           />
           <GooglePlacesAutocomplete
             ref={innerRef}
-            placeholder="Konum ara..."
+            placeholder={t("common.searchLocation")}
             onPress={(data, details: GooglePlaceDetail | null = null) => {
               if (details?.geometry?.location) {
                 const { lat, lng } = details.geometry.location;
@@ -101,13 +114,13 @@ export default function MapSearch({ onLocationSelect, ref }: MapSearchProps) {
             keyboardShouldPersistTaps="handled"
             keepResultsAfterBlur={false}
             query={{
-              key: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
-              language: "tr",
+              key: GOOGLE_PLACES_API_KEY,
+              language: resolvePlacesLanguage(i18n.language),
               components: "country:tr",
             }}
             requestUrl={{
               useOnPlatform: "all",
-              url: "https://maps.googleapis.com/maps/api",
+              url: GOOGLE_PLACES_API_URL,
             }}
             styles={{
               container: {
