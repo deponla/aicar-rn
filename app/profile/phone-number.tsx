@@ -12,6 +12,7 @@ import { notifyApiError } from "@/utils/apiError";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -26,6 +27,7 @@ export default function PhoneNumberScreen() {
   const user = authStore.user?.user;
   const router = useRouter();
   const { notify } = useNotification();
+  const { t } = useTranslation();
   const patchUser = usePatchUsers();
   const sendSmsOtp = useSendSmsOtp();
   const verifySmsOtp = useVerifySmsOtp();
@@ -41,10 +43,10 @@ export default function PhoneNumberScreen() {
 
   if (!user) {
     return (
-      <ScreenContainer title="Cep telefonu numaram" showBackButton>
+      <ScreenContainer title={t("phoneNumberScreen.screenTitle")} showBackButton>
         <View style={styles.emptyState}>
           <MaterialIcons name="person-off" size={48} color={tokens.textPlaceholder} />
-          <Text style={styles.emptyText}>Kullanıcı bilgisi bulunamadı.</Text>
+          <Text style={styles.emptyText}>{t("settings.noUser")}</Text>
         </View>
       </ScreenContainer>
     );
@@ -70,15 +72,15 @@ export default function PhoneNumberScreen() {
 
       notify({
         type: "success",
-        title: "Telefon numarası güncellendi",
-        message: "Yeni numaranızı doğrulamanız gerekiyor.",
+        title: t("phoneNumberScreen.notifications.updatedTitle"),
+        message: t("phoneNumberScreen.notifications.updatedMessage"),
       });
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        fallbackMessage: t("phoneNumberScreen.notifications.errorMessage"),
         notify,
-        title: "Telefon güncellenemedi",
+        title: t("phoneNumberScreen.notifications.updateFailedTitle"),
       });
     }
   };
@@ -91,15 +93,15 @@ export default function PhoneNumberScreen() {
 
       notify({
         type: "success",
-        title: "Doğrulama kodu gönderildi",
+        title: t("phoneNumberScreen.notifications.codeSentTitle"),
         message: response.message,
       });
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        fallbackMessage: t("phoneNumberScreen.notifications.errorMessage"),
         notify,
-        title: "Kod gönderilemedi",
+        title: t("phoneNumberScreen.notifications.codeFailedTitle"),
       });
     }
   };
@@ -119,39 +121,39 @@ export default function PhoneNumberScreen() {
 
       notify({
         type: "success",
-        title: "Telefon doğrulandı",
+        title: t("phoneNumberScreen.notifications.verifiedTitle"),
       });
     } catch (error: unknown) {
       notifyApiError({
         error,
-        fallbackMessage: "Lütfen daha sonra tekrar deneyin.",
+        fallbackMessage: t("phoneNumberScreen.notifications.errorMessage"),
         notify,
-        title: "Kod doğrulanamadı",
+        title: t("phoneNumberScreen.notifications.verifyFailedTitle"),
       });
     }
   };
 
   return (
-    <ScreenContainer title="Cep telefonu numaram" showBackButton>
+    <ScreenContainer title={t("phoneNumberScreen.screenTitle")} showBackButton>
       <View style={styles.card}>
-        <Text style={styles.title}>Telefon numaranız</Text>
-        <Text style={styles.subtitle}>
-          Numaranızı güncelledikten sonra SMS doğrulama kodu gönderin.
-        </Text>
+        <Text style={styles.title}>{t("phoneNumberScreen.title")}</Text>
+        <Text style={styles.subtitle}>{t("phoneNumberScreen.subtitle")}</Text>
 
-        <Text style={styles.label}>Telefon</Text>
+        <Text style={styles.label}>{t("phoneNumberScreen.label")}</Text>
         <TextInput
           style={styles.input}
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
-          placeholder="05XX XXX XX XX"
+          placeholder={t("phoneNumberScreen.placeholder")}
           placeholderTextColor={tokens.textPlaceholder}
         />
 
         <Text style={styles.statusText}>
-          Durum:{" "}
-          {user.isPhoneVerified && !isDirty ? "Doğrulandı" : "Doğrulanmadı"}
+          {t("phoneNumberScreen.statusLabel")}: {" "}
+          {user.isPhoneVerified && !isDirty
+            ? t("common.status.verified")
+            : t("common.status.unverified")}
         </Text>
 
         <TouchableOpacity
@@ -163,7 +165,7 @@ export default function PhoneNumberScreen() {
           {patchUser.isPending ? (
             <ActivityIndicator color={tokens.textInverse} />
           ) : (
-            <Text style={styles.primaryButtonText}>Numarayı kaydet</Text>
+            <Text style={styles.primaryButtonText}>{t("phoneNumberScreen.saveButton")}</Text>
           )}
         </TouchableOpacity>
 
@@ -176,19 +178,19 @@ export default function PhoneNumberScreen() {
           {sendSmsOtp.isPending ? (
             <ActivityIndicator color={Colors.primary} />
           ) : (
-            <Text style={styles.secondaryButtonText}>SMS kodu gönder</Text>
+            <Text style={styles.secondaryButtonText}>{t("phoneNumberScreen.sendCodeButton")}</Text>
           )}
         </TouchableOpacity>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.title}>Doğrulama kodu</Text>
+        <Text style={styles.title}>{t("phoneNumberScreen.verificationTitle")}</Text>
         <TextInput
           style={styles.input}
           value={otpCode}
           onChangeText={setOtpCode}
           keyboardType="number-pad"
-          placeholder="6 haneli kod"
+          placeholder={t("phoneNumberScreen.codePlaceholder")}
           placeholderTextColor={tokens.textPlaceholder}
           maxLength={6}
         />
@@ -206,13 +208,13 @@ export default function PhoneNumberScreen() {
           {verifySmsOtp.isPending ? (
             <ActivityIndicator color={tokens.textInverse} />
           ) : (
-            <Text style={styles.primaryButtonText}>Kodu doğrula</Text>
+            <Text style={styles.primaryButtonText}>{t("phoneNumberScreen.verifyButton")}</Text>
           )}
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.linkButton} onPress={() => router.back()}>
-        <Text style={styles.linkText}>Geri dön</Text>
+        <Text style={styles.linkText}>{t("phoneNumberScreen.back")}</Text>
       </TouchableOpacity>
     </ScreenContainer>
   );

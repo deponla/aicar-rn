@@ -605,6 +605,60 @@
             }
         }
     },
+    "phoneNumberScreen": {
+        "screenTitle": "Cep telefonu numaram",
+        "title": "Telefon numaranız",
+        "subtitle": "Numaranızı güncelledikten sonra SMS doğrulama kodu gönderin.",
+        "label": "Telefon",
+        "placeholder": "05XX XXX XX XX",
+        "statusLabel": "Durum",
+        "saveButton": "Numarayı kaydet",
+        "sendCodeButton": "SMS kodu gönder",
+        "verificationTitle": "Doğrulama kodu",
+        "codePlaceholder": "6 haneli kod",
+        "verifyButton": "Kodu doğrula",
+        "back": "Geri dön",
+        "notifications": {
+            "updatedTitle": "Telefon numarası güncellendi",
+            "updatedMessage": "Yeni numaranızı doğrulamanız gerekiyor.",
+            "updateFailedTitle": "Telefon güncellenemedi",
+            "codeSentTitle": "Doğrulama kodu gönderildi",
+            "codeFailedTitle": "Kod gönderilemedi",
+            "verifiedTitle": "Telefon doğrulandı",
+            "verifyFailedTitle": "Kod doğrulanamadı",
+            "errorMessage": "Lütfen daha sonra tekrar deneyin."
+        }
+    },
+    "notificationPreferencesScreen": {
+        "sections": {
+            "push": "PUSH BİLDİRİMLERİ",
+            "categories": "BİLDİRİM KATEGORİLERİ"
+        },
+        "master": {
+            "title": "Bildirimler",
+            "enabled": "Bildirimler açık",
+            "disabled": "Bildirimler kapalı — ayarlardan açabilirsiniz"
+        },
+        "actions": {
+            "enable": "Bildirimleri Aç",
+            "manageSystem": "Sistem Ayarlarını Yönet"
+        },
+        "categories": {
+            "messages": {
+                "label": "Mesajlar",
+                "description": "Sohbet mesajları ve yanıtlar"
+            },
+            "promotions": {
+                "label": "Kampanyalar",
+                "description": "Fırsatlar, indirimler ve yenilikler"
+            },
+            "system": {
+                "label": "Sistem Bildirimleri",
+                "description": "Hesap güvenliği ve sistem güncellemeleri"
+            }
+        },
+        "disabledNote": "Kategori tercihlerini yönetebilmek için bildirimleri açın."
+    },
     "chatScreen": {
         "pageTitle": "Mesajlar",
         "defaultTitle": "Sohbet",

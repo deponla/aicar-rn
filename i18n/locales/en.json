@@ -605,6 +605,60 @@
             }
         }
     },
+    "phoneNumberScreen": {
+        "screenTitle": "My mobile phone number",
+        "title": "Your phone number",
+        "subtitle": "After updating your number, send an SMS verification code.",
+        "label": "Phone",
+        "placeholder": "05XX XXX XX XX",
+        "statusLabel": "Status",
+        "saveButton": "Save number",
+        "sendCodeButton": "Send SMS code",
+        "verificationTitle": "Verification code",
+        "codePlaceholder": "6-digit code",
+        "verifyButton": "Verify code",
+        "back": "Go back",
+        "notifications": {
+            "updatedTitle": "Phone number updated",
+            "updatedMessage": "You need to verify your new number.",
+            "updateFailedTitle": "Phone could not be updated",
+            "codeSentTitle": "Verification code sent",
+            "codeFailedTitle": "Code could not be sent",
+            "verifiedTitle": "Phone verified",
+            "verifyFailedTitle": "Code could not be verified",
+            "errorMessage": "Please try again later."
+        }
+    },
+    "notificationPreferencesScreen": {
+        "sections": {
+            "push": "PUSH NOTIFICATIONS",
+            "categories": "NOTIFICATION CATEGORIES"
+        },
+        "master": {
+            "title": "Notifications",
+            "enabled": "Notifications are enabled",
+            "disabled": "Notifications are off — you can enable them in settings"
+        },
+        "actions": {
+            "enable": "Enable Notifications",
+            "manageSystem": "Manage System Settings"
+        },
+        "categories": {
+            "messages": {
+                "label": "Messages",
+                "description": "Chat messages and replies"
+            },
+            "promotions": {
+                "label": "Promotions",
+                "description": "Deals, discounts, and product updates"
+            },
+            "system": {
+                "label": "System Notifications",
+                "description": "Account security and system updates"
+            }
+        },
+        "disabledNote": "Turn on notifications to manage category preferences."
+    },
     "chatScreen": {
         "pageTitle": "Messages",
         "defaultTitle": "Chat",

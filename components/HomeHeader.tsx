@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -25,6 +26,7 @@ export default function HomeHeader({
   const isLoggedIn = status === AuthStatusEnum.LOGGED_IN;
   const userPhoto = isLoggedIn ? user?.user?.photo : undefined;
   const handleMenuPress = onMenuPress ?? toggleDrawer;
+  const { t } = useTranslation();
 
   const headerContent = (
     <View
@@ -54,7 +56,7 @@ export default function HomeHeader({
           >
             <MaterialIcons name="auto-awesome" size={16} color={tokens.secondaryFixedDim} />
             <Text style={styles.creditText}>
-              {credits.remaining} Kredi
+              {credits.remaining} {t("credits.balanceUnit")}
             </Text>
           </TouchableOpacity>
         ) : null}

@@ -605,6 +605,60 @@
             }
         }
     },
+    "phoneNumberScreen": {
+        "screenTitle": "Meine Mobiltelefonnummer",
+        "title": "Ihre Telefonnummer",
+        "subtitle": "Senden Sie nach der Aktualisierung Ihrer Nummer einen SMS-Bestätigungscode.",
+        "label": "Telefon",
+        "placeholder": "05XX XXX XX XX",
+        "statusLabel": "Status",
+        "saveButton": "Nummer speichern",
+        "sendCodeButton": "SMS-Code senden",
+        "verificationTitle": "Bestätigungscode",
+        "codePlaceholder": "6-stelliger Code",
+        "verifyButton": "Code bestätigen",
+        "back": "Zurück",
+        "notifications": {
+            "updatedTitle": "Telefonnummer aktualisiert",
+            "updatedMessage": "Sie müssen Ihre neue Nummer bestätigen.",
+            "updateFailedTitle": "Telefon konnte nicht aktualisiert werden",
+            "codeSentTitle": "Bestätigungscode gesendet",
+            "codeFailedTitle": "Code konnte nicht gesendet werden",
+            "verifiedTitle": "Telefon bestätigt",
+            "verifyFailedTitle": "Code konnte nicht bestätigt werden",
+            "errorMessage": "Bitte versuchen Sie es später erneut."
+        }
+    },
+    "notificationPreferencesScreen": {
+        "sections": {
+            "push": "PUSH-BENACHRICHTIGUNGEN",
+            "categories": "BENACHRICHTIGUNGSKATEGORIEN"
+        },
+        "master": {
+            "title": "Benachrichtigungen",
+            "enabled": "Benachrichtigungen sind aktiviert",
+            "disabled": "Benachrichtigungen sind aus — Sie können sie in den Einstellungen aktivieren"
+        },
+        "actions": {
+            "enable": "Benachrichtigungen aktivieren",
+            "manageSystem": "Systemeinstellungen verwalten"
+        },
+        "categories": {
+            "messages": {
+                "label": "Nachrichten",
+                "description": "Chatnachrichten und Antworten"
+            },
+            "promotions": {
+                "label": "Aktionen",
+                "description": "Angebote, Rabatte und Neuigkeiten"
+            },
+            "system": {
+                "label": "Systembenachrichtigungen",
+                "description": "Kontosicherheit und Systemaktualisierungen"
+            }
+        },
+        "disabledNote": "Aktivieren Sie Benachrichtigungen, um Kategorieeinstellungen zu verwalten."
+    },
     "chatScreen": {
         "pageTitle": "Nachrichten",
         "defaultTitle": "Chat",

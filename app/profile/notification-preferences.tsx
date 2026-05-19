@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Linking,
     Platform,
@@ -97,7 +98,8 @@ const PreferenceRow = memo(function PreferenceRow({
 });
 
 export default function NotificationPreferencesScreen() {
-    const t = tokens;
+    const theme = tokens;
+    const { t } = useTranslation();
     const [pushEnabled, setPushEnabled] = useState(false);
     const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
 
@@ -165,10 +167,10 @@ export default function NotificationPreferencesScreen() {
     }, [pushEnabled]);
 
     return (
-        <ScreenContainer title="Bildirim Tercihleri" showBackButton>
+        <ScreenContainer title={t("settings.notificationPreferences")} showBackButton>
             <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
-                    PUSH BİLDİRİMLERİ
+                <Text style={[styles.sectionLabel, { color: theme.textTertiary }]}>
+                    {t("notificationPreferencesScreen.sections.push")}
                 </Text>
                 <View
                     style={[
@@ -187,17 +189,17 @@ export default function NotificationPreferencesScreen() {
                             <MaterialIcons
                                 name="notifications-active"
                                 size={24}
-                                color={pushEnabled ? t.success : t.textPlaceholder}
+                                color={pushEnabled ? theme.success : theme.textPlaceholder}
                             />
                         </View>
                         <View style={styles.masterContent}>
-                            <Text style={[styles.masterTitle, { color: t.textPrimary }]}>
-                                Bildirimler
+                            <Text style={[styles.masterTitle, { color: theme.textPrimary }]}>
+                                {t("notificationPreferencesScreen.master.title")}
                             </Text>
-                            <Text style={[styles.masterDesc, { color: t.textTertiary }]}>
+                            <Text style={[styles.masterDesc, { color: theme.textTertiary }]}>
                                 {pushEnabled
-                                    ? "Bildirimler açık"
-                                    : "Bildirimler kapalı — ayarlardan açabilirsiniz"}
+                                    ? t("notificationPreferencesScreen.master.enabled")
+                                    : t("notificationPreferencesScreen.master.disabled")}
                             </Text>
                         </View>
                     </View>
@@ -208,7 +210,7 @@ export default function NotificationPreferencesScreen() {
                             activeOpacity={0.8}
                         >
                             <Text style={styles.enableButtonText}>
-                                Bildirimleri Aç
+                                {t("notificationPreferencesScreen.actions.enable")}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -219,9 +221,9 @@ export default function NotificationPreferencesScreen() {
                             activeOpacity={0.8}
                         >
                             <Text
-                                style={[styles.manageButtonText, { color: t.textSecondary }]}
+                                style={[styles.manageButtonText, { color: theme.textSecondary }]}
                             >
-                                Sistem Ayarlarını Yönet
+                                {t("notificationPreferencesScreen.actions.manageSystem")}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -229,15 +231,15 @@ export default function NotificationPreferencesScreen() {
             </View>
 
             <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: t.textTertiary }]}>
-                    BİLDİRİM KATEGORİLERİ
+                <Text style={[styles.sectionLabel, { color: theme.textTertiary }]}>
+                    {t("notificationPreferencesScreen.sections.categories")}
                 </Text>
                 <View style={styles.prefList}>
                     <PreferenceRow
                         icon="chat-bubble"
                         iconColor="#3B82F6"
-                        label="Mesajlar"
-                        description="Sohbet mesajları ve yanıtlar"
+                        label={t("notificationPreferencesScreen.categories.messages.label")}
+                        description={t("notificationPreferencesScreen.categories.messages.description")}
                         value={prefs.messages}
                         onToggle={toggleMessages}
                         disabled={!pushEnabled}
@@ -245,8 +247,8 @@ export default function NotificationPreferencesScreen() {
                     <PreferenceRow
                         icon="local-offer"
                         iconColor="#F59E0B"
-                        label="Kampanyalar"
-                        description="Fırsatlar, indirimler ve yenilikler"
+                        label={t("notificationPreferencesScreen.categories.promotions.label")}
+                        description={t("notificationPreferencesScreen.categories.promotions.description")}
                         value={prefs.promotions}
                         onToggle={togglePromotions}
                         disabled={!pushEnabled}
@@ -254,8 +256,8 @@ export default function NotificationPreferencesScreen() {
                     <PreferenceRow
                         icon="notifications"
                         iconColor="#8B5CF6"
-                        label="Sistem Bildirimleri"
-                        description="Hesap güvenliği ve sistem güncellemeleri"
+                        label={t("notificationPreferencesScreen.categories.system.label")}
+                        description={t("notificationPreferencesScreen.categories.system.description")}
                         value={prefs.system}
                         onToggle={toggleSystem}
                         disabled={!pushEnabled}
@@ -268,10 +270,10 @@ export default function NotificationPreferencesScreen() {
                     <MaterialIcons
                         name="info-outline"
                         size={16}
-                        color={t.warningText}
+                        color={theme.warningText}
                     />
-                    <Text style={[styles.disabledNoteText, { color: t.warningText }]}>
-                        Kategori tercihlerini yönetebilmek için bildirimleri açın.
+                    <Text style={[styles.disabledNoteText, { color: theme.warningText }]}>
+                        {t("notificationPreferencesScreen.disabledNote")}
                     </Text>
                 </View>
             )}
