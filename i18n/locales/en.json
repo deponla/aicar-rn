@@ -15,7 +15,9 @@
         "status": {
             "verified": "Verified",
             "unverified": "Not verified"
-        }
+        },
+        "cancel": "Cancel",
+        "error": "Error"
     },
     "auth": {
         "loading": "Loading...",

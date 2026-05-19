@@ -15,7 +15,9 @@
         "status": {
             "verified": "Bestätigt",
             "unverified": "Nicht bestätigt"
-        }
+        },
+        "cancel": "Abbrechen",
+        "error": "Fehler"
     },
     "auth": {
         "loading": "Wird geladen...",

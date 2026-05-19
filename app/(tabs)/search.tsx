@@ -158,7 +158,7 @@ const CarHeroCard = React.memo(function CarHeroCard({
       {item.currentMileage != null ? (
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statLabel}>ODOMETER</Text>
+            <Text style={styles.statLabel}>{t("garageScreen.odometerLabel")}</Text>
             <Text style={styles.statValue}>{item.currentMileage.toLocaleString()} km</Text>
           </View>
         </View>

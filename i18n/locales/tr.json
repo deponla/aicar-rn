@@ -15,7 +15,9 @@
         "status": {
             "verified": "Doğrulandı",
             "unverified": "Doğrulanmadı"
-        }
+        },
+        "cancel": "İptal",
+        "error": "Hata"
     },
     "auth": {
         "loading": "Yükleniyor...",
