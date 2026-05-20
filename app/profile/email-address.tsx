@@ -26,7 +26,13 @@ export default function EmailAddressScreen() {
   const [email, setEmail] = useState(user?.email || "");
 
   useEffect(() => {
-    setEmail(user?.email || "");
+    const frame = requestAnimationFrame(() => {
+      setEmail(user?.email || "");
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [user?.email]);
 
   if (!user) {

@@ -165,18 +165,15 @@ export default function FeedbackHistoryScreen() {
     [openCreate, t],
   );
 
-  const listFooter = useMemo(
-    () => (
-      <>
-        {typeof data?.count === "number" && data.count > feedbacks.length ? (
-          <Text style={styles.helperText}>
-            {t("feedbackHistory.latestRecords", { count: feedbacks.length })}
-          </Text>
-        ) : null}
-        <View style={styles.footerSpacing} />
-      </>
-    ),
-    [data?.count, feedbacks.length, t],
+  const listFooter = (
+    <>
+      {typeof data?.count === "number" && data.count > feedbacks.length ? (
+        <Text style={styles.helperText}>
+          {t("feedbackHistory.latestRecords", { count: feedbacks.length })}
+        </Text>
+      ) : null}
+      <View style={styles.footerSpacing} />
+    </>
   );
 
   return (

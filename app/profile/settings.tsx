@@ -17,7 +17,6 @@ import { memo, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Dimensions,
   Modal,
   Pressable,
   StyleSheet,
@@ -133,9 +132,6 @@ const PRESET_ICONS: Record<TextSizePreset, keyof typeof MaterialIcons.glyphMap> 
   large: "format-size",
   extraLarge: "title",
 };
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const MODAL_WIDTH = Math.min(SCREEN_WIDTH - 32, 400);
 
 function BottomSheetModal({
   visible,

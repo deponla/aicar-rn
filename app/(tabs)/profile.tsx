@@ -270,13 +270,9 @@ export default function ProfileScreen() {
     return user?.email?.charAt(0).toUpperCase() ?? "?";
   }, [user?.email, user?.name, user?.surname]);
 
-  const displayName = useMemo(
-    () =>
-      user?.name && user?.surname
-        ? `${user.name} ${user.surname}`
-        : (user?.email ?? ""),
-    [user?.email, user?.name, user?.surname],
-  );
+  const displayName = user?.name && user?.surname
+    ? `${user.name} ${user.surname}`
+    : (user?.email ?? "");
 
   // ── WebView modal ──
   const webViewModal = (

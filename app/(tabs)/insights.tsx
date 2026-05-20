@@ -17,7 +17,7 @@ import { Car } from "@/types/car";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -327,42 +327,39 @@ export default function InsightsScreen() {
   const carsQuery = useGetCars(undefined, { enabled: isLoggedIn });
   const cars = useMemo(() => carsQuery.data?.results ?? [], [carsQuery.data?.results]);
 
-  useEffect(() => {
+  const resolvedSelectedCarId = useMemo(() => {
     if (cars.length === 0) {
-      setSelectedCarId(null);
-      return;
+      return null;
     }
 
-    setSelectedCarId((current) => {
-      if (current && cars.some((car) => car.id === current)) {
-        return current;
-      }
+    if (selectedCarId && cars.some((car) => car.id === selectedCarId)) {
+      return selectedCarId;
+    }
 
-      return cars[0]?.id ?? null;
-    });
-  }, [cars]);
+    return cars[0]?.id ?? null;
+  }, [cars, selectedCarId]);
 
   const selectedCar = useMemo(
-    () => cars.find((car) => car.id === selectedCarId) ?? null,
-    [cars, selectedCarId],
+    () => cars.find((car) => car.id === resolvedSelectedCarId) ?? null,
+    [cars, resolvedSelectedCarId],
   );
 
   const analysisQuery = useGetAnalysisLogs(
-    selectedCarId
-      ? { carId: selectedCarId, limit: 120, sort: "createdAt:desc" }
+    resolvedSelectedCarId
+      ? { carId: resolvedSelectedCarId, limit: 120, sort: "createdAt:desc" }
       : undefined,
-    { enabled: isLoggedIn && !!selectedCarId },
+    { enabled: isLoggedIn && !!resolvedSelectedCarId },
   );
   const remindersQuery = useGetCarReminders(
-    selectedCarId
+    resolvedSelectedCarId
       ? {
-        carId: selectedCarId,
+        carId: resolvedSelectedCarId,
         status: CarReminderStatusEnum.ACTIVE,
         limit: 50,
         sort: "nextDueAt:asc",
       }
       : undefined,
-    { enabled: isLoggedIn && !!selectedCarId },
+    { enabled: isLoggedIn && !!resolvedSelectedCarId },
   );
 
   const logs = useMemo(() => analysisQuery.data?.results ?? [], [analysisQuery.data?.results]);
@@ -503,13 +500,13 @@ export default function InsightsScreen() {
     return t("history.dashboard.forecast.noTargetMessage", {
       type: reminderType,
     });
-  }, [activeReminder, localeTag, selectedCar?.currentMileage, t]);
+  }, [activeReminder, localeTag, selectedCar, t]);
 
   const isLoading = carsQuery.isLoading
-    || (!!selectedCarId && analysisQuery.isLoading && analysisQuery.data === undefined);
+    || (!!resolvedSelectedCarId && analysisQuery.isLoading && analysisQuery.data === undefined);
 
   const handleOpenPlanner = useCallback(() => {
-    if (!selectedCarId) {
+    if (!resolvedSelectedCarId) {
       router.push("/(tabs)/search");
       return;
     }
@@ -517,11 +514,11 @@ export default function InsightsScreen() {
     router.push({
       pathname: "/maintenance-planner",
       params: {
-        carId: selectedCarId,
+        carId: resolvedSelectedCarId,
         ...(activeReminder?.id ? { reminderId: activeReminder.id } : {}),
       },
     });
-  }, [activeReminder?.id, router, selectedCarId]);
+  }, [activeReminder, resolvedSelectedCarId, router]);
 
   const handleStartScan = useCallback(() => {
     router.push("/(tabs)");
@@ -570,7 +567,7 @@ export default function InsightsScreen() {
                     <VehicleChip
                       key={car.id}
                       car={car}
-                      isSelected={car.id === selectedCarId}
+                      isSelected={car.id === resolvedSelectedCarId}
                       onPress={() => setSelectedCarId(car.id)}
                     />
                   ))}

@@ -111,24 +111,30 @@ export default function MaintenancePlannerScreen() {
             return;
         }
 
-        setType(selectedReminder.type);
-        setIntervalMonths(inferIntervalMonths(selectedReminder.nextDueAt));
-        setNextDueMileage(
-            selectedReminder.nextDueMileage != null
-                ? String(selectedReminder.nextDueMileage)
-                : "",
-        );
-        setRemindDaysBefore(
-            selectedReminder.remindDaysBefore != null
-                ? String(selectedReminder.remindDaysBefore)
-                : "7",
-        );
-        setRemindMileageBefore(
-            selectedReminder.remindMileageBefore != null
-                ? String(selectedReminder.remindMileageBefore)
-                : "500",
-        );
-        setNotes(selectedReminder.notes ?? "");
+        const frame = requestAnimationFrame(() => {
+            setType(selectedReminder.type);
+            setIntervalMonths(inferIntervalMonths(selectedReminder.nextDueAt));
+            setNextDueMileage(
+                selectedReminder.nextDueMileage != null
+                    ? String(selectedReminder.nextDueMileage)
+                    : "",
+            );
+            setRemindDaysBefore(
+                selectedReminder.remindDaysBefore != null
+                    ? String(selectedReminder.remindDaysBefore)
+                    : "7",
+            );
+            setRemindMileageBefore(
+                selectedReminder.remindMileageBefore != null
+                    ? String(selectedReminder.remindMileageBefore)
+                    : "500",
+            );
+            setNotes(selectedReminder.notes ?? "");
+        });
+
+        return () => {
+            cancelAnimationFrame(frame);
+        };
     }, [selectedReminder]);
 
     const dueDatePreview = useMemo(
@@ -204,7 +210,7 @@ export default function MaintenancePlannerScreen() {
         remindDaysBefore,
         remindMileageBefore,
         router,
-        selectedReminder?.id,
+        selectedReminder,
         t,
         type,
         updateReminder,

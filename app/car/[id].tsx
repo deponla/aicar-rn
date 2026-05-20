@@ -247,7 +247,6 @@ const EditCarModal = React.memo(function EditCarModal({
     parsedYear,
     purchaseDate,
     transmission,
-    year,
   ]);
 
   return (

@@ -124,7 +124,7 @@ export default function SupportScreen() {
         () =>
             translate("supportScreen.faqItems", {
                 returnObjects: true,
-            }) as Array<{ question: string; answer: string }>,
+            }) as { question: string; answer: string }[],
         [translate],
     );
 

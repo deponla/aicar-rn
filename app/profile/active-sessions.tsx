@@ -339,7 +339,7 @@ export default function ActiveSessionsScreen() {
         <View style={styles.footerSpacing} />
       </>
     ),
-    [handleRevokeAll, otherSessionCount, revokeSession.isPending],
+    [handleRevokeAll, otherSessionCount, revokeSession.isPending, t],
   );
 
   return (

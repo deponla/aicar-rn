@@ -273,7 +273,6 @@ const AddCarComposer = React.memo(function AddCarComposer({
     parsedYear,
     purchaseDate,
     transmission,
-    year,
   ]);
 
   return (

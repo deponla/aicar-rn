@@ -149,7 +149,13 @@ export default function PermissionsScreen() {
   }, []);
 
   useEffect(() => {
-    checkPermissions();
+    const frame = requestAnimationFrame(() => {
+      void checkPermissions();
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [checkPermissions]);
 
   const handleCamera = useCallback(async () => {

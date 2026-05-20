@@ -15,7 +15,7 @@ function TabBarIcon({
   focused,
   name,
 }: {
-  color: string;
+  color: React.ComponentProps<typeof MaterialIcons>["color"];
   focused: boolean;
   name: TabIconName;
 }) {
@@ -38,7 +38,7 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarButton: HapticTab,
+          tabBarButton: (props) => <HapticTab {...props} />,
           tabBarActiveTintColor: Colors.primary,
           tabBarInactiveTintColor: tokens.textTertiary,
           tabBarStyle: {

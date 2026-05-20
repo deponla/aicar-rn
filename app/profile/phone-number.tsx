@@ -37,8 +37,14 @@ export default function PhoneNumberScreen() {
   const [savedPhone, setSavedPhone] = useState(user?.phone || "");
 
   useEffect(() => {
-    setPhone(user?.phone || "");
-    setSavedPhone(user?.phone || "");
+    const frame = requestAnimationFrame(() => {
+      setPhone(user?.phone || "");
+      setSavedPhone(user?.phone || "");
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [user?.phone]);
 
   if (!user) {

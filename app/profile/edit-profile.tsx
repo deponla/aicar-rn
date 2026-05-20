@@ -47,9 +47,15 @@ export default function EditProfileScreen() {
 
   useEffect(() => {
     if (user) {
-      setName(user.name || "");
-      setSurname(user.surname || "");
-      setPhone(user.phone || "");
+      const frame = requestAnimationFrame(() => {
+        setName(user.name || "");
+        setSurname(user.surname || "");
+        setPhone(user.phone || "");
+      });
+
+      return () => {
+        cancelAnimationFrame(frame);
+      };
     }
   }, [user]);
 

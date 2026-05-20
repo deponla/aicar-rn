@@ -6,7 +6,7 @@ import { useCreditsStore } from "@/store/useCredits";
 import { AuthStatusEnum } from "@/types/auth";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Href, usePathname, useRouter } from "expo-router";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Alert,
@@ -114,8 +114,8 @@ export default function HamburgerDrawer() {
         () => Math.min(Math.max(width * 0.72, 260), 320),
         [width],
     );
-    const translateX = useRef(new Animated.Value(-panelWidth)).current;
-    const backdropOpacity = useRef(new Animated.Value(0)).current;
+    const [translateX] = useState(() => new Animated.Value(-panelWidth));
+    const [backdropOpacity] = useState(() => new Animated.Value(0));
 
     const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
     const user = authStore.user?.user;
@@ -130,7 +130,16 @@ export default function HamburgerDrawer() {
 
     useEffect(() => {
         if (isOpen) {
-            setIsRendered(true);
+            if (!isRendered) {
+                const frame = requestAnimationFrame(() => {
+                    setIsRendered(true);
+                });
+
+                return () => {
+                    cancelAnimationFrame(frame);
+                };
+            }
+
             Animated.parallel([
                 Animated.timing(translateX, {
                     toValue: 0,
@@ -201,7 +210,7 @@ export default function HamburgerDrawer() {
         }
 
         return translate("profileScreen.guestDescription");
-    }, [credits?.isPremium, translate, user?.email]);
+    }, [credits?.isPremium, translate, user]);
 
     const handleClose = useCallback(() => {
         close();
@@ -437,7 +446,11 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
     },
     backdrop: {
-        ...StyleSheet.absoluteFillObject,
+        position: "absolute",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
         backgroundColor: "rgba(16, 24, 40, 0.24)",
     },
     panel: {

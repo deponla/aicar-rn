@@ -148,8 +148,14 @@ export default function NotificationPreferencesScreen() {
     }, [updatePref]);
 
     useEffect(() => {
-        void checkPushPermission();
-        void loadPrefs();
+        const frame = requestAnimationFrame(() => {
+            void checkPushPermission();
+            void loadPrefs();
+        });
+
+        return () => {
+            cancelAnimationFrame(frame);
+        };
     }, [checkPushPermission, loadPrefs]);
 
     const handleTogglePush = useCallback(async () => {
