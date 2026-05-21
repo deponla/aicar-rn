@@ -18,6 +18,19 @@ type AuthStore = {
   logout: () => Promise<void>;
 };
 
+function applyAuthenticatedSession(session: UserResponseData) {
+  useAuthStore.setState({
+    user: session,
+    status: AuthStatusEnum.LOGGED_IN,
+  });
+  instance.defaults.headers.common["Authorization"] =
+    `Bearer ${session.accessToken.token}`;
+}
+
+async function persistAuthenticatedSession(session: UserResponseData) {
+  await SecureStore.setItemAsync(SECURE_STORE_KEY, JSON.stringify(session));
+}
+
 export const useAuthStore = create<AuthStore>()((set, get) => ({
   user: null,
   status: AuthStatusEnum.LOADING,
@@ -63,14 +76,21 @@ export function mergeAuthenticatedUser(
   const authState = useAuthStore.getState();
 
   if (!authState.user) {
-    return;
+    return Promise.resolve();
   }
 
-  authState.login({
+  const nextSession = {
     ...authState.user,
     user: {
       ...authState.user.user,
       ...userPatch,
     },
+  };
+
+  applyAuthenticatedSession(nextSession);
+
+  return persistAuthenticatedSession(nextSession).catch(() => {
+    // Keep in-memory auth data aligned with the latest user patch even if
+    // persisting the session snapshot fails.
   });
 }

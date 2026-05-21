@@ -85,7 +85,7 @@ export default function EditProfileScreen() {
         },
       });
 
-      mergeAuthenticatedUser({
+      await mergeAuthenticatedUser({
         name: name.trim(),
         surname: surname.trim(),
         phone: phone.trim(),
@@ -163,7 +163,7 @@ export default function EditProfileScreen() {
         userId: user!.id,
       });
 
-      mergeAuthenticatedUser({ photo: confirmResult.photo });
+      await mergeAuthenticatedUser({ photo: confirmResult.photo });
 
       notify({ type: "success", title: t("editProfileScreen.photoUpdated") });
     } catch (error: unknown) {
@@ -189,7 +189,7 @@ export default function EditProfileScreen() {
         userId: user.id,
       });
 
-      mergeAuthenticatedUser({ photo: null });
+      await mergeAuthenticatedUser({ photo: null });
 
       notify({ type: "success", title: t("editProfileScreen.photoDeleted") });
     } catch (error: unknown) {

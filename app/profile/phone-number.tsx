@@ -71,7 +71,7 @@ export default function PhoneNumberScreen() {
 
       const nextPhone = phone.trim();
       setSavedPhone(nextPhone);
-      mergeAuthenticatedUser({
+      await mergeAuthenticatedUser({
         phone: nextPhone,
         isPhoneVerified: false,
       });
@@ -119,7 +119,7 @@ export default function PhoneNumberScreen() {
         type: SmsOtpType.PHONE_VERIFICATION,
       });
 
-      mergeAuthenticatedUser({
+      await mergeAuthenticatedUser({
         phone: savedPhone,
         isPhoneVerified: true,
       });

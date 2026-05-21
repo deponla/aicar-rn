@@ -56,7 +56,7 @@ export default function EmailAddressScreen() {
         d: { email: nextEmail },
       });
 
-      mergeAuthenticatedUser({
+      await mergeAuthenticatedUser({
         email: nextEmail,
         emailVerified: false,
         emailVerifiedAt: null,

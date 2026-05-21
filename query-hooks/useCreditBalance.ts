@@ -1,7 +1,9 @@
 import { getCreditBalance, getCreditPackages, getMyAccount } from "@/api/get";
+import { normalizeLanguage } from "@/i18n";
 import { postPurchaseCredits, postVerifyReceipt } from "@/api/post";
 import { PurchaseCreditsRequest, VerifyReceiptRequest } from "@/types/credit";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export enum CreditQueryKeys {
   BALANCE = "credit-balance",
@@ -22,8 +24,11 @@ export const useGetCreditBalance = ({
 };
 
 export const useGetCreditPackages = () => {
+  const { i18n } = useTranslation();
+  const language = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+
   return useQuery({
-    queryKey: [CreditQueryKeys.PACKAGES],
+    queryKey: [CreditQueryKeys.PACKAGES, language],
     queryFn: getCreditPackages,
   });
 };

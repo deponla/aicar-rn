@@ -173,7 +173,7 @@ function BottomSheetModal({
 };
 
 export default function SettingsScreen() {
-  const { t: translate } = useTranslation();
+  const { t: translate, i18n } = useTranslation();
   const authStore = useAuthStore();
   const user = authStore.user?.user;
   const router = useRouter();
@@ -184,17 +184,15 @@ export default function SettingsScreen() {
   const setTextSizePreset = usePreferencesStore(
     (state) => state.setTextSizePreset,
   );
-  const languageLabel = translate(
-    `common.languages.${normalizeLanguage(user?.language)}`,
-  );
+  const userId = user?.id;
+  const currentLanguage = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+  const languageLabel = translate(`common.languages.${currentLanguage}`);
   const textSizeLabel = translate(getTextSizeLabelKey(textSizePreset));
 
   // Modal state
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const [textSizeModalVisible, setTextSizeModalVisible] = useState(false);
-  const [selectedLang, setSelectedLang] = useState(() =>
-    normalizeLanguage(user?.language),
-  );
+  const [selectedLang, setSelectedLang] = useState(currentLanguage);
   const [isSavingLang, setIsSavingLang] = useState(false);
 
   const goToEditProfile = useCallback(() => {
@@ -218,9 +216,9 @@ export default function SettingsScreen() {
   }, [router]);
 
   const goToLanguage = useCallback(() => {
-    setSelectedLang(normalizeLanguage(user?.language));
+    setSelectedLang(currentLanguage);
     setLanguageModalVisible(true);
-  }, [user?.language]);
+  }, [currentLanguage]);
 
   const goToNotificationPreferences = useCallback(() => {
     router.push("/profile/notification-preferences");
@@ -231,24 +229,30 @@ export default function SettingsScreen() {
   }, []);
 
   const handleLanguageSave = useCallback(async () => {
-    const currentLang = normalizeLanguage(user?.language);
-    if (selectedLang === currentLang) {
+    if (!userId) {
+      return;
+    }
+
+    if (selectedLang === currentLanguage) {
       setLanguageModalVisible(false);
       return;
     }
+
+    const previousLanguage = currentLanguage;
 
     try {
       setIsSavingLang(true);
       const nextLanguage = await changeAppLanguage(selectedLang);
       await patchUser.mutateAsync({
-        id: user!.id,
+        id: userId,
         d: { language: nextLanguage },
       });
 
-      mergeAuthenticatedUser({ language: nextLanguage });
+      await mergeAuthenticatedUser({ language: nextLanguage });
       notify({ type: "success", title: translate("language.saved") });
       setLanguageModalVisible(false);
     } catch (error: unknown) {
+      await changeAppLanguage(previousLanguage).catch(() => undefined);
       notifyApiError({
         error,
         fallbackMessage: translate("language.retryLater"),
@@ -258,11 +262,12 @@ export default function SettingsScreen() {
     } finally {
       setIsSavingLang(false);
     }
-  }, [selectedLang, user, patchUser, notify, translate]);
+  }, [currentLanguage, notify, patchUser, selectedLang, translate, userId]);
 
   const handleTextSizeSelect = useCallback(
     (preset: TextSizePreset) => {
       void setTextSizePreset(preset);
+      setTextSizeModalVisible(false);
     },
     [setTextSizePreset],
   );
@@ -434,12 +439,12 @@ export default function SettingsScreen() {
           <TouchableOpacity
             style={[
               styles.modalSaveButton,
-              (selectedLang === normalizeLanguage(user?.language) || isSavingLang) &&
+              (selectedLang === currentLanguage || isSavingLang) &&
               styles.modalSaveButtonDisabled,
             ]}
             onPress={handleLanguageSave}
             disabled={
-              selectedLang === normalizeLanguage(user?.language) || isSavingLang
+              selectedLang === currentLanguage || isSavingLang
             }
             activeOpacity={0.8}
           >
