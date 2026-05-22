@@ -117,18 +117,17 @@ async function uploadImageAsset(
   const init = await postInitializeAiImageUpload();
   const formData = new FormData();
 
-  formData.append(
-    'file',
-    {
-      uri: asset.uri,
-      name: buildAssetFileName(asset, AiMediaType.IMAGE),
-      type: getAssetMimeType(asset, AiMediaType.IMAGE),
-    } as unknown as Blob,
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  formData.append('file', {
+    uri: asset.uri,
+    name: buildAssetFileName(asset, AiMediaType.IMAGE),
+    type: getAssetMimeType(asset, AiMediaType.IMAGE),
+  } as any);
 
   const uploadResponse = await fetch(init.uploadUrl, {
     method: 'POST',
     body: formData,
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
 
   if (!uploadResponse.ok) {
@@ -298,7 +297,7 @@ export default function ScanScreen() {
       }
 
       const pickerResult = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        mediaTypes: ['images', 'videos'],
         allowsEditing: false,
         allowsMultipleSelection: false,
         quality: 1,
@@ -328,8 +327,8 @@ export default function ScanScreen() {
     const pickerResult = await ImagePicker.launchCameraAsync({
       mediaTypes:
         source === 'video'
-          ? ImagePicker.MediaTypeOptions.Videos
-          : ImagePicker.MediaTypeOptions.Images,
+          ? ['videos']
+          : ['images'],
       allowsEditing: false,
       quality: 1,
       videoMaxDuration: MAX_VIDEO_DURATION_SECONDS,
