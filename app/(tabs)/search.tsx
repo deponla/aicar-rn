@@ -1,4 +1,6 @@
 import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
+import CarBrandModelFields from "@/components/CarBrandModelFields";
+import CarPhotoGrid from "@/components/CarPhotoGrid";
 import HomeHeader from "@/components/HomeHeader";
 import LoginRequired from "@/components/LoginRequired";
 import { useNotification } from "@/components/Notification";
@@ -7,6 +9,8 @@ import { AuthStatusEnum } from "@/types/auth";
 import { Car, CreateCarRequest, FuelTypeEnum, TransmissionEnum } from "@/types/car";
 import { AnalyzeMediaLog, AiUrgency } from "@/types/ai";
 import {
+  useCarUploadUrl,
+  useConfirmCarPhoto,
   useGetCars,
   useCreateCar,
   useDeleteCar,
@@ -16,12 +20,15 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
 import dayjs from "dayjs";
 import { Href, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useTranslation } from "react-i18next";
 import {
+  ActionSheetIOS,
   ActivityIndicator,
   Alert,
   Platform,
@@ -49,6 +56,13 @@ const TRANSMISSION_LABEL_KEYS: Record<TransmissionEnum, string> = {
 
 const FUEL_OPTIONS = Object.values(FuelTypeEnum);
 const TRANSMISSION_OPTIONS = Object.values(TransmissionEnum);
+const MAX_CAR_PHOTOS = 5;
+
+type PendingCarPhoto = {
+  uri: string;
+  mimeType?: string;
+  fileName?: string;
+};
 
 function getFuelLabel(fuelType: FuelTypeEnum, t: (key: string) => string) {
   return t(FUEL_LABEL_KEYS[fuelType]);
@@ -171,11 +185,13 @@ const AddCarComposer = React.memo(function AddCarComposer({
   onClose,
   onSubmit,
   isLoading,
+  isPhotoBusy,
   bottomInset,
 }: {
   onClose: () => void;
-  onSubmit: (data: CreateCarRequest) => void;
+  onSubmit: (data: CreateCarRequest, photos: PendingCarPhoto[]) => void;
   isLoading: boolean;
+  isPhotoBusy: boolean;
   bottomInset: number;
 }) {
   const { t } = useTranslation();
@@ -194,6 +210,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
   const [notes, setNotes] = useState("");
   const [purchaseDate, setPurchaseDate] = useState<string | undefined>();
   const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingCarPhoto[]>([]);
 
   const parsedYear = parseInt(year, 10);
   const submitDisabled =
@@ -240,25 +257,122 @@ const AddCarComposer = React.memo(function AddCarComposer({
     [],
   );
 
+  const pickCarPhoto = useCallback(
+    async (source: "camera" | "library") => {
+      try {
+        if (pendingPhotos.length >= MAX_CAR_PHOTOS) {
+          return;
+        }
+
+        const pickerOptions: ImagePicker.ImagePickerOptions = {
+          mediaTypes: ["images"],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        };
+
+        let result: ImagePicker.ImagePickerResult;
+        if (source === "camera") {
+          const permission = await ImagePicker.requestCameraPermissionsAsync();
+          if (permission.status !== "granted") {
+            return;
+          }
+          result = await ImagePicker.launchCameraAsync(pickerOptions);
+        } else {
+          const permission =
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (permission.status !== "granted") {
+            return;
+          }
+          result = await ImagePicker.launchImageLibraryAsync(pickerOptions);
+        }
+
+        if (result.canceled || !result.assets[0]) {
+          return;
+        }
+
+        const asset = result.assets[0];
+        setPendingPhotos((current) =>
+          current.length >= MAX_CAR_PHOTOS
+            ? current
+            : [
+              ...current,
+              {
+                uri: asset.uri,
+                mimeType: asset.mimeType,
+                fileName: asset.fileName ?? undefined,
+              },
+            ],
+        );
+      } catch {
+        // silently ignore pick errors
+      }
+    },
+    [pendingPhotos.length],
+  );
+
+  const openPhotoPicker = useCallback(() => {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [
+            t("carDetail.cancel"),
+            t("garageScreen.addCar.takePhotoAction"),
+            t("garageScreen.addCar.chooseFromGalleryAction"),
+          ],
+          cancelButtonIndex: 0,
+        },
+        (index) => {
+          if (index === 1) void pickCarPhoto("camera");
+          if (index === 2) void pickCarPhoto("library");
+        },
+      );
+      return;
+    }
+
+    Alert.alert(
+      t("garageScreen.addCar.photoSourceTitle"),
+      undefined,
+      [
+        { text: t("carDetail.cancel"), style: "cancel" },
+        {
+          text: t("garageScreen.addCar.takePhotoAction"),
+          onPress: () => void pickCarPhoto("camera"),
+        },
+        {
+          text: t("garageScreen.addCar.chooseFromGalleryAction"),
+          onPress: () => void pickCarPhoto("library"),
+        },
+      ],
+    );
+  }, [pickCarPhoto, t]);
+
+  const removePendingPhoto = useCallback((uri: string) => {
+    setPendingPhotos((current) => current.filter((photo) => photo.uri !== uri));
+  }, []);
+
   const handleSubmit = useCallback(() => {
     if (!brand.trim() || !model.trim() || Number.isNaN(parsedYear)) {
       return;
     }
 
-    onSubmit({
-      brand: brand.trim(),
-      model: model.trim(),
-      year: parsedYear,
-      fuelType,
-      transmission,
-      engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
-      currentMileage: currentMileage ? parseInt(currentMileage, 10) : undefined,
-      nickname: nickname.trim() || undefined,
-      licensePlate: normalizedLicensePlate || undefined,
-      color: color.trim() || undefined,
-      notes: notes.trim() || undefined,
-      purchaseDate,
-    });
+    onSubmit(
+      {
+        brand: brand.trim(),
+        model: model.trim(),
+        year: parsedYear,
+        fuelType,
+        transmission,
+        engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
+        currentMileage: currentMileage ? parseInt(currentMileage, 10) : undefined,
+        nickname: nickname.trim() || undefined,
+        licensePlate: normalizedLicensePlate || undefined,
+        color: color.trim() || undefined,
+        notes: notes.trim() || undefined,
+        purchaseDate,
+      },
+      pendingPhotos,
+    );
   }, [
     brand,
     color,
@@ -270,6 +384,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
     normalizedLicensePlate,
     notes,
     onSubmit,
+    pendingPhotos,
     parsedYear,
     purchaseDate,
     transmission,
@@ -367,22 +482,11 @@ const AddCarComposer = React.memo(function AddCarComposer({
             placeholderTextColor={tokens.textPlaceholder}
           />
 
-          <Text style={styles.inputLabel}>{t("carDetail.brandLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={brand}
-            onChangeText={setBrand}
-            placeholder={t("carDetail.brandPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.modelLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={model}
-            onChangeText={setModel}
-            placeholder={t("carDetail.modelPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
+          <CarBrandModelFields
+            brand={brand}
+            model={model}
+            onBrandChange={setBrand}
+            onModelChange={setModel}
           />
 
           <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
@@ -554,17 +658,19 @@ const AddCarComposer = React.memo(function AddCarComposer({
 
         <View style={styles.formCard}>
           <Text style={styles.formCardTitle}>{t("garageScreen.addCar.photoSectionTitle")}</Text>
-          <View style={styles.photoPlaceholderCard}>
-            <View style={styles.photoPlaceholderIconWrap}>
-              <MaterialIcons name="photo-library" size={26} color={Colors.primary} />
-            </View>
-            <Text style={styles.photoPlaceholderTitle}>
-              {t("garageScreen.addCar.photoPlaceholderTitle")}
-            </Text>
-            <Text style={styles.photoPlaceholderDescription}>
-              {t("garageScreen.addCar.photoPlaceholderDescription")}
-            </Text>
-          </View>
+          <CarPhotoGrid
+            items={pendingPhotos.map((photo) => ({
+              key: photo.uri,
+              uri: photo.uri,
+            }))}
+            maxItems={MAX_CAR_PHOTOS}
+            onAddPress={openPhotoPicker}
+            onRemovePress={(item) => removePendingPhoto(item.uri)}
+            addLabel={t("garageScreen.addCar.addPhotoAction")}
+            emptyTitle={t("garageScreen.addCar.photoEmptyTitle")}
+            emptyDescription={t("garageScreen.addCar.photoEmptyDescription")}
+            isBusy={isPhotoBusy}
+          />
         </View>
       </ScrollView>
 
@@ -609,6 +715,9 @@ export default function GarageScreen() {
   });
   const createCar = useCreateCar();
   const removeCar = useDeleteCar();
+  const carUploadUrl = useCarUploadUrl();
+  const confirmCarPhoto = useConfirmCarPhoto();
+  const [isPhotoBusy, setIsPhotoBusy] = useState(false);
 
   const cars = useMemo(() => data?.results ?? [], [data?.results]);
   const primaryCar = cars[0] ?? null;
@@ -630,9 +739,41 @@ export default function GarageScreen() {
   );
 
   const handleCreate = useCallback(
-    (payload: Parameters<typeof createCar.mutate>[0]) => {
+    (payload: CreateCarRequest, photos: PendingCarPhoto[]) => {
       createCar.mutate(payload, {
-        onSuccess: () => {
+        onSuccess: async (response) => {
+          const carId = response.result.id;
+
+          if (photos.length > 0) {
+            setIsPhotoBusy(true);
+            try {
+              for (const photo of photos) {
+                const { result: uploadData } =
+                  await carUploadUrl.mutateAsync();
+
+                const formData = new FormData();
+                formData.append("file", {
+                  uri: photo.uri,
+                  type: photo.mimeType || "image/jpeg",
+                  name: photo.fileName || "photo.jpg",
+                } as unknown as Blob);
+
+                await axios.post(uploadData.url, formData, {
+                  headers: { "Content-Type": "multipart/form-data" },
+                });
+
+                await confirmCarPhoto.mutateAsync({
+                  id: uploadData.id,
+                  carId,
+                });
+              }
+            } catch {
+              // silently ignore photo upload errors
+            } finally {
+              setIsPhotoBusy(false);
+            }
+          }
+
           setIsAddMode(false);
           notify({ type: "success", title: t("garageScreen.addCar.success") });
         },
@@ -645,7 +786,7 @@ export default function GarageScreen() {
         },
       });
     },
-    [createCar, notify, t],
+    [carUploadUrl, confirmCarPhoto, createCar, notify, t],
   );
 
   const handleDelete = useCallback(
@@ -699,6 +840,7 @@ export default function GarageScreen() {
           onClose={closeAddMode}
           onSubmit={handleCreate}
           isLoading={createCar.isPending}
+          isPhotoBusy={isPhotoBusy}
           bottomInset={insets.bottom}
         />
       ) : (

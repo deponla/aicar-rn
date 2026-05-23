@@ -16,6 +16,12 @@ import { FeedbackListResponse, FeedbackQuery } from "@/types/feedback";
 import { Session, SessionResponse } from "@/types/session";
 import { CarListResponse, CarQuery, CarResponse } from "@/types/car";
 import {
+  CarBrandListResponse,
+  CarBrandQuery,
+  CarModelListResponse,
+  CarModelQuery,
+} from "@/types/car-brand";
+import {
   NotificationListResponse,
   NotificationQuery,
 } from "@/types/notification";
@@ -86,6 +92,24 @@ export async function getCars(filters?: CarQuery): Promise<CarListResponse> {
 
 export async function getCar(id: string): Promise<CarResponse> {
   return instance.get(`v1/cars/${id}`).then((r) => r.data);
+}
+
+export async function getCarBrands(
+  filters?: CarBrandQuery,
+): Promise<CarBrandListResponse> {
+  return instance.get("v1/car-brands", { params: filters }).then((r) => r.data);
+}
+
+export async function getCarModels({
+  brandId,
+  filters,
+}: {
+  brandId: string;
+  filters?: CarModelQuery;
+}): Promise<CarModelListResponse> {
+  return instance
+    .get(`v1/car-brands/${brandId}/models`, { params: filters })
+    .then((r) => r.data);
 }
 
 // Car Reminders

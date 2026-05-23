@@ -18,6 +18,7 @@ export interface Car {
   brand: string;
   model: string;
   year: number;
+  photos?: string[];
   category?: string;
   fuelType?: FuelTypeEnum;
   transmission?: TransmissionEnum;
@@ -54,6 +55,40 @@ export type UpdateCarRequest = Partial<CreateCarRequest>;
 
 export interface CarResponse {
   result: Car;
+}
+
+export interface CarUploadUrlResponse {
+  result: {
+    url: string;
+    id: string;
+  };
+}
+
+export interface ConfirmCarPhotoRequest {
+  id: string;
+  carId: string;
+}
+
+export interface ConfirmCarPhotoResponse {
+  result: {
+    success: boolean;
+    message: string;
+    photoUrl: string;
+    carId: string;
+  };
+}
+
+export interface DeleteCarPhotoRequest {
+  id: string;
+  carId: string;
+}
+
+export interface DeleteCarPhotoResponse {
+  result: {
+    success: boolean;
+    message: string;
+    carId: string;
+  };
 }
 
 export interface CarListResponse {

@@ -1,8 +1,19 @@
 import { deleteCar } from "@/api/delete";
 import { getCar, getCars } from "@/api/get";
 import { patchCar } from "@/api/patch";
-import { postCreateCar } from "@/api/post";
-import { CarQuery, CreateCarRequest, UpdateCarRequest } from "@/types/car";
+import {
+  postCarUploadUrl,
+  postConfirmCarPhoto,
+  postCreateCar,
+  postDeleteCarPhoto,
+} from "@/api/post";
+import {
+  CarQuery,
+  ConfirmCarPhotoRequest,
+  CreateCarRequest,
+  DeleteCarPhotoRequest,
+  UpdateCarRequest,
+} from "@/types/car";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export enum CarQueryKeys {
@@ -56,6 +67,39 @@ export const useDeleteCar = () => {
     mutationFn: (id: string) => deleteCar(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CarQueryKeys.CARS] });
+    },
+  });
+};
+
+export const useCarUploadUrl = () => {
+  return useMutation({
+    mutationFn: postCarUploadUrl,
+  });
+};
+
+export const useConfirmCarPhoto = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: ConfirmCarPhotoRequest) =>
+      postConfirmCarPhoto(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [CarQueryKeys.CARS] });
+      queryClient.invalidateQueries({
+        queryKey: [CarQueryKeys.CAR, variables.carId],
+      });
+    },
+  });
+};
+
+export const useDeleteCarPhoto = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: DeleteCarPhotoRequest) => postDeleteCarPhoto(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [CarQueryKeys.CARS] });
+      queryClient.invalidateQueries({
+        queryKey: [CarQueryKeys.CAR, variables.carId],
+      });
     },
   });
 };

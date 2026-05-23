@@ -29,7 +29,15 @@ import {
   AnalyzeMediaRequest,
   AnalyzeMediaResponse,
 } from "@/types/ai";
-import { CarResponse, CreateCarRequest } from "@/types/car";
+import {
+  CarResponse,
+  CarUploadUrlResponse,
+  ConfirmCarPhotoRequest,
+  ConfirmCarPhotoResponse,
+  CreateCarRequest,
+  DeleteCarPhotoRequest,
+  DeleteCarPhotoResponse,
+} from "@/types/car";
 import {
   AccountResponse,
   PurchaseCreditsRequest,
@@ -183,6 +191,22 @@ export async function postCreateCar(
   payload: CreateCarRequest,
 ): Promise<CarResponse> {
   return instance.post("v1/cars", payload).then((r) => r.data);
+}
+
+export async function postCarUploadUrl(): Promise<CarUploadUrlResponse> {
+  return instance.post("v1/cars/upload-url").then((r) => r.data);
+}
+
+export async function postConfirmCarPhoto(
+  payload: ConfirmCarPhotoRequest,
+): Promise<ConfirmCarPhotoResponse> {
+  return instance.post("v1/cars/confirm-upload", payload).then((r) => r.data);
+}
+
+export async function postDeleteCarPhoto(
+  payload: DeleteCarPhotoRequest,
+): Promise<DeleteCarPhotoResponse> {
+  return instance.post("v1/cars/delete-photo", payload).then((r) => r.data);
 }
 
 // Car Reminders

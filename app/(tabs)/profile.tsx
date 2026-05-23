@@ -1,5 +1,7 @@
 import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
 import HomeHeader from "@/components/HomeHeader";
+import NativeMenuSections from "@/components/NativeMenuSections";
+import type { NativeMenuSectionData } from "@/components/NativeMenuSections";
 import { PRIVACY_URL, TERMS_URL } from "@/utils/env";
 import {
   AUTH_CALLBACK_ACTIONS,
@@ -14,6 +16,7 @@ import {
   Alert,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -274,6 +277,87 @@ export default function ProfileScreen() {
     ? `${user.name} ${user.surname}`
     : (user?.email ?? "");
 
+  const nativeMenuSections: NativeMenuSectionData[] = useMemo(
+    () => [
+      {
+        title: translate("profileScreen.sections.account"),
+        items: [
+          {
+            title: translate("settings.title"),
+            systemImage: "gearshape.circle.fill",
+            tintColor: "#6B7280",
+            onPress: goToSettings,
+          },
+          {
+            title: translate("profileScreen.permissions"),
+            systemImage: "checkmark.shield.fill",
+            tintColor: "#059669",
+            onPress: goToPermissions,
+          },
+          {
+            title: translate("credits.title"),
+            systemImage: "creditcard.fill",
+            tintColor: "#2563EB",
+            onPress: goToCredits,
+          },
+        ],
+      },
+      {
+        title: translate("profileScreen.sections.support"),
+        items: [
+          {
+            title: translate("profileScreen.support"),
+            systemImage: "questionmark.circle.fill",
+            tintColor: "#3B82F6",
+            onPress: goToSupport,
+          },
+          {
+            title: translate("profileScreen.feedback"),
+            systemImage: "megaphone.fill",
+            tintColor: "#C2410C",
+            onPress: goToFeedback,
+          },
+          {
+            title: translate("profileScreen.feedbackHistory"),
+            systemImage: "clock.arrow.circlepath",
+            tintColor: "#4338CA",
+            onPress: goToFeedbackHistory,
+          },
+          {
+            title: translate("about.title"),
+            systemImage: "info.circle.fill",
+            tintColor: "#3B82F6",
+            onPress: goToAbout,
+          },
+          {
+            title: translate("about.links.terms"),
+            systemImage: "doc.text.fill",
+            tintColor: "#7C3AED",
+            onPress: openTerms,
+          },
+          {
+            title: translate("about.links.privacy"),
+            systemImage: "hand.raised.fill",
+            tintColor: "#7C3AED",
+            onPress: openPrivacy,
+          },
+        ],
+      },
+    ],
+    [
+      translate,
+      goToSettings,
+      goToPermissions,
+      goToCredits,
+      goToSupport,
+      goToFeedback,
+      goToFeedbackHistory,
+      goToAbout,
+      openTerms,
+      openPrivacy,
+    ],
+  );
+
   // ── WebView modal ──
   const webViewModal = (
     <Modal
@@ -505,79 +589,83 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* ── Hesabım ── */}
-        <SectionLabel label={translate("profileScreen.sections.account")} />
-        <MenuSection>
-          <MenuItem
-            icon="manage-accounts"
-            label={translate("settings.title")}
-            onPress={goToSettings}
-          />
-          <MenuItem
-            icon="security"
-            iconBg="#ECFDF3"
-            iconColor="#059669"
-            label={translate("profileScreen.permissions")}
-            onPress={goToPermissions}
-          />
-          <MenuItem
-            icon="monetization-on"
-            iconBg={t.primaryLight}
-            iconColor="#2563EB"
-            label={translate("credits.title")}
-            onPress={goToCredits}
-            showDivider={false}
-          />
-        </MenuSection>
+        {/* ── Menu Sections ── */}
+        {Platform.OS === "ios" ? (
+          <NativeMenuSections sections={nativeMenuSections} />
+        ) : (
+          <>
+            <SectionLabel label={translate("profileScreen.sections.account")} />
+            <MenuSection>
+              <MenuItem
+                icon="manage-accounts"
+                label={translate("settings.title")}
+                onPress={goToSettings}
+              />
+              <MenuItem
+                icon="security"
+                iconBg="#ECFDF3"
+                iconColor="#059669"
+                label={translate("profileScreen.permissions")}
+                onPress={goToPermissions}
+              />
+              <MenuItem
+                icon="monetization-on"
+                iconBg={t.primaryLight}
+                iconColor="#2563EB"
+                label={translate("credits.title")}
+                onPress={goToCredits}
+                showDivider={false}
+              />
+            </MenuSection>
 
-        {/* ── Keşfet ── */}
-        {/* ── Destek ── */}
-        <SectionLabel label={translate("profileScreen.sections.support")} />
-        <MenuSection>
-          <MenuItem
-            icon="help-outline"
-            iconBg={t.primaryLight}
-            iconColor="#3B82F6"
-            label={translate("profileScreen.support")}
-            onPress={goToSupport}
-          />
-          <MenuItem
-            icon="campaign"
-            iconBg="#FFF7ED"
-            iconColor="#C2410C"
-            label={translate("profileScreen.feedback")}
-            onPress={goToFeedback}
-          />
-          <MenuItem
-            icon="history"
-            iconBg="#EEF2FF"
-            iconColor="#4338CA"
-            label={translate("profileScreen.feedbackHistory")}
-            onPress={goToFeedbackHistory}
-          />
-          <MenuItem
-            icon="info-outline"
-            iconBg={t.primaryLight}
-            iconColor="#3B82F6"
-            label={translate("about.title")}
-            onPress={goToAbout}
-          />
-          <MenuItem
-            icon="description"
-            iconBg="#F5F3FF"
-            iconColor="#7C3AED"
-            label={translate("about.links.terms")}
-            onPress={openTerms}
-          />
-          <MenuItem
-            icon="privacy-tip"
-            iconBg="#F5F3FF"
-            iconColor="#7C3AED"
-            label={translate("about.links.privacy")}
-            onPress={openPrivacy}
-            showDivider={false}
-          />
-        </MenuSection>
+            <SectionLabel label={translate("profileScreen.sections.support")} />
+            <MenuSection>
+              <MenuItem
+                icon="help-outline"
+                iconBg={t.primaryLight}
+                iconColor="#3B82F6"
+                label={translate("profileScreen.support")}
+                onPress={goToSupport}
+              />
+              <MenuItem
+                icon="campaign"
+                iconBg="#FFF7ED"
+                iconColor="#C2410C"
+                label={translate("profileScreen.feedback")}
+                onPress={goToFeedback}
+              />
+              <MenuItem
+                icon="history"
+                iconBg="#EEF2FF"
+                iconColor="#4338CA"
+                label={translate("profileScreen.feedbackHistory")}
+                onPress={goToFeedbackHistory}
+              />
+              <MenuItem
+                icon="info-outline"
+                iconBg={t.primaryLight}
+                iconColor="#3B82F6"
+                label={translate("about.title")}
+                onPress={goToAbout}
+              />
+              <MenuItem
+                icon="description"
+                iconBg="#F5F3FF"
+                iconColor="#7C3AED"
+                label={translate("about.links.terms")}
+                onPress={openTerms}
+              />
+              <MenuItem
+                icon="privacy-tip"
+                iconBg="#F5F3FF"
+                iconColor="#7C3AED"
+                label={translate("about.links.privacy")}
+                onPress={openPrivacy}
+                showDivider={false}
+              />
+            </MenuSection>
+          </>
+        )}
 
         <View style={{ height: 32 }} />
       </ScrollView>

@@ -117,7 +117,6 @@ async function uploadImageAsset(
   const init = await postInitializeAiImageUpload();
   const formData = new FormData();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formData.append('file', {
     uri: asset.uri,
     name: buildAssetFileName(asset, AiMediaType.IMAGE),
