@@ -83,10 +83,14 @@ export default function AuthCallback() {
     void WebBrowser.dismissBrowser().catch(() => undefined);
 
     const saveSessionAndRedirect = async (sessionData: UserResponseData) => {
-      await SecureStore.setItemAsync(
-        SECURE_STORE_KEY,
-        JSON.stringify(sessionData),
-      );
+      try {
+        await SecureStore.setItemAsync(
+          SECURE_STORE_KEY,
+          JSON.stringify(sessionData),
+        );
+      } catch (error) {
+        console.error("Failed to save session to SecureStore:", error);
+      }
       authStore.login(sessionData);
       router.replace("/(tabs)/profile");
     };

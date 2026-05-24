@@ -28,6 +28,12 @@ import {
 import { LegalDocument } from "@/types/legal";
 import { AnalyzeMediaLog } from "@/types/ai";
 import {
+  AiConversationListResponse,
+  AiConversationQuery,
+  AiMessageListResponse,
+  AiMessageQuery,
+} from "@/types/ai-chat";
+import {
   CarReminderListResponse,
   CarReminderQuery,
   CarReminderResponse,
@@ -182,5 +188,28 @@ export async function getAnalysisLogs(filters?: {
 }> {
   return instance
     .get("v1/analysis-logs", { params: filters })
+    .then((r) => r.data);
+}
+
+// AI Chat
+export async function getAiConversations(
+  filters?: AiConversationQuery,
+): Promise<AiConversationListResponse> {
+  return instance
+    .get("v1/ai-chat/conversations", { params: filters })
+    .then((r) => r.data);
+}
+
+export async function getAiMessages({
+  conversationId,
+  filters,
+}: {
+  conversationId: string;
+  filters?: AiMessageQuery;
+}): Promise<AiMessageListResponse> {
+  return instance
+    .get(`v1/ai-chat/conversations/${conversationId}/messages`, {
+      params: filters,
+    })
     .then((r) => r.data);
 }

@@ -45,6 +45,12 @@ import {
   VerifyReceiptRequest,
 } from "@/types/credit";
 import {
+  AiConversationResponse,
+  AiMessageResponse as AiChatMessageResponse,
+  CreateAiConversationRequest,
+  SendAiMessageRequest,
+} from "@/types/ai-chat";
+import {
   CarReminderResponse,
   CompleteCarReminderRequest,
   CreateCarReminderRequest,
@@ -238,4 +244,19 @@ export async function postVerifyReceipt(
   return instance
     .post("v1/account/verify-receipt", payload)
     .then((r) => r.data);
+}
+
+// AI Chat
+export async function postCreateAiConversation(
+  payload?: CreateAiConversationRequest,
+): Promise<AiConversationResponse> {
+  return instance
+    .post("v1/ai-chat/conversations", payload ?? {})
+    .then((r) => r.data);
+}
+
+export async function postSendAiMessage(
+  payload: SendAiMessageRequest,
+): Promise<AiChatMessageResponse> {
+  return instance.post("v1/ai-chat/messages", payload).then((r) => r.data);
 }

@@ -14,3 +14,8 @@ export async function deleteAllSessions(): Promise<void> {
 export async function deleteCar(id: string): Promise<void> {
   return instance.delete(`v1/cars/${id}`).then((r) => r.data);
 }
+
+// AI Chat
+export async function deleteAiConversation(id: string): Promise<void> {
+  return instance.delete(`v1/ai-chat/conversations/${id}`).then((r) => r.data);
+}

@@ -1,5 +1,5 @@
 const React = require("react");
-const ReactNative = require("react-native/index.js");
+const ReactNative = require("react-native");
 const { getTextSizeScale, scaleTextStyle } = require("../utils/textSize");
 
 const { StyleSheet } = ReactNative;

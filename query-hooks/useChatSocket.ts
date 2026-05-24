@@ -144,7 +144,16 @@ export function useChatSocket(options?: UseChatSocketOptions) {
   }, []);
 
   const emitSend = useCallback((conversationId: string, content: string) => {
-    socketRef.current?.emit("message.send", { conversationId, content });
+    socketRef.current?.emit(
+      "message.send",
+      { conversationId, content },
+      (error?: { message: string }) => {
+        if (error) {
+          console.error("Message send failed:", error.message);
+          onErrorRef.current?.(error);
+        }
+      },
+    );
   }, []);
 
   const reconnect = useCallback(() => {

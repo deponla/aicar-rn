@@ -23,15 +23,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { tokens, FontFamily, Colors, ambientShadow } from '@/constants/theme';
 import HomeHeader from '@/components/HomeHeader';
-import i18n from '@/i18n';
-import {
-  postCompleteAiImageUpload,
-  postCompleteAiVideoUpload,
-  postInitializeAiImageUpload,
-  postInitializeAiVideoUpload,
-} from '@/api/post';
-import { useAnalyzeMedia } from '@/query-hooks/useAiAnalysis';
 import { useGetCars } from '@/query-hooks/useCars';
+import { getAssetMediaType } from '@/services/CloudflareUploadService';
+import { analyzeAsset } from '@/services/AIAnalysisService';
 import {
   CreditQueryKeys,
   useGetCreditBalance,
@@ -42,7 +36,6 @@ import {
   AiAnalysisType,
   AiMediaType,
   type AiAnalysisPayload,
-  type AiUploadCompleteResponse,
   type AnalyzeMediaResponse,
 } from '@/types/ai';
 import { AuthStatusEnum } from '@/types/auth';
@@ -61,10 +54,7 @@ type ScanSource = 'camera' | 'video' | 'gallery';
 
 const MAX_VIDEO_DURATION_SECONDS = 30;
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+const SHEET_DISMISS_DELAY_MS = 180;
 
 function createCreditsSnapshot(balance: CreditBalanceResponse) {
   const existingCredits = useCreditsStore.getState().credits;
@@ -80,102 +70,10 @@ function createCreditsSnapshot(balance: CreditBalanceResponse) {
   };
 }
 
-function getAssetMediaType(asset: ImagePicker.ImagePickerAsset): AiMediaType {
-  if (asset.type === 'video' || asset.mimeType?.startsWith('video/')) {
-    return AiMediaType.VIDEO;
-  }
-
-  return AiMediaType.IMAGE;
-}
-
-function getAssetMimeType(
-  asset: ImagePicker.ImagePickerAsset,
-  mediaType: AiMediaType,
-): string {
-  if (asset.mimeType) {
-    return asset.mimeType;
-  }
-
-  return mediaType === AiMediaType.VIDEO ? 'video/mp4' : 'image/jpeg';
-}
-
-function buildAssetFileName(
-  asset: ImagePicker.ImagePickerAsset,
-  mediaType: AiMediaType,
-): string {
-  if (asset.fileName) {
-    return asset.fileName;
-  }
-
-  const extension = mediaType === AiMediaType.VIDEO ? 'mp4' : 'jpg';
-  return `scan-${Date.now()}.${extension}`;
-}
-
-async function uploadImageAsset(
-  asset: ImagePicker.ImagePickerAsset,
-): Promise<AiUploadCompleteResponse> {
-  const init = await postInitializeAiImageUpload();
-  const formData = new FormData();
-
-  formData.append('file', {
-    uri: asset.uri,
-    name: buildAssetFileName(asset, AiMediaType.IMAGE),
-    type: getAssetMimeType(asset, AiMediaType.IMAGE),
-  } as any);
-
-  const uploadResponse = await fetch(init.uploadUrl, {
-    method: 'POST',
-    body: formData,
-    headers: { 'Content-Type': 'multipart/form-data' },
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
   });
-
-  if (!uploadResponse.ok) {
-    throw new Error(i18n.t('scanScreen.alerts.imageUploadFailed'));
-  }
-
-  return postCompleteAiImageUpload({ id: init.id });
-}
-
-async function resolveVideoUpload(videoId: string): Promise<AiUploadCompleteResponse> {
-  let latest: AiUploadCompleteResponse | null = null;
-
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    latest = await postCompleteAiVideoUpload({ videoId });
-
-    if (latest.readyToStream !== false) {
-      return latest;
-    }
-
-    await sleep(2000);
-  }
-
-  if (!latest) {
-    throw new Error(i18n.t('scanScreen.alerts.videoProcessingFailed'));
-  }
-
-  return latest;
-}
-
-async function uploadVideoAsset(
-  asset: ImagePicker.ImagePickerAsset,
-): Promise<AiUploadCompleteResponse> {
-  const init = await postInitializeAiVideoUpload();
-  const fileResponse = await fetch(asset.uri);
-  const fileBlob = await fileResponse.blob();
-
-  const uploadResponse = await fetch(init.uploadUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': getAssetMimeType(asset, AiMediaType.VIDEO),
-    },
-    body: fileBlob,
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error(i18n.t('scanScreen.alerts.videoUploadFailed'));
-  }
-
-  return resolveVideoUpload(init.videoId);
 }
 
 function getUrgencyTone(
@@ -232,7 +130,6 @@ export default function ScanScreen() {
   const { status, user } = useAuthStore();
   const setCredits = useCreditsStore((state) => state.setCredits);
   const router = useRouter();
-  const analyzeMedia = useAnalyzeMedia();
   const creditBalanceQuery = useGetCreditBalance({
     enabled: status === AuthStatusEnum.LOGGED_IN && !!user,
   });
@@ -245,7 +142,7 @@ export default function ScanScreen() {
   const carsQuery = useGetCars(undefined, { enabled: isAuthenticated });
   const cars = useMemo(() => carsQuery.data?.results ?? [], [carsQuery.data?.results]);
 
-  const isBusy = isUploading || analyzeMedia.isPending;
+  const isBusy = isUploading;
   const creditBalance = creditBalanceQuery.data ?? null;
   const analysisPayload = analysis?.result.aiResponse;
   const urgencyTone = useMemo(
@@ -352,40 +249,28 @@ export default function ScanScreen() {
     setIsUploading(true);
 
     try {
-      const uploadedMedia =
-        mediaType === AiMediaType.VIDEO
-          ? await uploadVideoAsset(asset)
-          : await uploadImageAsset(asset);
-
-      if (uploadedMedia.mediaType === AiMediaType.VIDEO && uploadedMedia.readyToStream === false) {
-        throw new Error(translate('scanScreen.alerts.videoNotReady'));
-      }
+      const result = await analyzeAsset({
+        asset,
+        analysisType: AiAnalysisType.GENERAL,
+        ...(selectedCarId ? { carId: selectedCarId } : {}),
+      });
 
       setSelectedMedia((current) =>
         current
           ? {
             ...current,
-            thumbnailUrl: uploadedMedia.thumbnailUrl,
+            thumbnailUrl: result.thumbnailUrl,
           }
           : current,
       );
 
-      const response = await analyzeMedia.mutateAsync({
-        mediaUrl: uploadedMedia.mediaUrl,
-        mediaType: uploadedMedia.mediaType,
-        thumbnailUrl: uploadedMedia.thumbnailUrl,
-        videoId: uploadedMedia.videoId,
-        analysisType: AiAnalysisType.GENERAL,
-        ...(selectedCarId ? { carId: selectedCarId } : {}),
-      });
-
       const nextBalance: CreditBalanceResponse = {
-        remainingCredits: response.balance.remainingCredits,
-        isPremium: response.balance.isPremium,
-        premiumExpiresAt: response.balance.premiumExpiresAt ?? null,
+        remainingCredits: result.response.balance.remainingCredits,
+        isPremium: result.response.balance.isPremium,
+        premiumExpiresAt: result.response.balance.premiumExpiresAt ?? null,
       };
 
-      setAnalysis(response);
+      setAnalysis(result.response);
       setCredits(createCreditsSnapshot(nextBalance));
       queryClient.setQueryData<CreditBalanceResponse>(
         [CreditQueryKeys.BALANCE],
@@ -399,7 +284,7 @@ export default function ScanScreen() {
     } finally {
       setIsUploading(false);
     }
-  }, [analyzeMedia, queryClient, selectedCarId, setCredits, translate]);
+  }, [queryClient, selectedCarId, setCredits, translate]);
 
   const handleSelectSource = useCallback(async (source: ScanSource) => {
     if (!isAuthenticated) {
@@ -411,7 +296,7 @@ export default function ScanScreen() {
     }
 
     closeSourceSheet();
-    await sleep(180);
+    await sleep(SHEET_DISMISS_DELAY_MS);
 
     const asset = await pickAssetFromSource(source);
     if (!asset) {

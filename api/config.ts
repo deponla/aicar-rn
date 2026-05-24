@@ -49,6 +49,7 @@ function getRequestFailedMessage() {
 
 export const instance = axios.create({
   baseURL: API_URL,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -64,12 +65,24 @@ instance.interceptors.request.use((config) => {
 instance.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiErrorResponse>) => {
-    const responseData = error.response?.data;
-    const statusCode = error.response?.status ?? responseData?.statusCode;
+    const statusCode =
+      error.response?.status ?? error.response?.data?.statusCode;
+
+    if (!error.response) {
+      const isTimeout = error.code === "ECONNABORTED";
+      throw new ApiRequestError(
+        {
+          message: isTimeout ? "Request timed out" : getRequestFailedMessage(),
+        },
+        isTimeout ? "Request timed out" : getRequestFailedMessage(),
+      );
+    }
 
     if (isUnauthorizedStatus(statusCode)) {
       void triggerUnauthorizedHandler();
     }
+
+    const responseData = error.response.data;
 
     if (
       responseData?.errors &&

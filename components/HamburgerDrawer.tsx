@@ -27,6 +27,7 @@ type DrawerItemKey =
     | "scanner"
     | "garage"
     | "insights"
+    | "ai-chat"
     | "subscription"
     | "settings"
     | "support";
@@ -36,6 +37,7 @@ type DrawerRoute =
     | "/(tabs)/search"
     | "/(tabs)/insights"
     | "/(tabs)/profile"
+    | "/ai-chat"
     | "/credits"
     | "/profile/settings"
     | "/profile/support";
@@ -59,6 +61,10 @@ function getActiveItemKey(pathname: string): DrawerItemKey | null {
 
     if (pathname.startsWith("/insights")) {
         return "insights";
+    }
+
+    if (pathname.startsWith("/ai-chat")) {
+        return "ai-chat";
     }
 
     if (pathname === "/profile" || pathname.startsWith("/profile")) {
@@ -276,6 +282,12 @@ export default function HamburgerDrawer() {
                 icon: "bar-chart" as const,
                 label: translate("tabs.insights"),
                 onPress: () => handleNavigate("/(tabs)/insights"),
+            },
+            {
+                key: "ai-chat" as const,
+                icon: "smart-toy" as const,
+                label: translate("drawer.aiChat"),
+                onPress: () => handleNavigate("/ai-chat"),
             },
             {
                 key: "subscription" as const,

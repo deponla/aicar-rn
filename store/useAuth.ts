@@ -56,7 +56,11 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 export function clearLocalAuthState() {
   if (!clearLocalAuthStatePromise) {
     clearLocalAuthStatePromise = (async () => {
-      await SecureStore.deleteItemAsync(SECURE_STORE_KEY);
+      try {
+        await SecureStore.deleteItemAsync(SECURE_STORE_KEY);
+      } catch (error) {
+        console.error("Failed to delete auth from SecureStore:", error);
+      }
       useCreditsStore.getState().reset();
       useAuthStore.setState({ user: null, status: AuthStatusEnum.LOGGED_OUT });
       delete instance.defaults.headers.common["Authorization"];

@@ -36,10 +36,17 @@ export default function AuthProvider({
 
   useEffect(() => {
     async function loadAuthStore() {
-      const result = await SecureStore.getItemAsync(SECURE_STORE_KEY);
-      const parsedResult = result
-        ? (JSON.parse(result) as UserResponseData)
-        : null;
+      let parsedResult: UserResponseData | null = null;
+      try {
+        const result = await SecureStore.getItemAsync(SECURE_STORE_KEY);
+        parsedResult = result
+          ? (JSON.parse(result) as UserResponseData)
+          : null;
+      } catch (error) {
+        console.error("Failed to read auth from SecureStore:", error);
+        clearLocalAuthState();
+        return;
+      }
 
       if (parsedResult) {
         const nowTime = Date.now();
@@ -57,13 +64,18 @@ export default function AuthProvider({
         if (shouldRefreshSession) {
           postRefreshToken({ token: parsedResult.refreshToken.token })
             .then(async (data) => {
-              await SecureStore.setItemAsync(
-                SECURE_STORE_KEY,
-                JSON.stringify(data),
-              );
+              try {
+                await SecureStore.setItemAsync(
+                  SECURE_STORE_KEY,
+                  JSON.stringify(data),
+                );
+              } catch (error) {
+                console.error("Failed to persist refreshed session:", error);
+              }
               authStore.login(data);
             })
-            .catch(() => {
+            .catch((error) => {
+              console.error("Token refresh failed during init:", error);
               clearLocalAuthState();
             });
         } else if (accessTokenExpires < nowTime) {
@@ -76,7 +88,8 @@ export default function AuthProvider({
                 user: response.user,
               });
             })
-            .catch(() => {
+            .catch((error) => {
+              console.error("getMe verification failed:", error);
               clearLocalAuthState();
             });
         }
@@ -100,7 +113,9 @@ export default function AuthProvider({
     }
 
     lastRegisteredAccessToken.current = accessToken;
-    registerDeviceAfterLogin().catch(() => { });
+    registerDeviceAfterLogin().catch((error) => {
+      console.error("Device registration failed:", error);
+    });
   }, [authStore.status, authStore.user?.accessToken.token]);
 
   useEffect(() => {
@@ -121,13 +136,18 @@ export default function AuthProvider({
         if (timeUntilExpiry > 0 && timeUntilExpiry <= FIVE_MINUTES) {
           postRefreshToken({ token: authStore.user.refreshToken.token })
             .then(async (data) => {
-              await SecureStore.setItemAsync(
-                SECURE_STORE_KEY,
-                JSON.stringify(data),
-              );
+              try {
+                await SecureStore.setItemAsync(
+                  SECURE_STORE_KEY,
+                  JSON.stringify(data),
+                );
+              } catch (error) {
+                console.error("Failed to persist refreshed session:", error);
+              }
               authStore.login(data);
             })
-            .catch(() => {
+            .catch((error) => {
+              console.error("Proactive token refresh failed:", error);
               clearLocalAuthState();
             });
         }

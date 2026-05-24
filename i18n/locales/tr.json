@@ -776,6 +776,23 @@
         "homeScanner": "Ana Sayfa / Tarayıcı",
         "myGarage": "Garajım",
         "subscription": "Abonelik",
-        "proMember": "Pro Üye"
+        "proMember": "Pro Üye",
+        "aiChat": "AI Sohbet"
+    },
+    "aiChat": {
+        "title": "AI Sohbet",
+        "assistantName": "AI Asistan",
+        "newConversation": "Yeni Konuşma",
+        "emptyTitle": "Henüz Konuşma Yok",
+        "emptyDescription": "Araç bakımı, teşhis veya herhangi bir araçla ilgili soru sormak için AI ile yeni bir konuşma başlatın.",
+        "startConversation": "Konuşmayı başlatmak için bir mesaj gönderin",
+        "messagePlaceholder": "Aracınız hakkında bir şey sorun...",
+        "deleteTitle": "Konuşmayı Sil",
+        "deleteConfirm": "Bu konuşmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+        "loginTitle": "AI Sohbet için giriş yapın",
+        "loginDescription": "Aracınız hakkında AI ile sohbet etmek için giriş yapın.",
+        "uploadFailed": "Resim yüklenemedi. Lütfen tekrar deneyin.",
+        "permissionTitle": "İzin Gerekli",
+        "permissionDescription": "Resim göndermek için fotoğraf kitaplığı erişimine izin verin."
     }
 }
