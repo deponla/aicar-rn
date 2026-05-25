@@ -17,7 +17,12 @@
             "unverified": "Doğrulanmadı"
         },
         "cancel": "İptal",
+        "delete": "Sil",
         "error": "Hata"
+    },
+    "errorBoundary": {
+        "title": "Bir şeyler ters gitti",
+        "description": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin."
     },
     "auth": {
         "loading": "Yükleniyor...",
@@ -256,6 +261,7 @@
             "imageUploadFailed": "Görsel yükleme başarısız oldu.",
             "videoUploadFailed": "Video yükleme başarısız oldu.",
             "videoProcessingFailed": "Video işlenemedi.",
+            "videoNotSupportedInDev": "Geliştirme modunda video analizi desteklenmiyor.",
             "videoNotReady": "Video henüz hazır değil. Lütfen kısa bir süre sonra tekrar deneyin."
         }
     },
@@ -289,7 +295,8 @@
         "modelEmptyState": "Model bulunamadı",
         "modelSelectBrandFirst": "Önce marka seçin",
         "yearLabel": "Yıl *",
-        "yearPlaceholder": "Örn. 2020",
+        "yearPickerTitle": "Yıl Seçin",
+        "yearPlaceholder": "Yıl seçin",
         "fuelTypeLabel": "Yakıt Tipi",
         "transmissionLabel": "Vites",
         "engineCcLabel": "Motor Hacmi (cc)",

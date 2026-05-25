@@ -17,7 +17,12 @@
             "unverified": "Not verified"
         },
         "cancel": "Cancel",
+        "delete": "Delete",
         "error": "Error"
+    },
+    "errorBoundary": {
+        "title": "Something went wrong",
+        "description": "An unexpected error occurred. Please try again."
     },
     "auth": {
         "loading": "Loading...",
@@ -256,6 +261,7 @@
             "imageUploadFailed": "Image upload failed.",
             "videoUploadFailed": "Video upload failed.",
             "videoProcessingFailed": "The video could not be processed.",
+            "videoNotSupportedInDev": "Video analysis is not supported in dev mode.",
             "videoNotReady": "The video is not ready yet. Please try again shortly."
         }
     },
@@ -289,7 +295,8 @@
         "modelEmptyState": "No models found",
         "modelSelectBrandFirst": "Select a brand first",
         "yearLabel": "Year *",
-        "yearPlaceholder": "e.g. 2020",
+        "yearPickerTitle": "Select Year",
+        "yearPlaceholder": "Select a year",
         "fuelTypeLabel": "Fuel Type",
         "transmissionLabel": "Transmission",
         "engineCcLabel": "Engine Volume (cc)",

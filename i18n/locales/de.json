@@ -17,7 +17,12 @@
             "unverified": "Nicht bestätigt"
         },
         "cancel": "Abbrechen",
+        "delete": "Löschen",
         "error": "Fehler"
+    },
+    "errorBoundary": {
+        "title": "Etwas ist schiefgelaufen",
+        "description": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
     },
     "auth": {
         "loading": "Wird geladen...",
@@ -256,6 +261,7 @@
             "imageUploadFailed": "Bild-Upload fehlgeschlagen.",
             "videoUploadFailed": "Video-Upload fehlgeschlagen.",
             "videoProcessingFailed": "Das Video konnte nicht verarbeitet werden.",
+            "videoNotSupportedInDev": "Videoanalyse wird im Entwicklungsmodus nicht unterstützt.",
             "videoNotReady": "Das Video ist noch nicht bereit. Bitte versuchen Sie es in Kürze erneut."
         }
     },
@@ -289,7 +295,8 @@
         "modelEmptyState": "Keine Modelle gefunden",
         "modelSelectBrandFirst": "Wählen Sie zuerst eine Marke",
         "yearLabel": "Baujahr *",
-        "yearPlaceholder": "z. B. 2020",
+        "yearPickerTitle": "Baujahr auswählen",
+        "yearPlaceholder": "Baujahr auswählen",
         "fuelTypeLabel": "Kraftstoffart",
         "transmissionLabel": "Getriebe",
         "engineCcLabel": "Hubraum (cc)",

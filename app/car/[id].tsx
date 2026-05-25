@@ -1,5 +1,6 @@
 import { LegendList } from "@legendapp/list";
 import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
+import CarYearField from "@/components/CarYearField";
 import LoginRequired from "@/components/LoginRequired";
 import ScreenContainer from "@/components/ScreenContainer";
 import { useNotification } from "@/components/Notification";
@@ -8,6 +9,7 @@ import { useGetAnalysisLogs } from "@/query-hooks/useAnalysisLogs";
 import { useAuthStore } from "@/store/useAuth";
 import { AnalyzeMediaLog, AiAnalysisType, AiUrgency } from "@/types/ai";
 import { AuthStatusEnum } from "@/types/auth";
+import { isSelectableCarYear } from "@/utils/carYears";
 import {
   Car,
   FuelTypeEnum,
@@ -157,7 +159,7 @@ const EditCarModal = React.memo(function EditCarModal({
   const { t } = useTranslation();
   const [brand, setBrand] = useState(car.brand);
   const [model, setModel] = useState(car.model);
-  const [year, setYear] = useState(String(car.year));
+  const [year, setYear] = useState(car.year);
   const [fuelType, setFuelType] = useState<FuelTypeEnum | undefined>(car.fuelType);
   const [transmission, setTransmission] = useState<TransmissionEnum | undefined>(
     car.transmission,
@@ -177,9 +179,12 @@ const EditCarModal = React.memo(function EditCarModal({
   );
   const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
 
-  const parsedYear = parseInt(year, 10);
+  const yearChanged = year !== car.year;
   const submitDisabled =
-    isLoading || !brand.trim() || !model.trim() || Number.isNaN(parsedYear);
+    isLoading ||
+    !brand.trim() ||
+    !model.trim() ||
+    (yearChanged && !isSelectableCarYear(year));
 
   const purchaseDateValue = useMemo(() => {
     if (!purchaseDate) {
@@ -214,14 +219,17 @@ const EditCarModal = React.memo(function EditCarModal({
   );
 
   const handleSubmit = useCallback(() => {
-    if (!brand.trim() || !model.trim() || Number.isNaN(parsedYear)) {
+    if (
+      !brand.trim() ||
+      !model.trim() ||
+      (yearChanged && !isSelectableCarYear(year))
+    ) {
       return;
     }
 
-    onSubmit({
+    const payload: UpdateCarRequest = {
       brand: brand.trim(),
       model: model.trim(),
-      year: parsedYear,
       fuelType,
       transmission,
       engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
@@ -231,21 +239,28 @@ const EditCarModal = React.memo(function EditCarModal({
       color: color.trim() || undefined,
       notes: notes.trim() || undefined,
       purchaseDate,
-    });
+    };
+
+    if (yearChanged) {
+      payload.year = year;
+    }
+
+    onSubmit(payload);
   }, [
     brand,
     color,
     currentMileage,
     engineCC,
     fuelType,
+    yearChanged,
     nickname,
     normalizedLicensePlate,
     notes,
     model,
     onSubmit,
-    parsedYear,
     purchaseDate,
     transmission,
+    year,
   ]);
 
   return (
@@ -294,13 +309,12 @@ const EditCarModal = React.memo(function EditCarModal({
               />
 
               <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
-              <TextInput
-                style={styles.input}
+              <CarYearField
                 value={year}
-                onChangeText={setYear}
                 placeholder={t("carDetail.yearPlaceholder")}
-                placeholderTextColor={tokens.textPlaceholder}
-                keyboardType="number-pad"
+                title={t("carDetail.yearPickerTitle")}
+                legacyValue={car.year}
+                onChange={setYear}
               />
 
               <Text style={styles.inputLabel}>{t("carDetail.licensePlateLabel")}</Text>

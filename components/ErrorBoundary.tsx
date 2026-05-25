@@ -1,4 +1,5 @@
 import { Colors, FontFamily } from "@/constants/theme";
+import i18n from "@/i18n";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -32,16 +33,16 @@ export default class ErrorBoundary extends React.Component<
             return (
                 <View style={styles.container}>
                     <Text style={styles.emoji}>⚠️</Text>
-                    <Text style={styles.title}>Something went wrong</Text>
+                    <Text style={styles.title}>{i18n.t("errorBoundary.title")}</Text>
                     <Text style={styles.subtitle}>
-                        An unexpected error occurred. Please try again.
+                        {i18n.t("errorBoundary.description")}
                     </Text>
                     <TouchableOpacity
                         style={styles.button}
                         onPress={this.handleReset}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.buttonText}>Retry</Text>
+                        <Text style={styles.buttonText}>{i18n.t("common.retry")}</Text>
                     </TouchableOpacity>
                 </View>
             );

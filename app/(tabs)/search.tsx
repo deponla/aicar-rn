@@ -1,5 +1,6 @@
 import { Colors, tokens, FontFamily, ambientShadow } from "@/constants/theme";
 import CarBrandModelFields from "@/components/CarBrandModelFields";
+import CarYearField from "@/components/CarYearField";
 import CarPhotoGrid from "@/components/CarPhotoGrid";
 import HomeHeader from "@/components/HomeHeader";
 import LoginRequired from "@/components/LoginRequired";
@@ -28,6 +29,7 @@ import { Href, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useTranslation } from "react-i18next";
+import { isSelectableCarYear } from "@/utils/carYears";
 import {
   ActionSheetIOS,
   ActivityIndicator,
@@ -197,7 +199,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
   const { t } = useTranslation();
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState<number>();
   const [fuelType, setFuelType] = useState<FuelTypeEnum | undefined>();
   const [transmission, setTransmission] = useState<
     TransmissionEnum | undefined
@@ -212,17 +214,16 @@ const AddCarComposer = React.memo(function AddCarComposer({
   const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<PendingCarPhoto[]>([]);
 
-  const parsedYear = parseInt(year, 10);
   const submitDisabled =
-    isLoading || !brand.trim() || !model.trim() || Number.isNaN(parsedYear);
+    isLoading || !brand.trim() || !model.trim() || !isSelectableCarYear(year);
 
   const previewTitle = useMemo(() => {
     const title = [brand.trim(), model.trim()].filter(Boolean).join(" ");
-    if (!title && !year.trim()) {
+    if (!title && year == null) {
       return t("garageScreen.addCar.previewFallback");
     }
 
-    return [year.trim(), title].filter(Boolean).join(" ");
+    return [year != null ? String(year) : undefined, title].filter(Boolean).join(" ");
   }, [brand, model, t, year]);
 
   const normalizedLicensePlate = useMemo(
@@ -352,7 +353,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
   }, []);
 
   const handleSubmit = useCallback(() => {
-    if (!brand.trim() || !model.trim() || Number.isNaN(parsedYear)) {
+    if (!brand.trim() || !model.trim() || !isSelectableCarYear(year)) {
       return;
     }
 
@@ -360,7 +361,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
       {
         brand: brand.trim(),
         model: model.trim(),
-        year: parsedYear,
+        year,
         fuelType,
         transmission,
         engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
@@ -385,9 +386,9 @@ const AddCarComposer = React.memo(function AddCarComposer({
     notes,
     onSubmit,
     pendingPhotos,
-    parsedYear,
     purchaseDate,
     transmission,
+    year,
   ]);
 
   return (
@@ -492,13 +493,11 @@ const AddCarComposer = React.memo(function AddCarComposer({
           />
 
           <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
-          <TextInput
-            style={styles.input}
+          <CarYearField
             value={year}
-            onChangeText={setYear}
             placeholder={t("carDetail.yearPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-            keyboardType="number-pad"
+            title={t("carDetail.yearPickerTitle")}
+            onChange={setYear}
           />
         </View>
 
