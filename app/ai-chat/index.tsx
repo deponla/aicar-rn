@@ -9,6 +9,7 @@ import { AuthStatusEnum } from "@/types/auth";
 import LoginRequired from "@/components/LoginRequired";
 import type { AiConversation } from "@/types/ai-chat";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList } from "@legendapp/list";
 import dayjs from "dayjs";
 import { Href, useRouter } from "expo-router";
 import { useCallback } from "react";
@@ -16,7 +17,6 @@ import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Alert,
-    FlatList,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -153,10 +153,12 @@ export default function AiChatListScreen() {
                     </Text>
                 </View>
             ) : (
-                <FlatList
+                <LegendList
                     data={conversationsQuery.data.results}
                     keyExtractor={(item) => item.id}
                     renderItem={renderConversation}
+                    estimatedItemSize={88}
+                    recycleItems
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
                     ItemSeparatorComponent={() => <View style={styles.separator} />}

@@ -2,12 +2,12 @@ import { FontFamily, tokens } from "@/constants/theme";
 import { useGetCarBrands, useGetCarModels } from "@/query-hooks/useCarBrands";
 import { useDebounce } from "@/utils/useDebounce";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList } from "@legendapp/list";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Modal,
-    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -61,29 +61,35 @@ function PickerModal({
                         placeholderTextColor={tokens.textPlaceholder}
                     />
 
-                    <ScrollView style={styles.optionList} showsVerticalScrollIndicator={false}>
-                        {loading ? (
+                    {loading ? (
+                        <View style={styles.optionList}>
                             <ActivityIndicator style={{ paddingVertical: 18 }} color={tokens.textSecondary} />
-                        ) : options.length > 0 ? (
-                            options.map((option) => (
+                        </View>
+                    ) : (
+                        <LegendList
+                            data={options}
+                            keyExtractor={(item) => item.key}
+                            estimatedItemSize={48}
+                            recycleItems
+                            style={styles.optionList}
+                            showsVerticalScrollIndicator={false}
+                            ListEmptyComponent={<Text style={styles.emptyText}>{emptyText}</Text>}
+                            renderItem={({ item }) => (
                                 <TouchableOpacity
-                                    key={option.key}
                                     style={styles.optionButton}
-                                    onPress={() => onSelect(option.key)}
+                                    onPress={() => onSelect(item.key)}
                                     activeOpacity={0.85}
                                 >
-                                    <Text style={styles.optionText}>{option.label}</Text>
+                                    <Text style={styles.optionText}>{item.label}</Text>
                                     <MaterialIcons
                                         name="keyboard-arrow-right"
                                         size={18}
                                         color={tokens.textSecondary}
                                     />
                                 </TouchableOpacity>
-                            ))
-                        ) : (
-                            <Text style={styles.emptyText}>{emptyText}</Text>
-                        )}
-                    </ScrollView>
+                            )}
+                        />
+                    )}
                 </View>
             </View>
         </Modal>

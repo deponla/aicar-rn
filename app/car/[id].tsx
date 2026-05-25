@@ -26,7 +26,6 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -263,195 +262,201 @@ const EditCarModal = React.memo(function EditCarModal({
             <MaterialIcons name="close" size={24} color={tokens.textPrimary} />
           </TouchableOpacity>
         </View>
-        <ScrollView
+        <LegendList
+          data={[0]}
+          renderItem={() => (
+            <>
+              <Text style={styles.inputLabel}>{t("carDetail.nicknameLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={nickname}
+                onChangeText={setNickname}
+                placeholder={t("carDetail.nicknamePlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.brandLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={brand}
+                onChangeText={setBrand}
+                placeholder={t("carDetail.brandPlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.modelLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={model}
+                onChangeText={setModel}
+                placeholder={t("carDetail.modelPlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={year}
+                onChangeText={setYear}
+                placeholder={t("carDetail.yearPlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+                keyboardType="number-pad"
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.licensePlateLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={licensePlate}
+                onChangeText={setLicensePlate}
+                placeholder={t("carDetail.licensePlatePlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+                autoCapitalize="characters"
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.colorLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={color}
+                onChangeText={setColor}
+                placeholder={t("carDetail.colorPlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.purchaseDateLabel")}</Text>
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() => setShowPurchaseDatePicker((current) => !current)}
+                activeOpacity={0.85}
+              >
+                <Text
+                  style={[
+                    styles.dateInputText,
+                    !purchaseDate && styles.dateInputTextPlaceholder,
+                  ]}
+                >
+                  {formattedPurchaseDate}
+                </Text>
+                <MaterialIcons name="calendar-today" size={18} color={tokens.textSecondary} />
+              </TouchableOpacity>
+
+              {purchaseDate ? (
+                <TouchableOpacity
+                  style={styles.dateClearButton}
+                  onPress={() => {
+                    setPurchaseDate(undefined);
+                    setShowPurchaseDatePicker(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.dateClearButtonText}>
+                    {t("carDetail.purchaseDateClear")}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+
+              {showPurchaseDatePicker ? (
+                <View style={styles.datePickerWrapper}>
+                  <DateTimePicker
+                    value={purchaseDateValue}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    maximumDate={new Date()}
+                    onChange={handlePurchaseDateChange}
+                  />
+                </View>
+              ) : null}
+
+              <Text style={styles.inputLabel}>{t("carDetail.fuelTypeLabel")}</Text>
+              <View style={styles.chipRow}>
+                {FUEL_OPTIONS.map((fuelValue) => (
+                  <TouchableOpacity
+                    key={fuelValue}
+                    style={[
+                      styles.selectChip,
+                      fuelType === fuelValue && styles.selectChipActive,
+                    ]}
+                    onPress={() =>
+                      setFuelType(fuelType === fuelValue ? undefined : fuelValue)
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.selectChipText,
+                        fuelType === fuelValue && styles.selectChipTextActive,
+                      ]}
+                    >
+                      {getFuelLabel(fuelValue, t)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>{t("carDetail.transmissionLabel")}</Text>
+              <View style={styles.chipRow}>
+                {TRANSMISSION_OPTIONS.map((transmissionValue) => (
+                  <TouchableOpacity
+                    key={transmissionValue}
+                    style={[
+                      styles.selectChip,
+                      transmission === transmissionValue && styles.selectChipActive,
+                    ]}
+                    onPress={() =>
+                      setTransmission(
+                        transmission === transmissionValue ? undefined : transmissionValue,
+                      )
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.selectChipText,
+                        transmission === transmissionValue &&
+                        styles.selectChipTextActive,
+                      ]}
+                    >
+                      {getTransmissionLabel(transmissionValue, t)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>{t("carDetail.engineCcLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={engineCC}
+                onChangeText={setEngineCC}
+                placeholder={t("carDetail.engineCcPlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+                keyboardType="number-pad"
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.mileageLabel")}</Text>
+              <TextInput
+                style={styles.input}
+                value={currentMileage}
+                onChangeText={setCurrentMileage}
+                placeholder={t("carDetail.mileagePlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+                keyboardType="number-pad"
+              />
+
+              <Text style={styles.inputLabel}>{t("carDetail.notesLabel")}</Text>
+              <TextInput
+                style={[styles.input, styles.notesInput]}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder={t("carDetail.notesPlaceholder")}
+                placeholderTextColor={tokens.textPlaceholder}
+                multiline
+                textAlignVertical="top"
+              />
+            </>
+          )}
+          keyExtractor={() => "edit-car-form"}
+          estimatedItemSize={900}
           style={styles.modalBody}
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.inputLabel}>{t("carDetail.nicknameLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={nickname}
-            onChangeText={setNickname}
-            placeholder={t("carDetail.nicknamePlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.brandLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={brand}
-            onChangeText={setBrand}
-            placeholder={t("carDetail.brandPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.modelLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={model}
-            onChangeText={setModel}
-            placeholder={t("carDetail.modelPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={year}
-            onChangeText={setYear}
-            placeholder={t("carDetail.yearPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-            keyboardType="number-pad"
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.licensePlateLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={licensePlate}
-            onChangeText={setLicensePlate}
-            placeholder={t("carDetail.licensePlatePlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-            autoCapitalize="characters"
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.colorLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={color}
-            onChangeText={setColor}
-            placeholder={t("carDetail.colorPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.purchaseDateLabel")}</Text>
-          <TouchableOpacity
-            style={styles.dateInput}
-            onPress={() => setShowPurchaseDatePicker((current) => !current)}
-            activeOpacity={0.85}
-          >
-            <Text
-              style={[
-                styles.dateInputText,
-                !purchaseDate && styles.dateInputTextPlaceholder,
-              ]}
-            >
-              {formattedPurchaseDate}
-            </Text>
-            <MaterialIcons name="calendar-today" size={18} color={tokens.textSecondary} />
-          </TouchableOpacity>
-
-          {purchaseDate ? (
-            <TouchableOpacity
-              style={styles.dateClearButton}
-              onPress={() => {
-                setPurchaseDate(undefined);
-                setShowPurchaseDatePicker(false);
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.dateClearButtonText}>
-                {t("carDetail.purchaseDateClear")}
-              </Text>
-            </TouchableOpacity>
-          ) : null}
-
-          {showPurchaseDatePicker ? (
-            <View style={styles.datePickerWrapper}>
-              <DateTimePicker
-                value={purchaseDateValue}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                maximumDate={new Date()}
-                onChange={handlePurchaseDateChange}
-              />
-            </View>
-          ) : null}
-
-          <Text style={styles.inputLabel}>{t("carDetail.fuelTypeLabel")}</Text>
-          <View style={styles.chipRow}>
-            {FUEL_OPTIONS.map((fuelValue) => (
-              <TouchableOpacity
-                key={fuelValue}
-                style={[
-                  styles.selectChip,
-                  fuelType === fuelValue && styles.selectChipActive,
-                ]}
-                onPress={() =>
-                  setFuelType(fuelType === fuelValue ? undefined : fuelValue)
-                }
-              >
-                <Text
-                  style={[
-                    styles.selectChipText,
-                    fuelType === fuelValue && styles.selectChipTextActive,
-                  ]}
-                >
-                  {getFuelLabel(fuelValue, t)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.inputLabel}>{t("carDetail.transmissionLabel")}</Text>
-          <View style={styles.chipRow}>
-            {TRANSMISSION_OPTIONS.map((transmissionValue) => (
-              <TouchableOpacity
-                key={transmissionValue}
-                style={[
-                  styles.selectChip,
-                  transmission === transmissionValue && styles.selectChipActive,
-                ]}
-                onPress={() =>
-                  setTransmission(
-                    transmission === transmissionValue ? undefined : transmissionValue,
-                  )
-                }
-              >
-                <Text
-                  style={[
-                    styles.selectChipText,
-                    transmission === transmissionValue &&
-                    styles.selectChipTextActive,
-                  ]}
-                >
-                  {getTransmissionLabel(transmissionValue, t)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.inputLabel}>{t("carDetail.engineCcLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={engineCC}
-            onChangeText={setEngineCC}
-            placeholder={t("carDetail.engineCcPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-            keyboardType="number-pad"
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.mileageLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            value={currentMileage}
-            onChangeText={setCurrentMileage}
-            placeholder={t("carDetail.mileagePlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-            keyboardType="number-pad"
-          />
-
-          <Text style={styles.inputLabel}>{t("carDetail.notesLabel")}</Text>
-          <TextInput
-            style={[styles.input, styles.notesInput]}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder={t("carDetail.notesPlaceholder")}
-            placeholderTextColor={tokens.textPlaceholder}
-            multiline
-            textAlignVertical="top"
-          />
-        </ScrollView>
+        />
         <View style={styles.modalFooter}>
           <TouchableOpacity
             style={[

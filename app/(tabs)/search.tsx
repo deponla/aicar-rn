@@ -20,6 +20,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList } from "@legendapp/list";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -32,7 +33,6 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -409,7 +409,8 @@ const AddCarComposer = React.memo(function AddCarComposer({
         </TouchableOpacity>
       </View>
 
-      <ScrollView
+      <LegendList
+        estimatedItemSize={1100}
         style={styles.addComposerScroll}
         contentContainerStyle={[
           styles.addComposerContent,
@@ -672,7 +673,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
             isBusy={isPhotoBusy}
           />
         </View>
-      </ScrollView>
+      </LegendList>
 
       <View
         style={[
@@ -845,7 +846,8 @@ export default function GarageScreen() {
         />
       ) : (
         <>
-          <ScrollView
+          <LegendList
+            estimatedItemSize={700}
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -920,7 +922,7 @@ export default function GarageScreen() {
                 </TouchableOpacity>
               </View>
             )}
-          </ScrollView>
+          </LegendList>
 
           {primaryCar ? (
             <TouchableOpacity

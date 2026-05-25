@@ -1,8 +1,7 @@
 import { PlatformPressable } from 'expo-router/react-navigation';
 import * as Device from 'expo-device';
-import * as Haptics from 'expo-haptics';
 import type { ComponentProps, MouseEvent } from 'react';
-import { type ColorValue, type GestureResponderEvent } from 'react-native';
+import { Platform, type ColorValue, type GestureResponderEvent } from 'react-native';
 
 type HapticTabProps = Omit<ComponentProps<typeof PlatformPressable>, 'pressColor' | 'hoverEffect'> & {
   pressColor?: ColorValue;
@@ -33,9 +32,10 @@ export function HapticTab(props: HapticTabProps) {
           : undefined
       }
       onPressIn={(ev) => {
-        // Only trigger haptics on real iOS devices (not simulator)
-        if (process.env.EXPO_OS === 'ios' && Device.isDevice) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (Platform.OS === 'ios' && Device.isDevice) {
+          void import('expo-haptics')
+            .then((Haptics) => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light))
+            .catch(() => undefined);
         }
         onPressIn?.(ev);
       }}

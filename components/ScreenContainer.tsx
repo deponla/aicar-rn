@@ -1,12 +1,12 @@
 import { tokens, FontFamily } from "@/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList, type LegendListRef } from "@legendapp/list";
 import { useRouter } from "expo-router";
 import React, { ReactNode } from "react";
 import {
   Keyboard,
   Platform,
   RefreshControlProps,
-  ScrollView,
   StyleProp,
   StyleSheet,
   Text,
@@ -25,7 +25,7 @@ interface ScreenContainerProps {
   readonly contentContainerStyle?: StyleProp<ViewStyle>;
   readonly headerRight?: ReactNode;
   readonly showBackButton?: boolean;
-  readonly scrollRef?: React.RefObject<ScrollView | null>;
+  readonly scrollRef?: React.RefObject<LegendListRef | null>;
   readonly onScrollBeginDrag?: () => void;
   readonly refreshControl?: React.ReactElement<RefreshControlProps>;
   readonly scrollable?: boolean;
@@ -92,8 +92,12 @@ export default function ScreenContainer({
     }
 
     return (
-      <ScrollView
+      <LegendList
         ref={scrollRef}
+        data={[children]}
+        renderItem={({ item }) => <>{item}</>}
+        keyExtractor={() => "screen-content"}
+        estimatedItemSize={700}
         style={[styles.scrollView, { marginTop: HEADER_HEIGHT + insets.top }]}
         contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
         showsVerticalScrollIndicator={false}
@@ -101,9 +105,7 @@ export default function ScreenContainer({
         keyboardShouldPersistTaps="handled"
         onScrollBeginDrag={onScrollBeginDrag}
         refreshControl={refreshControl}
-      >
-        {children}
-      </ScrollView>
+      />
     );
   };
 

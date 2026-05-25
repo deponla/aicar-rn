@@ -15,6 +15,7 @@ import {
 } from "@/types/car-reminder";
 import { Car } from "@/types/car";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList } from "@legendapp/list";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
 import React, { useCallback, useMemo, useState } from "react";
@@ -22,7 +23,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -544,7 +544,177 @@ export default function InsightsScreen() {
         </View>
       ) : (
         <>
-          <ScrollView
+          <LegendList
+            data={[0]}
+            renderItem={() => (
+              <>
+                <Text style={styles.pageTitle}>{t("history.dashboard.pageTitle")}</Text>
+
+                {cars.length > 0 ? (
+                  <>
+                    <LegendList
+                      horizontal
+                      data={cars}
+                      renderItem={({ item }) => (
+                        <VehicleChip
+                          car={item}
+                          isSelected={item.id === resolvedSelectedCarId}
+                          onPress={() => setSelectedCarId(item.id)}
+                        />
+                      )}
+                      keyExtractor={(item) => item.id}
+                      estimatedItemSize={140}
+                      recycleItems
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.vehicleSelectorContent}
+                      style={styles.vehicleSelector}
+                    />
+
+                    <View style={styles.segmentedControl}>
+                      {PERIODS.map((item) => {
+                        const isActive = item === period;
+
+                        return (
+                          <TouchableOpacity
+                            key={item}
+                            activeOpacity={0.85}
+                            onPress={() => setPeriod(item)}
+                            style={[styles.segmentButton, isActive && styles.segmentButtonActive]}
+                          >
+                            <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
+                              {t(`history.dashboard.periods.${item}`)}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <View style={styles.card}>
+                      <View style={styles.forecastHeader}>
+                        <View style={styles.forecastLabelRow}>
+                          <MaterialIcons name="auto-awesome" size={20} color="#1FC7FF" />
+                          <Text style={styles.forecastLabel}>{t("history.dashboard.forecast.label")}</Text>
+                        </View>
+                        {activeReminder ? (
+                          <View style={styles.forecastTypeBadge}>
+                            <MaterialIcons
+                              name={
+                                activeReminder.type === CarReminderTypeEnum.OIL_CHANGE
+                                  ? "opacity"
+                                  : activeReminder.type === CarReminderTypeEnum.INSPECTION
+                                    ? "fact-check"
+                                    : "build"
+                              }
+                              size={14}
+                              color={Colors.secondary}
+                            />
+                            <Text style={styles.forecastTypeText}>
+                              {t(`history.dashboard.reminderTypes.${activeReminder.type}`)}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+
+                      <Text style={styles.forecastTitle}>{forecastMessage}</Text>
+
+                      <View style={styles.forecastMetaBlock}>
+                        <Text style={styles.forecastMetaText}>
+                          {t("history.dashboard.forecast.lastScan")}: {latestScan ? formatAbsoluteDate(latestScan.createdAt, localeTag) : t("history.dashboard.forecast.noScans")}
+                        </Text>
+                        <Text style={styles.forecastMetaText}>
+                          {t("history.dashboard.forecast.currentMileage")}: {selectedCar?.currentMileage != null ? `${formatNumber(selectedCar.currentMileage, localeTag)} km` : t("history.dashboard.forecast.noMileage")}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity style={styles.forecastButton} activeOpacity={0.9} onPress={handleOpenPlanner}>
+                        <MaterialIcons name="calendar-month" size={18} color={tokens.textInverse} />
+                        <Text style={styles.forecastButtonText}>{t("history.dashboard.forecast.cta")}</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.card}>
+                      <View style={styles.cardHeaderRow}>
+                        <Text style={styles.cardTitle}>{t("history.dashboard.activity.title")}</Text>
+                        <View style={styles.statusBadge}>
+                          <View style={styles.statusBadgeDot} />
+                          <Text style={styles.statusBadgeText}>
+                            {periodLogs.length > 0
+                              ? t("history.dashboard.activity.active")
+                              : t("history.dashboard.activity.idle")}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.chartArea}>
+                        {activityBuckets.map((bucket) => (
+                          <View key={bucket.key} style={styles.chartColumn}>
+                            <View style={styles.chartTrack}>
+                              <View
+                                style={[
+                                  styles.chartFill,
+                                  {
+                                    height: `${Math.max((bucket.count / chartMax) * 100, bucket.count > 0 ? 10 : 0)}%`,
+                                    opacity: bucket.count > 0 ? 1 : 0.22,
+                                  },
+                                ]}
+                              />
+                            </View>
+                            <Text style={styles.chartLabel}>{bucket.label}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+
+                    <View style={styles.card}>
+                      <Text style={styles.cardTitle}>{t("history.dashboard.findings.title")}</Text>
+                      {findings.some((item) => item.count > 0) ? (
+                        <View style={styles.findingsList}>
+                          {findings.map((finding) => (
+                            <View key={finding.key} style={styles.findingRow}>
+                              <View style={styles.findingHeader}>
+                                <Text style={styles.findingLabel}>{finding.label}</Text>
+                                <Text style={styles.findingValue}>{finding.percentage}%</Text>
+                              </View>
+                              <View style={styles.findingTrack}>
+                                <View
+                                  style={[
+                                    styles.findingFill,
+                                    { width: `${Math.max(finding.percentage, finding.count > 0 ? 8 : 0)}%` },
+                                  ]}
+                                />
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text style={styles.emptyCardText}>{t("history.dashboard.findings.empty")}</Text>
+                      )}
+                    </View>
+
+                    {logs.length === 0 ? (
+                      <View style={[styles.card, styles.helperCard]}>
+                        <Text style={styles.helperTitle}>{t("history.dashboard.emptyTitle")}</Text>
+                        <Text style={styles.helperDescription}>{t("history.dashboard.emptyDescription")}</Text>
+                      </View>
+                    ) : null}
+                  </>
+                ) : (
+                  <View style={[styles.card, styles.helperCard]}>
+                    <Text style={styles.helperTitle}>{t("history.dashboard.noVehicleTitle")}</Text>
+                    <Text style={styles.helperDescription}>{t("history.dashboard.noVehicleDescription")}</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      style={styles.secondaryButton}
+                      onPress={() => router.push("/(tabs)/search")}
+                    >
+                      <Text style={styles.secondaryButtonText}>{t("history.dashboard.goToGarage")}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
+            keyExtractor={() => "insights-content"}
+            estimatedItemSize={900}
             style={styles.scrollView}
             contentContainerStyle={[
               styles.contentContainer,
@@ -552,169 +722,7 @@ export default function InsightsScreen() {
             ]}
             showsVerticalScrollIndicator={false}
             refreshControl={refreshControl}
-          >
-            <Text style={styles.pageTitle}>{t("history.dashboard.pageTitle")}</Text>
-
-            {cars.length > 0 ? (
-              <>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.vehicleSelectorContent}
-                  style={styles.vehicleSelector}
-                >
-                  {cars.map((car) => (
-                    <VehicleChip
-                      key={car.id}
-                      car={car}
-                      isSelected={car.id === resolvedSelectedCarId}
-                      onPress={() => setSelectedCarId(car.id)}
-                    />
-                  ))}
-                </ScrollView>
-
-                <View style={styles.segmentedControl}>
-                  {PERIODS.map((item) => {
-                    const isActive = item === period;
-
-                    return (
-                      <TouchableOpacity
-                        key={item}
-                        activeOpacity={0.85}
-                        onPress={() => setPeriod(item)}
-                        style={[styles.segmentButton, isActive && styles.segmentButtonActive]}
-                      >
-                        <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
-                          {t(`history.dashboard.periods.${item}`)}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <View style={styles.card}>
-                  <View style={styles.forecastHeader}>
-                    <View style={styles.forecastLabelRow}>
-                      <MaterialIcons name="auto-awesome" size={20} color="#1FC7FF" />
-                      <Text style={styles.forecastLabel}>{t("history.dashboard.forecast.label")}</Text>
-                    </View>
-                    {activeReminder ? (
-                      <View style={styles.forecastTypeBadge}>
-                        <MaterialIcons
-                          name={
-                            activeReminder.type === CarReminderTypeEnum.OIL_CHANGE
-                              ? "opacity"
-                              : activeReminder.type === CarReminderTypeEnum.INSPECTION
-                                ? "fact-check"
-                                : "build"
-                          }
-                          size={14}
-                          color={Colors.secondary}
-                        />
-                        <Text style={styles.forecastTypeText}>
-                          {t(`history.dashboard.reminderTypes.${activeReminder.type}`)}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  <Text style={styles.forecastTitle}>{forecastMessage}</Text>
-
-                  <View style={styles.forecastMetaBlock}>
-                    <Text style={styles.forecastMetaText}>
-                      {t("history.dashboard.forecast.lastScan")}: {latestScan ? formatAbsoluteDate(latestScan.createdAt, localeTag) : t("history.dashboard.forecast.noScans")}
-                    </Text>
-                    <Text style={styles.forecastMetaText}>
-                      {t("history.dashboard.forecast.currentMileage")}: {selectedCar?.currentMileage != null ? `${formatNumber(selectedCar.currentMileage, localeTag)} km` : t("history.dashboard.forecast.noMileage")}
-                    </Text>
-                  </View>
-
-                  <TouchableOpacity style={styles.forecastButton} activeOpacity={0.9} onPress={handleOpenPlanner}>
-                    <MaterialIcons name="calendar-month" size={18} color={tokens.textInverse} />
-                    <Text style={styles.forecastButtonText}>{t("history.dashboard.forecast.cta")}</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.card}>
-                  <View style={styles.cardHeaderRow}>
-                    <Text style={styles.cardTitle}>{t("history.dashboard.activity.title")}</Text>
-                    <View style={styles.statusBadge}>
-                      <View style={styles.statusBadgeDot} />
-                      <Text style={styles.statusBadgeText}>
-                        {periodLogs.length > 0
-                          ? t("history.dashboard.activity.active")
-                          : t("history.dashboard.activity.idle")}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.chartArea}>
-                    {activityBuckets.map((bucket) => (
-                      <View key={bucket.key} style={styles.chartColumn}>
-                        <View style={styles.chartTrack}>
-                          <View
-                            style={[
-                              styles.chartFill,
-                              {
-                                height: `${Math.max((bucket.count / chartMax) * 100, bucket.count > 0 ? 10 : 0)}%`,
-                                opacity: bucket.count > 0 ? 1 : 0.22,
-                              },
-                            ]}
-                          />
-                        </View>
-                        <Text style={styles.chartLabel}>{bucket.label}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.card}>
-                  <Text style={styles.cardTitle}>{t("history.dashboard.findings.title")}</Text>
-                  {findings.some((item) => item.count > 0) ? (
-                    <View style={styles.findingsList}>
-                      {findings.map((finding) => (
-                        <View key={finding.key} style={styles.findingRow}>
-                          <View style={styles.findingHeader}>
-                            <Text style={styles.findingLabel}>{finding.label}</Text>
-                            <Text style={styles.findingValue}>{finding.percentage}%</Text>
-                          </View>
-                          <View style={styles.findingTrack}>
-                            <View
-                              style={[
-                                styles.findingFill,
-                                { width: `${Math.max(finding.percentage, finding.count > 0 ? 8 : 0)}%` },
-                              ]}
-                            />
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  ) : (
-                    <Text style={styles.emptyCardText}>{t("history.dashboard.findings.empty")}</Text>
-                  )}
-                </View>
-
-                {logs.length === 0 ? (
-                  <View style={[styles.card, styles.helperCard]}>
-                    <Text style={styles.helperTitle}>{t("history.dashboard.emptyTitle")}</Text>
-                    <Text style={styles.helperDescription}>{t("history.dashboard.emptyDescription")}</Text>
-                  </View>
-                ) : null}
-              </>
-            ) : (
-              <View style={[styles.card, styles.helperCard]}>
-                <Text style={styles.helperTitle}>{t("history.dashboard.noVehicleTitle")}</Text>
-                <Text style={styles.helperDescription}>{t("history.dashboard.noVehicleDescription")}</Text>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  style={styles.secondaryButton}
-                  onPress={() => router.push("/(tabs)/search")}
-                >
-                  <Text style={styles.secondaryButtonText}>{t("history.dashboard.goToGarage")}</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </ScrollView>
+          />
 
           <View
             style={[

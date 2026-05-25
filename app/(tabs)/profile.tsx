@@ -8,6 +8,7 @@ import {
 } from "@/utils/parseSessionFromUrl";
 import { startAuthSession } from "@/utils/authSession";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList } from "@legendapp/list";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -17,7 +18,6 @@ import {
   Image,
   Modal,
   Platform,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -402,7 +402,8 @@ export default function ProfileScreen() {
         <HomeHeader />
         <StatusBar barStyle="dark-content" />
         {webViewModal}
-        <ScrollView
+        <LegendList
+          estimatedItemSize={520}
           contentContainerStyle={[
             styles.scrollContent,
             { backgroundColor: tokens.bgBase },
@@ -474,7 +475,7 @@ export default function ProfileScreen() {
           </Text>
 
           {/* ── Keşfet ── */}
-        </ScrollView>
+        </LegendList>
       </View>
     );
   }
@@ -485,7 +486,8 @@ export default function ProfileScreen() {
       <HomeHeader />
       <StatusBar barStyle="dark-content" />
       {webViewModal}
-      <ScrollView
+      <LegendList
+        estimatedItemSize={900}
         showsVerticalScrollIndicator={false}
         bounces={false}
         contentContainerStyle={[
@@ -668,7 +670,7 @@ export default function ProfileScreen() {
         )}
 
         <View style={{ height: 32 }} />
-      </ScrollView>
+      </LegendList>
     </View>
   );
 }

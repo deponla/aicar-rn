@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -362,7 +361,8 @@ export default function ScanScreen() {
     <>
       <HomeHeader />
 
-      <ScrollView
+      <LegendList
+        estimatedItemSize={900}
         automaticallyAdjustContentInsets={false}
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
@@ -515,7 +515,7 @@ export default function ScanScreen() {
             ) : null}
           </View>
         ) : null}
-      </ScrollView>
+      </LegendList>
 
       <BottomSheetModal
         ref={sourceSheetRef}

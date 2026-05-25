@@ -9,7 +9,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Modal,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -55,17 +54,23 @@ const LegalDocumentViewer = React.memo(function LegalDocumentViewer({
             </View>
           </TouchableOpacity>
         </View>
-        <ScrollView
+        <LegendList
+          data={[document]}
+          renderItem={({ item }) => (
+            <>
+              <Text style={styles.documentText}>
+                {item.content.replace(/<[^>]*>/g, "")}
+              </Text>
+              <Text style={styles.versionText}>
+                {t("legal.version", { version: item.version })}
+              </Text>
+            </>
+          )}
+          keyExtractor={(item) => item.id}
+          estimatedItemSize={600}
           style={styles.contentScroll}
           contentContainerStyle={styles.contentContainer}
-        >
-          <Text style={styles.documentText}>
-            {document.content.replace(/<[^>]*>/g, "")}
-          </Text>
-          <Text style={styles.versionText}>
-            {t("legal.version", { version: document.version })}
-          </Text>
-        </ScrollView>
+        />
       </SafeAreaView>
     </Modal>
   );

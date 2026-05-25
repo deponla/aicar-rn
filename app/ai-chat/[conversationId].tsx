@@ -9,10 +9,12 @@ import LoginRequired from "@/components/LoginRequired";
 import type { AiMessage } from "@/types/ai-chat";
 import { AiMessageRole } from "@/types/ai-chat";
 import { sendAiMessageStreaming } from "@/services/AiChatService";
-import { postInitializeAiImageUpload, postCompleteAiImageUpload } from "@/api/post";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList, type LegendListRef } from "@legendapp/list";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { File } from "expo-file-system";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -20,7 +22,6 @@ import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Alert,
-    FlatList,
     Image,
     Keyboard,
     StyleSheet,
@@ -39,6 +40,53 @@ interface StreamingMessage {
     isStreaming: boolean;
 }
 
+interface PendingImage {
+    base64: string;
+    uri: string;
+}
+
+const AI_CHAT_MAX_IMAGE_DIMENSION = 1024;
+const AI_CHAT_IMAGE_COMPRESS = 0.65;
+
+function toDisplayImageUri(value: string) {
+    if (/^(https?:\/\/|file:\/\/|data:)/i.test(value)) {
+        return value;
+    }
+
+    return `data:image/jpeg;base64,${value}`;
+}
+
+async function prepareImageForAiChat(
+    asset: ImagePicker.ImagePickerAsset,
+): Promise<PendingImage> {
+    const manipulator = ImageManipulator.manipulate(asset.uri);
+    const { width, height } = asset;
+
+    if (width && height) {
+        const longestSide = Math.max(width, height);
+
+        if (longestSide > AI_CHAT_MAX_IMAGE_DIMENSION) {
+            if (width >= height) {
+                manipulator.resize({ width: AI_CHAT_MAX_IMAGE_DIMENSION });
+            } else {
+                manipulator.resize({ height: AI_CHAT_MAX_IMAGE_DIMENSION });
+            }
+        }
+    }
+
+    const rendered = await manipulator.renderAsync();
+    const saved = await rendered.saveAsync({
+        compress: AI_CHAT_IMAGE_COMPRESS,
+        format: SaveFormat.JPEG,
+    });
+    const file = new File(saved.uri);
+
+    return {
+        base64: await file.base64(),
+        uri: saved.uri,
+    };
+}
+
 export default function AiChatDetailScreen() {
     const { conversationId } = useLocalSearchParams<{
         conversationId: string;
@@ -47,7 +95,7 @@ export default function AiChatDetailScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const queryClient = useQueryClient();
-    const flatListRef = useRef<FlatList>(null);
+    const listRef = useRef<LegendListRef>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const { t: translate } = useTranslation();
     const isLoggedIn = auth.status === AuthStatusEnum.LOGGED_IN && !!auth.user;
@@ -55,7 +103,7 @@ export default function AiChatDetailScreen() {
     const [messageText, setMessageText] = useState("");
     const [isSending, setIsSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [pendingImageUrls, setPendingImageUrls] = useState<string[]>([]);
+    const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
     const [streamingMessage, setStreamingMessage] =
         useState<StreamingMessage | null>(null);
     const hasStreamingMessage = streamingMessage != null;
@@ -71,7 +119,7 @@ export default function AiChatDetailScreen() {
     useEffect(() => {
         if (messagesQuery.data?.results?.length || hasStreamingMessage) {
             setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
+                listRef.current?.scrollToEnd({ animated: true });
             }, 100);
         }
     }, [
@@ -109,26 +157,11 @@ export default function AiChatDetailScreen() {
         setIsUploading(true);
 
         try {
-            // Upload to Cloudflare Images
-            const initResponse = await postInitializeAiImageUpload();
-            const formData = new FormData();
-            formData.append("file", {
-                uri: asset.uri,
-                type: asset.mimeType ?? "image/jpeg",
-                name: asset.fileName ?? "photo.jpg",
-            } as unknown as Blob);
+            const preparedImage = await prepareImageForAiChat(asset);
 
-            await fetch(initResponse.uploadUrl, {
-                method: "POST",
-                body: formData,
-            });
-
-            const completeResponse = await postCompleteAiImageUpload({
-                id: initResponse.id,
-            });
-
-            setPendingImageUrls((prev) => [...prev, completeResponse.mediaUrl]);
-        } catch {
+            setPendingImages((prev) => [...prev, preparedImage]);
+        } catch (error) {
+            console.error("Failed to prepare AI chat image:", error);
             Alert.alert(
                 translate("common.error"),
                 translate("aiChat.uploadFailed"),
@@ -139,17 +172,17 @@ export default function AiChatDetailScreen() {
     }, [translate]);
 
     const handleRemoveImage = useCallback((index: number) => {
-        setPendingImageUrls((prev) => prev.filter((_, i) => i !== index));
+        setPendingImages((prev) => prev.filter((_, i) => i !== index));
     }, []);
 
     const handleSend = useCallback(() => {
-        if (!conversationId || (!messageText.trim() && !pendingImageUrls.length))
+        if (!conversationId || (!messageText.trim() && !pendingImages.length))
             return;
 
         const text = messageText.trim();
-        const images = [...pendingImageUrls];
+        const images = pendingImages.map((image) => image.base64);
         setMessageText("");
-        setPendingImageUrls([]);
+        setPendingImages([]);
         setIsSending(true);
         Keyboard.dismiss();
 
@@ -232,7 +265,7 @@ export default function AiChatDetailScreen() {
             },
             abortController.signal,
         );
-    }, [conversationId, messageText, pendingImageUrls, queryClient, translate]);
+    }, [conversationId, messageText, pendingImages, queryClient, translate]);
 
     // Build display data: messages + streaming message
     const displayMessages: (AiMessage | StreamingMessage)[] = [
@@ -268,7 +301,7 @@ export default function AiChatDetailScreen() {
                                 {item.imageUrls.map((url, idx) => (
                                     <Image
                                         key={idx}
-                                        source={{ uri: url }}
+                                        source={{ uri: toDisplayImageUri(url) }}
                                         style={styles.messageImage}
                                         resizeMode="cover"
                                     />
@@ -377,29 +410,31 @@ export default function AiChatDetailScreen() {
                     </View>
                 )}
                 {!messagesQuery.isLoading && displayMessages.length > 0 && (
-                    <FlatList
-                        ref={flatListRef}
+                    <LegendList
+                        ref={listRef}
                         data={displayMessages}
                         keyExtractor={(item) => item.id}
                         renderItem={renderMessage}
+                        estimatedItemSize={96}
+                        recycleItems
                         contentContainerStyle={styles.messagesList}
                         showsVerticalScrollIndicator={false}
                         keyboardDismissMode="interactive"
                         keyboardShouldPersistTaps="handled"
                         onContentSizeChange={() => {
-                            flatListRef.current?.scrollToEnd({ animated: false });
+                            listRef.current?.scrollToEnd({ animated: false });
                         }}
                     />
                 )}
             </View>
 
             {/* Pending images preview */}
-            {pendingImageUrls.length > 0 && (
+            {pendingImages.length > 0 && (
                 <View style={styles.pendingImagesBar}>
-                    {pendingImageUrls.map((url, idx) => (
+                    {pendingImages.map((image, idx) => (
                         <View key={idx} style={styles.pendingImageContainer}>
                             <Image
-                                source={{ uri: url }}
+                                source={{ uri: image.uri }}
                                 style={styles.pendingImage}
                                 resizeMode="cover"
                             />
@@ -464,11 +499,11 @@ export default function AiChatDetailScreen() {
                 <TouchableOpacity
                     style={[
                         styles.sendButton,
-                        !messageText.trim() && !pendingImageUrls.length && styles.sendButtonDisabled,
+                        !messageText.trim() && !pendingImages.length && styles.sendButtonDisabled,
                     ]}
                     onPress={handleSend}
                     disabled={
-                        (!messageText.trim() && !pendingImageUrls.length) || isSending
+                        (!messageText.trim() && !pendingImages.length) || isSending
                     }
                     activeOpacity={0.7}
                 >

@@ -17,6 +17,7 @@ import type {
   Message,
 } from "@/types/chat";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LegendList, type LegendListRef } from "@legendapp/list";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -24,7 +25,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  FlatList,
   Keyboard,
   StyleSheet,
   Text,
@@ -59,7 +59,7 @@ export default function ChatDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const flatListRef = useRef<FlatList>(null);
+  const listRef = useRef<LegendListRef>(null);
   const t = tokens;
   const { t: translate } = useTranslation();
   const isLoggedIn = auth.status === AuthStatusEnum.LOGGED_IN && !!auth.user;
@@ -206,7 +206,7 @@ export default function ChatDetailScreen() {
   useEffect(() => {
     if (messagesQuery.data?.results?.length) {
       setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
+        listRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [messagesQuery.data?.results?.length]);
@@ -224,7 +224,7 @@ export default function ChatDetailScreen() {
       {
         onSuccess: () => {
           setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
+            listRef.current?.scrollToEnd({ animated: true });
           }, 150);
         },
       },
@@ -365,17 +365,19 @@ export default function ChatDetailScreen() {
           </View>
         )}
         {!messagesQuery.isLoading && !!messagesQuery.data?.results?.length && (
-          <FlatList
-            ref={flatListRef}
+          <LegendList
+            ref={listRef}
             data={messagesQuery.data.results}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
+            estimatedItemSize={80}
+            recycleItems
             contentContainerStyle={styles.messagesList}
             showsVerticalScrollIndicator={false}
             keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
             onContentSizeChange={() => {
-              flatListRef.current?.scrollToEnd({ animated: false });
+              listRef.current?.scrollToEnd({ animated: false });
             }}
           />
         )}

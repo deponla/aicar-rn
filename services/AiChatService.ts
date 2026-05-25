@@ -1,6 +1,36 @@
+import { postSendAiMessage } from "@/api/post";
 import { useAuthStore } from "@/store/useAuth";
 import type { AiChatStreamEvent, SendAiMessageRequest } from "@/types/ai-chat";
 import { API_URL } from "@/utils/env";
+import { Platform } from "react-native";
+
+function buildApiUrl(path: string) {
+  return `${API_URL}/${path.replace(/^\/+/, "")}`;
+}
+
+async function sendAiMessageWithoutStreaming(
+  data: SendAiMessageRequest,
+  onChunk: (text: string) => void,
+  onDone: (messageId: string) => void,
+  onError: (error: Error) => void,
+) {
+  try {
+    const response = await postSendAiMessage(data);
+    const message = response.result;
+
+    if (!message) {
+      onError(new Error("AI response did not include a message"));
+      return;
+    }
+
+    onChunk(message.content);
+    onDone(message.id);
+  } catch (error) {
+    onError(
+      error instanceof Error ? error : new Error("AI chat request failed"),
+    );
+  }
+}
 
 export async function sendAiMessageStreaming(
   data: SendAiMessageRequest,
@@ -17,7 +47,12 @@ export async function sendAiMessageStreaming(
     return;
   }
 
-  const url = `${API_URL}v1/ai-chat/messages/stream`;
+  if (Platform.OS !== "web") {
+    await sendAiMessageWithoutStreaming(data, onChunk, onDone, onError);
+    return;
+  }
+
+  const url = buildApiUrl("v1/ai-chat/messages/stream");
 
   try {
     const response = await fetch(url, {
@@ -38,7 +73,7 @@ export async function sendAiMessageStreaming(
 
     const reader = response.body?.getReader();
     if (!reader) {
-      onError(new Error("No readable stream"));
+      await sendAiMessageWithoutStreaming(data, onChunk, onDone, onError);
       return;
     }
 
