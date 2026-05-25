@@ -403,7 +403,9 @@ export default function ProfileScreen() {
         <StatusBar barStyle="dark-content" />
         {webViewModal}
         <LegendList
-          estimatedItemSize={520}
+          estimatedItemSize={200}
+          initialContainerPoolRatio={4}
+          style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
             { backgroundColor: tokens.bgBase },
@@ -487,7 +489,9 @@ export default function ProfileScreen() {
       <StatusBar barStyle="dark-content" />
       {webViewModal}
       <LegendList
-        estimatedItemSize={900}
+        estimatedItemSize={220}
+        initialContainerPoolRatio={4}
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         bounces={false}
         contentContainerStyle={[
@@ -865,6 +869,9 @@ const styles = StyleSheet.create({
     gap: 12,
     marginHorizontal: 16,
     marginBottom: 20,
+  },
+  scrollView: {
+    flex: 1,
   },
   authBtn: {
     flex: 1,

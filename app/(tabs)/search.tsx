@@ -410,7 +410,8 @@ const AddCarComposer = React.memo(function AddCarComposer({
       </View>
 
       <LegendList
-        estimatedItemSize={1100}
+        estimatedItemSize={180}
+        initialContainerPoolRatio={4}
         style={styles.addComposerScroll}
         contentContainerStyle={[
           styles.addComposerContent,
@@ -847,7 +848,8 @@ export default function GarageScreen() {
       ) : (
         <>
           <LegendList
-            estimatedItemSize={700}
+            estimatedItemSize={220}
+            initialContainerPoolRatio={4}
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}

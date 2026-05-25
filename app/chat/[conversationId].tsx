@@ -371,7 +371,9 @@ export default function ChatDetailScreen() {
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
             estimatedItemSize={80}
+            initialContainerPoolRatio={4}
             recycleItems
+            style={styles.messagesListView}
             contentContainerStyle={styles.messagesList}
             showsVerticalScrollIndicator={false}
             keyboardDismissMode="interactive"
@@ -501,6 +503,9 @@ const styles = StyleSheet.create({
   messagesList: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  messagesListView: {
+    flex: 1,
   },
   messageBubbleRow: {
     marginBottom: 8,

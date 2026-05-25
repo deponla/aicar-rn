@@ -68,6 +68,7 @@ const LegalDocumentViewer = React.memo(function LegalDocumentViewer({
           )}
           keyExtractor={(item) => item.id}
           estimatedItemSize={600}
+          initialContainerPoolRatio={4}
           style={styles.contentScroll}
           contentContainerStyle={styles.contentContainer}
         />
@@ -153,6 +154,7 @@ export default function LegalScreen() {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           estimatedItemSize={72}
+          initialContainerPoolRatio={4}
           recycleItems
           refreshing={isLoading}
           onRefresh={refetch}

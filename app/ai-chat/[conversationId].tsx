@@ -13,8 +13,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LegendList, type LegendListRef } from "@legendapp/list";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { File } from "expo-file-system";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -32,6 +30,7 @@ import {
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { prepareImageAssetAsBase64 } from "@/services/ImageAssetService";
 
 interface StreamingMessage {
     id: string;
@@ -59,31 +58,15 @@ function toDisplayImageUri(value: string) {
 async function prepareImageForAiChat(
     asset: ImagePicker.ImagePickerAsset,
 ): Promise<PendingImage> {
-    const manipulator = ImageManipulator.manipulate(asset.uri);
-    const { width, height } = asset;
-
-    if (width && height) {
-        const longestSide = Math.max(width, height);
-
-        if (longestSide > AI_CHAT_MAX_IMAGE_DIMENSION) {
-            if (width >= height) {
-                manipulator.resize({ width: AI_CHAT_MAX_IMAGE_DIMENSION });
-            } else {
-                manipulator.resize({ height: AI_CHAT_MAX_IMAGE_DIMENSION });
-            }
-        }
-    }
-
-    const rendered = await manipulator.renderAsync();
-    const saved = await rendered.saveAsync({
+    const preparedAsset = await prepareImageAssetAsBase64(asset, {
+        maxDimension: AI_CHAT_MAX_IMAGE_DIMENSION,
         compress: AI_CHAT_IMAGE_COMPRESS,
-        format: SaveFormat.JPEG,
+        forceJpeg: true,
     });
-    const file = new File(saved.uri);
 
     return {
-        base64: await file.base64(),
-        uri: saved.uri,
+        base64: preparedAsset.base64,
+        uri: preparedAsset.uri,
     };
 }
 
@@ -416,7 +399,9 @@ export default function AiChatDetailScreen() {
                         keyExtractor={(item) => item.id}
                         renderItem={renderMessage}
                         estimatedItemSize={96}
+                        initialContainerPoolRatio={4}
                         recycleItems
+                        style={styles.messagesListView}
                         contentContainerStyle={styles.messagesList}
                         showsVerticalScrollIndicator={false}
                         keyboardDismissMode="interactive"
@@ -589,6 +574,9 @@ const styles = StyleSheet.create({
     messagesList: {
         paddingHorizontal: 16,
         paddingVertical: 12,
+    },
+    messagesListView: {
+        flex: 1,
     },
     messageBubbleRow: {
         marginBottom: 8,

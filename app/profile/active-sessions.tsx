@@ -369,6 +369,7 @@ export default function ActiveSessionsScreen() {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           estimatedItemSize={152}
+          initialContainerPoolRatio={4}
           recycleItems
           refreshing={isLoading}
           onRefresh={refetch}

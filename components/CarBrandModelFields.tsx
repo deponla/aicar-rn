@@ -1,3 +1,4 @@
+import { useNotification } from "@/components/Notification";
 import { FontFamily, tokens } from "@/constants/theme";
 import { useGetCarBrands, useGetCarModels } from "@/query-hooks/useCarBrands";
 import { useDebounce } from "@/utils/useDebounce";
@@ -70,6 +71,7 @@ function PickerModal({
                             data={options}
                             keyExtractor={(item) => item.key}
                             estimatedItemSize={48}
+                            initialContainerPoolRatio={4}
                             recycleItems
                             style={styles.optionList}
                             showsVerticalScrollIndicator={false}
@@ -108,6 +110,7 @@ export default function CarBrandModelFields({
     onModelChange: (value: string) => void;
 }) {
     const { t } = useTranslation();
+    const { notify } = useNotification();
     const [brandPickerVisible, setBrandPickerVisible] = useState(false);
     const [modelPickerVisible, setModelPickerVisible] = useState(false);
     const [brandSearch, setBrandSearch] = useState("");
@@ -115,6 +118,7 @@ export default function CarBrandModelFields({
     const [selectedBrandId, setSelectedBrandId] = useState<string>();
     const [brandMode, setBrandMode] = useState<"catalog" | "manual">("catalog");
     const isInitializedRef = useRef(false);
+    const lastModelErrorRef = useRef<string | undefined>(undefined);
 
     const debouncedBrandSearch = useDebounce(brandSearch, 300);
 
@@ -154,12 +158,42 @@ export default function CarBrandModelFields({
         };
     }, [brand, brands]);
 
-    const { data: modelsData, isFetching: modelsFetching } = useGetCarModels({
+    const {
+        data: modelsData,
+        error: modelsError,
+        isError: hasModelsError,
+        isFetching: modelsFetching,
+    } = useGetCarModels({
         brandId: selectedBrandId,
         filters: { limit: 500 },
         enabled: brandMode === "catalog" && Boolean(selectedBrandId),
     });
     const models = useMemo(() => modelsData?.results ?? [], [modelsData?.results]);
+
+    useEffect(() => {
+        if (!hasModelsError) {
+            lastModelErrorRef.current = undefined;
+            return;
+        }
+
+        const message =
+            modelsError instanceof Error && modelsError.message
+                ? modelsError.message
+                : t("common.requestFailed");
+
+        if (lastModelErrorRef.current === message) {
+            return;
+        }
+
+        lastModelErrorRef.current = message;
+        setModelPickerVisible(false);
+        setModelSearch("");
+        notify({
+            type: "error",
+            title: t("common.error"),
+            message,
+        });
+    }, [hasModelsError, modelsError, notify, t]);
 
     const filteredModels = useMemo(() => {
         const search = normalize(modelSearch);
@@ -191,6 +225,9 @@ export default function CarBrandModelFields({
         () => filteredModels.map((item) => ({ key: item.id, label: item.name })),
         [filteredModels],
     );
+
+    const shouldUseManualModelInput = Boolean(selectedBrandId) &&
+        (hasModelsError || (models.length === 0 && !modelsFetching));
 
     const handleSelectBrand = (brandId: string) => {
         const selectedBrand = brands.find((item) => item.id === brandId);
@@ -264,7 +301,7 @@ export default function CarBrandModelFields({
             ) : (
                 <>
                     <Text style={styles.inputLabel}>{t("carDetail.modelLabel")}</Text>
-                    {selectedBrandId && models.length === 0 && !modelsFetching ? (
+                    {shouldUseManualModelInput ? (
                         <TextInput
                             style={styles.input}
                             value={model}
@@ -423,6 +460,8 @@ const styles = StyleSheet.create({
     },
     optionList: {
         marginTop: 14,
+        minHeight: 64,
+        maxHeight: 360,
     },
     optionButton: {
         flexDirection: "row",

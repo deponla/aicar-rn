@@ -1,7 +1,5 @@
 import type { ImagePickerAsset } from "expo-image-picker";
 import { Platform } from "react-native";
-import { File } from "expo-file-system";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { postAnalyzeMedia } from "@/api/post";
 import i18n from "@/i18n";
 import {
@@ -14,6 +12,7 @@ import {
   type AnalyzeMediaResponse,
 } from "@/types/ai";
 import { uploadAsset, getAssetMediaType } from "./CloudflareUploadService";
+import { prepareImageAssetAsBase64 } from "./ImageAssetService";
 
 // ---------------------------------------------------------------------------
 // Local AI constants (dev-only)
@@ -45,75 +44,6 @@ function getLocalAiBaseUrl(): string {
   }
 
   return "http://127.0.0.1:1234";
-}
-
-function normalizeAssetUri(uri: string): string {
-  return Platform.OS === "ios" && !uri.startsWith("file://")
-    ? `file://${uri}`
-    : uri;
-}
-
-async function readAssetAsBase64(uri: string): Promise<string> {
-  const normalizedUri = normalizeAssetUri(uri);
-
-  console.log("[AI] Reading asset as base64:", normalizedUri);
-  const file = new File(normalizedUri);
-  const b64 = await file.base64();
-  console.log(
-    `[AI] Base64 read complete (${Math.round(b64.length / 1024)} KB)`,
-  );
-  return b64;
-}
-
-async function prepareAssetForLocalAI(
-  asset: ImagePickerAsset,
-): Promise<{ uri: string; mimeType: string; width?: number; height?: number }> {
-  const originalUri = normalizeAssetUri(asset.uri);
-  const mimeType = asset.mimeType ?? "image/jpeg";
-  const width = asset.width ?? null;
-  const height = asset.height ?? null;
-  const longestSide = Math.max(width ?? 0, height ?? 0);
-  const shouldResize = longestSide > LOCAL_AI_MAX_IMAGE_DIMENSION;
-  const shouldConvert = shouldResize || mimeType === "image/png";
-
-  if (!shouldConvert) {
-    return {
-      uri: originalUri,
-      mimeType,
-      ...(asset.width ? { width: asset.width } : {}),
-      ...(asset.height ? { height: asset.height } : {}),
-    };
-  }
-
-  const manipulator = ImageManipulator.manipulate(originalUri);
-  if (shouldResize && width && height) {
-    if (width >= height) {
-      manipulator.resize({ width: LOCAL_AI_MAX_IMAGE_DIMENSION });
-    } else {
-      manipulator.resize({ height: LOCAL_AI_MAX_IMAGE_DIMENSION });
-    }
-  }
-
-  const rendered = await manipulator.renderAsync();
-  const saved = await rendered.saveAsync({
-    compress: LOCAL_AI_IMAGE_COMPRESS,
-    format: SaveFormat.JPEG,
-  });
-
-  console.log("[AI] Image prepared for local AI", {
-    originalMimeType: mimeType,
-    originalWidth: asset.width,
-    originalHeight: asset.height,
-    preparedWidth: saved.width,
-    preparedHeight: saved.height,
-  });
-
-  return {
-    uri: saved.uri,
-    mimeType: "image/jpeg",
-    width: saved.width,
-    height: saved.height,
-  };
 }
 
 function parseAiJson(text: string): AiAnalysisPayload {
@@ -166,10 +96,18 @@ async function analyzeWithLocalAI(
   }
 
   console.log("[AI] Step 1/4: Preparing and reading image...");
-  const preparedAsset = await prepareAssetForLocalAI(asset);
-  const base64 = await readAssetAsBase64(preparedAsset.uri);
-  const mimeType = preparedAsset.mimeType;
-  const dataUri = `data:${mimeType};base64,${base64}`;
+  const preparedAsset = await prepareImageAssetAsBase64(asset, {
+    maxDimension: LOCAL_AI_MAX_IMAGE_DIMENSION,
+    compress: LOCAL_AI_IMAGE_COMPRESS,
+  });
+  console.log("[AI] Image prepared for local AI", {
+    originalMimeType: asset.mimeType,
+    originalWidth: asset.width,
+    originalHeight: asset.height,
+    preparedWidth: preparedAsset.width,
+    preparedHeight: preparedAsset.height,
+  });
+  console.log(`[AI] Base64 read complete (${preparedAsset.sizeKb} KB)`);
   const language = i18n.language?.split("-")[0] ?? "en";
   const languageName =
     language === "tr" ? "Turkish" : language === "de" ? "German" : "English";
@@ -191,7 +129,7 @@ async function analyzeWithLocalAI(
     model: LOCAL_AI_MODEL,
     language: languageName,
     analysisType: typeLabel,
-    imageSize: `${Math.round(base64.length / 1024)} KB`,
+    imageSize: `${preparedAsset.sizeKb} KB`,
     preparedWidth: preparedAsset.width,
     preparedHeight: preparedAsset.height,
   });
@@ -208,7 +146,7 @@ async function analyzeWithLocalAI(
         role: "user",
         content: [
           { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: dataUri } },
+          { type: "image_url", image_url: { url: preparedAsset.dataUri } },
         ],
       },
     ],

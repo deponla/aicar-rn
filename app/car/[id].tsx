@@ -453,6 +453,7 @@ const EditCarModal = React.memo(function EditCarModal({
           )}
           keyExtractor={() => "edit-car-form"}
           estimatedItemSize={900}
+          initialContainerPoolRatio={4}
           style={styles.modalBody}
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
@@ -763,6 +764,7 @@ export default function CarDetailScreen() {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           estimatedItemSize={104}
+          initialContainerPoolRatio={4}
           recycleItems
           refreshing={isLoading}
           onRefresh={handleRefresh}

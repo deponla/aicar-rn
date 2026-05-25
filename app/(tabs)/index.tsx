@@ -362,7 +362,8 @@ export default function ScanScreen() {
       <HomeHeader />
 
       <LegendList
-        estimatedItemSize={900}
+        estimatedItemSize={220}
+        initialContainerPoolRatio={4}
         automaticallyAdjustContentInsets={false}
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
@@ -551,6 +552,7 @@ export default function ScanScreen() {
                 renderItem={renderCarChip}
                 keyExtractor={carKeyExtractor}
                 estimatedItemSize={120}
+                initialContainerPoolRatio={4}
                 recycleItems
                 style={styles.carScroll}
                 contentContainerStyle={styles.carScrollContent}
@@ -859,7 +861,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   carScroll: {
-    maxHeight: 44,
+    height: 44,
   },
   carScrollContent: {
     paddingRight: 4,

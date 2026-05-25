@@ -98,6 +98,7 @@ export default function ScreenContainer({
         renderItem={({ item }) => <>{item}</>}
         keyExtractor={() => "screen-content"}
         estimatedItemSize={700}
+        initialContainerPoolRatio={4}
         style={[styles.scrollView, { marginTop: HEADER_HEIGHT + insets.top }]}
         contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
         showsVerticalScrollIndicator={false}

@@ -129,6 +129,7 @@ export default function NotificationsScreen() {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           estimatedItemSize={88}
+          initialContainerPoolRatio={4}
           recycleItems
           refreshing={isLoading}
           onRefresh={refetch}

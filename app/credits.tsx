@@ -333,6 +333,7 @@ export default function CreditsScreen() {
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         estimatedItemSize={96}
+        initialContainerPoolRatio={4}
         recycleItems
         style={styles.listView}
         contentContainerStyle={styles.listContent}

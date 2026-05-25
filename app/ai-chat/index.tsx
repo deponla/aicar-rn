@@ -158,7 +158,9 @@ export default function AiChatListScreen() {
                     keyExtractor={(item) => item.id}
                     renderItem={renderConversation}
                     estimatedItemSize={88}
+                    initialContainerPoolRatio={4}
                     recycleItems
+                    style={styles.listView}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
                     ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -232,6 +234,9 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingVertical: 8,
+    },
+    listView: {
+        flex: 1,
     },
     conversationItem: {
         flexDirection: "row",

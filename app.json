@@ -67,7 +67,8 @@
             "deploymentTarget": "16.5"
           }
         }
-      ]
+      ],
+      "./plugins/with-ios-build-settings"
     ],
     "experiments": {
       "typedRoutes": true,

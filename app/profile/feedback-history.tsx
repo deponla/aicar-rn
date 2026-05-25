@@ -207,6 +207,7 @@ export default function FeedbackHistoryScreen() {
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           estimatedItemSize={180}
+          initialContainerPoolRatio={4}
           recycleItems
           refreshing={isLoading}
           onRefresh={refetch}

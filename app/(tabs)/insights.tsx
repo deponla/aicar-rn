@@ -564,6 +564,7 @@ export default function InsightsScreen() {
                       )}
                       keyExtractor={(item) => item.id}
                       estimatedItemSize={140}
+                      initialContainerPoolRatio={4}
                       recycleItems
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.vehicleSelectorContent}
@@ -715,6 +716,7 @@ export default function InsightsScreen() {
             )}
             keyExtractor={() => "insights-content"}
             estimatedItemSize={900}
+            initialContainerPoolRatio={4}
             style={styles.scrollView}
             contentContainerStyle={[
               styles.contentContainer,
@@ -767,6 +769,7 @@ const styles = StyleSheet.create({
     color: tokens.textPrimary,
   },
   vehicleSelector: {
+    height: 46,
     marginTop: -2,
   },
   vehicleSelectorContent: {
