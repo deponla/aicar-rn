@@ -1,7 +1,10 @@
 import ScreenContainer from "@/components/ScreenContainer";
 import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
+import {
+    getNotificationPermissionStatus,
+    requestNotificationPermissionStatus,
+} from "@/utils/notificationPermissions";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -104,8 +107,8 @@ export default function NotificationPreferencesScreen() {
     const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
 
     const checkPushPermission = useCallback(async () => {
-        const perms = await Notifications.getPermissionsAsync() as unknown as { status: string };
-        setPushEnabled(perms.status === "granted");
+        const status = await getNotificationPermissionStatus();
+        setPushEnabled(status === "granted");
     }, []);
 
     const loadPrefs = useCallback(async () => {
@@ -164,8 +167,8 @@ export default function NotificationPreferencesScreen() {
             return;
         }
 
-        const perms = await Notifications.requestPermissionsAsync() as unknown as { status: string };
-        const granted = perms.status === "granted";
+        const status = await requestNotificationPermissionStatus();
+        const granted = status === "granted";
         setPushEnabled(granted);
         if (!granted) {
             openAppSettings();

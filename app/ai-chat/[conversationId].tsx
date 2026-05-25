@@ -58,6 +58,8 @@ export default function AiChatDetailScreen() {
     const [pendingImageUrls, setPendingImageUrls] = useState<string[]>([]);
     const [streamingMessage, setStreamingMessage] =
         useState<StreamingMessage | null>(null);
+    const hasStreamingMessage = streamingMessage != null;
+    const streamingMessageContent = streamingMessage?.content;
 
     const messagesQuery = useGetAiMessages({
         conversationId,
@@ -67,12 +69,16 @@ export default function AiChatDetailScreen() {
 
     // Scroll to bottom on new messages
     useEffect(() => {
-        if (messagesQuery.data?.results?.length || streamingMessage) {
+        if (messagesQuery.data?.results?.length || hasStreamingMessage) {
             setTimeout(() => {
                 flatListRef.current?.scrollToEnd({ animated: true });
             }, 100);
         }
-    }, [messagesQuery.data?.results?.length, streamingMessage?.content]);
+    }, [
+        hasStreamingMessage,
+        messagesQuery.data?.results?.length,
+        streamingMessageContent,
+    ]);
 
     // Cleanup abort controller on unmount
     useEffect(() => {
@@ -122,7 +128,7 @@ export default function AiChatDetailScreen() {
             });
 
             setPendingImageUrls((prev) => [...prev, completeResponse.mediaUrl]);
-        } catch (error) {
+        } catch {
             Alert.alert(
                 translate("common.error"),
                 translate("aiChat.uploadFailed"),

@@ -1,12 +1,12 @@
 import * as Device from "expo-device";
 import * as Application from "expo-application";
-import * as Notifications from "expo-notifications";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import { postRegisterDevice } from "@/api/post";
 import { patchDevicePermissions } from "@/api/patch";
 import type { DevicePermissions, PermissionStatus } from "@/types/device";
+import { getNotificationPermissionStatus } from "@/utils/notificationPermissions";
 
 export const DEVICE_ID_KEY = "device_id";
 export const DEVICE_INSTALLATION_ID_KEY = "device_installation_id";
@@ -66,9 +66,7 @@ async function getInstallationId(): Promise<string | null> {
 
 async function gatherPermissions(): Promise<DevicePermissions> {
   const [notif, camera, photos] = await Promise.all([
-    Notifications.getPermissionsAsync().catch(() => ({
-      status: "undetermined" as const,
-    })),
+    getNotificationPermissionStatus().catch(() => "undetermined"),
     ImagePicker.getCameraPermissionsAsync().catch(() => ({
       status: "undetermined" as const,
     })),
@@ -77,7 +75,7 @@ async function gatherPermissions(): Promise<DevicePermissions> {
     })),
   ]);
   return {
-    notifications: toPermissionStatus(notif.status),
+    notifications: toPermissionStatus(notif),
     camera: toPermissionStatus(camera.status),
     mediaLibrary: toPermissionStatus(photos.status),
   };

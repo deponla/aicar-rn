@@ -1,7 +1,6 @@
 import ScreenContainer from "@/components/ScreenContainer";
 import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import * as ImagePicker from "expo-image-picker";
-import * as Notifications from "expo-notifications";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +12,10 @@ import {
   View,
 } from "react-native";
 import { syncPermissions } from "@/utils/deviceRegistration";
+import {
+  getNotificationPermissionStatus,
+  requestNotificationPermissionStatus,
+} from "@/utils/notificationPermissions";
 import type { PermissionStatus } from "@/types/device";
 
 interface PermissionCardProps {
@@ -134,17 +137,17 @@ export default function PermissionsScreen() {
     const [camera, photos, notif] = await Promise.all([
       ImagePicker.getCameraPermissionsAsync(),
       ImagePicker.getMediaLibraryPermissionsAsync(),
-      Notifications.getPermissionsAsync(),
+      getNotificationPermissionStatus(),
     ]);
     setCameraGranted(camera.status === "granted");
     setPhotosGranted(photos.status === "granted");
-    setNotificationsGranted(notif.status === "granted");
+    setNotificationsGranted(notif === "granted");
 
     // Mevcut durumu backend'e sync et
     syncPermissions({
       camera: toPermissionStatus(camera.status),
       mediaLibrary: toPermissionStatus(photos.status),
-      notifications: toPermissionStatus(notif.status),
+      notifications: toPermissionStatus(notif),
     });
   }, []);
 
@@ -187,11 +190,11 @@ export default function PermissionsScreen() {
       openAppSettings();
       return;
     }
-    const perms = await Notifications.requestPermissionsAsync() as unknown as { status: string };
-    const granted = perms.status === 'granted';
+    const status = await requestNotificationPermissionStatus();
+    const granted = status === 'granted';
     setNotificationsGranted(granted);
     if (!granted) openAppSettings();
-    syncPermissions({ notifications: toPermissionStatus(perms.status) });
+    syncPermissions({ notifications: toPermissionStatus(status) });
   }, [notificationsGranted]);
 
   return (
