@@ -35,6 +35,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -410,15 +411,14 @@ const AddCarComposer = React.memo(function AddCarComposer({
         </TouchableOpacity>
       </View>
 
-      <LegendList
-        estimatedItemSize={180}
-        initialContainerPoolRatio={4}
+      <ScrollView
         style={styles.addComposerScroll}
         contentContainerStyle={[
           styles.addComposerContent,
           { paddingBottom: bottomInset + 120 },
         ]}
         keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.addComposerTitle}>{t("garageScreen.addCar.title")}</Text>
@@ -653,6 +653,8 @@ const AddCarComposer = React.memo(function AddCarComposer({
             placeholder={t("carDetail.notesPlaceholder")}
             placeholderTextColor={tokens.textPlaceholder}
             multiline
+            numberOfLines={5}
+            scrollEnabled={false}
             textAlignVertical="top"
           />
         </View>
@@ -673,7 +675,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
             isBusy={isPhotoBusy}
           />
         </View>
-      </LegendList>
+      </ScrollView>
 
       <View
         style={[
@@ -1413,7 +1415,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   notesInput: {
-    minHeight: 120,
+    height: 128,
     paddingTop: 14,
   },
   photoPlaceholderCard: {
