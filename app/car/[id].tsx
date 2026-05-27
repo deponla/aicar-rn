@@ -21,7 +21,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -500,6 +500,7 @@ function ListSeparator() {
 
 export default function CarDetailScreen() {
   const { t } = useTranslation();
+  const isFocused = useIsFocused();
   const { id } = useLocalSearchParams<{ id: string }>();
   const authStore = useAuthStore();
   const isLoggedIn = authStore.status === AuthStatusEnum.LOGGED_IN;
@@ -507,13 +508,16 @@ export default function CarDetailScreen() {
   const { notify } = useNotification();
   const [editVisible, setEditVisible] = useState(false);
 
-  const { data: carData, isLoading: carLoading, refetch: refetchCar } = useGetCar(
-    id ?? "",
-    { enabled: isLoggedIn && !!id },
-  );
+  const {
+    data: carData,
+    isLoading: carLoading,
+    isRefetching: carRefetching,
+    refetch: refetchCar,
+  } = useGetCar(id ?? "", { enabled: isLoggedIn && !!id });
   const {
     data: logsData,
     isLoading: logsLoading,
+    isRefetching: logsRefetching,
     refetch: refetchLogs,
   } = useGetAnalysisLogs(
     { carId: id ?? "" },
@@ -521,7 +525,6 @@ export default function CarDetailScreen() {
   );
   const updateCar = useUpdateCar();
 
-  const isLoading = carLoading || logsLoading;
   const car = carData?.result;
   const logs = useMemo(() => logsData?.results ?? [], [logsData?.results]);
 
@@ -780,7 +783,7 @@ export default function CarDetailScreen() {
           estimatedItemSize={104}
           initialContainerPoolRatio={4}
           recycleItems
-          refreshing={isLoading}
+          refreshing={isFocused && (carRefetching || logsRefetching)}
           onRefresh={handleRefresh}
           style={styles.listView}
           contentContainerStyle={styles.listContent}

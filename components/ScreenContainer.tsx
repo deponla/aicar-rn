@@ -1,11 +1,11 @@
 import { tokens, FontFamily } from "@/constants/theme";
+import LiquidGlassView from "@/components/LiquidGlassView";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LegendList, type LegendListRef } from "@legendapp/list";
 import { useRouter } from "expo-router";
 import React, { ReactNode } from "react";
 import {
   Keyboard,
-  Platform,
   RefreshControlProps,
   StyleProp,
   StyleSheet,
@@ -14,7 +14,6 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const HEADER_HEIGHT = 48;
@@ -121,13 +120,11 @@ export default function ScreenContainer({
           },
         ]}
       >
-        {Platform.OS === "ios" ? (
-          <BlurView
-            intensity={80}
-            tint="systemChromeMaterialLight"
-            style={StyleSheet.absoluteFill}
-          />
-        ) : null}
+        <LiquidGlassView
+          glassStyle="regular"
+          tintColor={tokens.glassTint}
+          style={StyleSheet.absoluteFill}
+        />
         {headerInner}
         <View style={styles.headerBorder} />
       </View>
@@ -147,7 +144,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: Platform.OS === "ios" ? "transparent" : "rgba(251,249,251,0.85)",
+    backgroundColor: "transparent",
     zIndex: 100,
   },
   headerContent: {
@@ -185,7 +182,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: tokens.borderSubtle,
+    backgroundColor: tokens.glassStrokeMuted,
   },
   scrollView: {
     flex: 1,

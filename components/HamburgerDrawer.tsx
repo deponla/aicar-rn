@@ -33,10 +33,10 @@ type DrawerItemKey =
     | "support";
 
 type DrawerRoute =
-    | "/(tabs)/index"
-    | "/(tabs)/search"
-    | "/(tabs)/insights"
-    | "/(tabs)/profile"
+    | "/"
+    | "/search"
+    | "/insights"
+    | "/profile"
     | "/ai-chat"
     | "/credits"
     | "/profile/settings"
@@ -225,7 +225,7 @@ export default function HamburgerDrawer() {
     const handleNavigate = useCallback(
         (route: DrawerRoute) => {
             close();
-            router.push(route as Href);
+            router.navigate(route as Href);
         },
         [close, router],
     );
@@ -261,7 +261,7 @@ export default function HamburgerDrawer() {
 
     const settingsRoute: DrawerRoute = isLoggedIn
         ? "/profile/settings"
-        : "/(tabs)/profile";
+        : "/profile";
 
     const items = useMemo(
         () => [
@@ -269,19 +269,19 @@ export default function HamburgerDrawer() {
                 key: "scanner" as const,
                 icon: "center-focus-strong" as const,
                 label: translate("drawer.homeScanner"),
-                onPress: () => handleNavigate("/(tabs)/index"),
+                onPress: () => handleNavigate("/"),
             },
             {
                 key: "garage" as const,
                 icon: "directions-car" as const,
                 label: translate("drawer.myGarage"),
-                onPress: () => handleNavigate("/(tabs)/search"),
+                onPress: () => handleNavigate("/search"),
             },
             {
                 key: "insights" as const,
                 icon: "bar-chart" as const,
                 label: translate("tabs.insights"),
-                onPress: () => handleNavigate("/(tabs)/insights"),
+                onPress: () => handleNavigate("/insights"),
             },
             {
                 key: "ai-chat" as const,
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     },
     panel: {
         flex: 1,
-        backgroundColor: tokens.surfaceContainerLowest,
+        backgroundColor: "#FFFFFF",
         borderTopRightRadius: 24,
         borderBottomRightRadius: 24,
         overflow: "hidden",
@@ -477,9 +477,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingBottom: 16,
         paddingTop: 8,
-        backgroundColor: tokens.bgSubtle,
+        backgroundColor: "#F7F7F8",
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: tokens.borderSubtle,
+        borderBottomColor: "#E5E7EB",
     },
     avatar: {
         width: 48,
@@ -566,9 +566,9 @@ const styles = StyleSheet.create({
     logoutButton: {
         minHeight: 48,
         borderRadius: 999,
-        backgroundColor: tokens.surfaceContainerLow,
+        backgroundColor: "#F7F7F8",
         borderWidth: 1,
-        borderColor: tokens.borderSubtle,
+        borderColor: "#E5E7EB",
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",

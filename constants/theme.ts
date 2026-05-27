@@ -115,14 +115,18 @@ export const tokens = {
   bgElevated: "#ffffff",
   bgSubtle: "#f5f3f5",
   bgMuted: "#efedef",
+  glassFallback: "rgba(251,249,251,0.82)",
+  glassStroke: "rgba(255,255,255,0.56)",
+  glassStrokeMuted: "rgba(197,198,205,0.34)",
+  glassTint: "rgba(255,255,255,0.34)",
 
   // Surface Container Scale
-  surfaceContainerLowest: "#ffffff",
-  surfaceContainerLow: "#f5f3f5",
-  surfaceContainer: "#efedef",
-  surfaceContainerHigh: "#eae7ea",
-  surfaceContainerHighest: "#e4e2e4",
-  surfaceVariant: "#e4e2e4",
+  surfaceContainerLowest: "rgba(255,255,255,0.86)",
+  surfaceContainerLow: "rgba(245,243,245,0.78)",
+  surfaceContainer: "rgba(239,237,239,0.72)",
+  surfaceContainerHigh: "rgba(234,231,234,0.68)",
+  surfaceContainerHighest: "rgba(228,226,228,0.64)",
+  surfaceVariant: "rgba(228,226,228,0.64)",
 
   // Text
   textPrimary: "#1b1b1d",

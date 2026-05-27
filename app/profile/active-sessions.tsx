@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/useAuth";
 import { Session, SessionPlatform } from "@/types/session";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { useIsFocused } from "expo-router";
 import "dayjs/locale/de";
 import "dayjs/locale/en";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -199,9 +200,10 @@ function ListSeparator() {
 
 export default function ActiveSessionsScreen() {
   const { t } = useTranslation();
+  const isFocused = useIsFocused();
   const authStore = useAuthStore();
   const { notify } = useNotification();
-  const { data: sessions, error, isError, isLoading, refetch } =
+  const { data: sessions, error, isError, isLoading, isRefetching, refetch } =
     useActiveSessions();
   const revokeSession = useRevokeSession();
   const currentSessionId = authStore.user?.sessionId;
@@ -371,7 +373,7 @@ export default function ActiveSessionsScreen() {
           estimatedItemSize={152}
           initialContainerPoolRatio={4}
           recycleItems
-          refreshing={isLoading}
+          refreshing={isFocused && isRefetching}
           onRefresh={refetch}
           style={styles.listView}
           contentContainerStyle={styles.listContent}

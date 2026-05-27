@@ -8,6 +8,7 @@ import {
   NotificationType,
 } from "@/types/notification";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useIsFocused } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -80,8 +81,9 @@ const NotificationCard = React.memo(function NotificationCard({
 
 export default function NotificationsScreen() {
   const { t, i18n } = useTranslation();
+  const isFocused = useIsFocused();
   const locale = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
-  const { data, isLoading, refetch } = useGetNotifications({
+  const { data, isLoading, isRefetching, refetch } = useGetNotifications({
     limit: 50,
     sort: "createdAt:desc",
   });
@@ -131,7 +133,7 @@ export default function NotificationsScreen() {
           estimatedItemSize={88}
           initialContainerPoolRatio={4}
           recycleItems
-          refreshing={isLoading}
+          refreshing={isFocused && isRefetching}
           onRefresh={refetch}
           style={styles.listView}
           contentContainerStyle={styles.listContent}

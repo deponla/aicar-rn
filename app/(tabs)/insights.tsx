@@ -16,7 +16,7 @@ import {
 import { Car } from "@/types/car";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LegendList } from "@legendapp/list";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import dayjs from "dayjs";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -315,6 +315,7 @@ function VehicleChip({
 
 export default function InsightsScreen() {
   const { t, i18n } = useTranslation();
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const authStore = useAuthStore();
@@ -376,7 +377,10 @@ export default function InsightsScreen() {
   const refreshControl = useMemo(
     () => (
       <RefreshControl
-        refreshing={carsQuery.isRefetching || analysisQuery.isRefetching || remindersQuery.isRefetching}
+        refreshing={
+          isFocused
+          && (carsQuery.isRefetching || analysisQuery.isRefetching || remindersQuery.isRefetching)
+        }
         onRefresh={() => {
           void Promise.all([
             carsQuery.refetch(),
@@ -387,7 +391,7 @@ export default function InsightsScreen() {
         tintColor={Colors.secondary}
       />
     ),
-    [analysisQuery, carsQuery, remindersQuery],
+    [analysisQuery, carsQuery, isFocused, remindersQuery],
   );
 
   const activityBuckets = useMemo(

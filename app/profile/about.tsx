@@ -26,6 +26,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 
+const appIconSource = require("../../assets/images/icon.png");
+
 function InfoRow({
     label,
     value,
@@ -193,14 +195,7 @@ export default function AboutScreen() {
                 <View
                     style={[styles.appIconWrapper, { backgroundColor: Colors.primary }]}
                 >
-                    {Constants.expoConfig?.icon ? (
-                        <Image
-                            source={{ uri: Constants.expoConfig.icon }}
-                            style={styles.appIcon}
-                        />
-                    ) : (
-                        <MaterialIcons name="directions-car" size={40} color={tokens.textInverse} />
-                    )}
+                    <Image source={appIconSource} style={styles.appIcon} />
                 </View>
                 <Text style={[styles.appName, { color: t.textPrimary }]}>AutoLensly</Text>
                 <Text style={[styles.appTagline, { color: t.textTertiary }]}>

@@ -19,7 +19,6 @@ export default function ProfileLayout() {
       <Stack.Screen name="permissions" />
       <Stack.Screen name="change-password" />
       <Stack.Screen name="active-sessions" />
-      <Stack.Screen name="language" />
       <Stack.Screen name="notification-preferences" />
       <Stack.Screen name="support" />
       <Stack.Screen name="about" />

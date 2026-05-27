@@ -5,7 +5,7 @@ import { useGetFeedbacks } from "@/query-hooks/useFeedback";
 import { Feedback, FeedbackStatus, FeedbackType } from "@/types/feedback";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -112,7 +112,8 @@ function ListSeparator() {
 export default function FeedbackHistoryScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { data, error, isError, isLoading, refetch } = useGetFeedbacks({
+  const isFocused = useIsFocused();
+  const { data, error, isError, isLoading, isRefetching, refetch } = useGetFeedbacks({
     page: 0,
     limit: 50,
   });
@@ -209,7 +210,7 @@ export default function FeedbackHistoryScreen() {
           estimatedItemSize={180}
           initialContainerPoolRatio={4}
           recycleItems
-          refreshing={isLoading}
+          refreshing={isFocused && isRefetching}
           onRefresh={refetch}
           style={styles.listView}
           contentContainerStyle={styles.listContent}

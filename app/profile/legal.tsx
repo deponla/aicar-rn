@@ -4,6 +4,7 @@ import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useGetLegalDocuments } from "@/query-hooks/useLegal";
 import { LegalDocument, LegalDocumentTypeEnum } from "@/types/legal";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useIsFocused } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -118,7 +119,8 @@ function Divider() {
 
 export default function LegalScreen() {
   const { t } = useTranslation();
-  const { data, isLoading, refetch } = useGetLegalDocuments();
+  const isFocused = useIsFocused();
+  const { data, isLoading, isRefetching, refetch } = useGetLegalDocuments();
   const [selected, setSelected] = useState<LegalDocument | null>(null);
 
   const documents = useMemo(() => (Array.isArray(data) ? data : []), [data]);
@@ -156,7 +158,7 @@ export default function LegalScreen() {
           estimatedItemSize={72}
           initialContainerPoolRatio={4}
           recycleItems
-          refreshing={isLoading}
+          refreshing={isFocused && isRefetching}
           onRefresh={refetch}
           style={styles.listView}
           contentContainerStyle={styles.card}

@@ -1,14 +1,14 @@
 import { FontFamily, tokens } from "@/constants/theme";
+import LiquidGlassView from "@/components/LiquidGlassView";
 import { useAuthStore } from "@/store/useAuth";
 import { useCreditsStore } from "@/store/useCredits";
 import { useHamburgerDrawerStore } from "@/store/useHamburgerDrawer";
 import { AuthStatusEnum } from "@/types/auth";
 import { MaterialIcons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface HomeHeaderProps {
@@ -78,31 +78,26 @@ export default function HomeHeader({
     </View>
   );
 
-  if (Platform.OS === "ios") {
-    return (
-      <BlurView
-        intensity={80}
-        tint="systemChromeMaterialLight"
-        style={styles.blurWrap}
-      >
-        {headerContent}
-      </BlurView>
-    );
-  }
-
   return (
-    <View style={[styles.blurWrap, styles.androidBg]}>
+    <LiquidGlassView
+      glassStyle="regular"
+      tintColor={tokens.glassTint}
+      style={styles.blurWrap}
+      contentStyle={styles.glassContent}
+    >
       {headerContent}
-    </View>
+    </LiquidGlassView>
   );
 }
 
 const styles = StyleSheet.create({
   blurWrap: {
     zIndex: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.glassStrokeMuted,
   },
-  androidBg: {
-    backgroundColor: "rgba(251,249,251,0.85)",
+  glassContent: {
+    flex: 0,
   },
   container: {
     flexDirection: "row",
