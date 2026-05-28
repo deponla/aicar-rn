@@ -26,6 +26,7 @@ export interface NotificationOptions {
   title: string;
   message?: string;
   duration?: number; // ms, default 3500
+  onPress?: () => void;
 }
 
 interface NotificationContextValue {
@@ -77,6 +78,7 @@ interface BannerState {
   type: NotificationType;
   title: string;
   message?: string;
+  onPress?: () => void;
 }
 
 function NotificationBanner({
@@ -90,6 +92,10 @@ function NotificationBanner({
   const [translateY] = useState(() => new Animated.Value(-120));
   const [opacity] = useState(() => new Animated.Value(0));
   const config = TYPE_CONFIG[state.type];
+  const handlePress = useCallback(() => {
+    state.onPress?.();
+    onDismiss();
+  }, [onDismiss, state]);
 
   React.useEffect(() => {
     if (state.visible) {
@@ -136,7 +142,7 @@ function NotificationBanner({
     >
       <TouchableOpacity
         activeOpacity={0.92}
-        onPress={onDismiss}
+        onPress={handlePress}
         style={[
           styles.banner,
           {
@@ -197,14 +203,20 @@ export function NotificationProvider({
   }, []);
 
   const notify = useCallback(
-    ({ type = "info", title, message, duration = 3500 }: NotificationOptions) => {
+    ({
+      type = "info",
+      title,
+      message,
+      duration = 3500,
+      onPress,
+    }: NotificationOptions) => {
       // Reset first if already visible
       if (timerRef.current) clearTimeout(timerRef.current);
-      setBannerState({ visible: false, type, title, message });
+      setBannerState({ visible: false, type, title, message, onPress });
 
       // Small delay so exit animation plays before new one enters
       requestAnimationFrame(() => {
-        setBannerState({ visible: true, type, title, message });
+        setBannerState({ visible: true, type, title, message, onPress });
         timerRef.current = setTimeout(dismiss, duration);
       });
     },

@@ -5,6 +5,7 @@ import { useGetFeedbacks } from "@/query-hooks/useFeedback";
 import { Feedback, FeedbackStatus, FeedbackType } from "@/types/feedback";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { DATE_TIME_FORMAT } from "@/utils/dateFormats";
 import { useIsFocused, useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -82,7 +83,7 @@ const FeedbackCard = React.memo(function FeedbackCard({ item }: { item: Feedback
           </View>
         </View>
         <Text style={styles.dateText}>
-          {dayjs(item.createdAt).format("DD.MM.YYYY HH:mm")}
+          {dayjs(item.createdAt).format(DATE_TIME_FORMAT)}
         </Text>
       </View>
 
@@ -98,7 +99,7 @@ const FeedbackCard = React.memo(function FeedbackCard({ item }: { item: Feedback
 
       {item.resolvedAt ? (
         <Text style={styles.resolvedText}>
-          {t("feedbackHistory.lastUpdated")}: {dayjs(item.resolvedAt).format("DD.MM.YYYY HH:mm")}
+          {t("feedbackHistory.lastUpdated")}: {dayjs(item.resolvedAt).format(DATE_TIME_FORMAT)}
         </Text>
       ) : null}
     </View>

@@ -1,4 +1,5 @@
 import ErrorBoundary from "@/components/ErrorBoundary";
+import AiChatNotificationBridge from "@/components/AiChatNotificationBridge";
 import { NotificationProvider } from "@/components/Notification";
 import i18n from "@/i18n";
 import AuthProvider from "@/providers/AuthProvider";
@@ -63,6 +64,7 @@ export default function RootLayout() {
                   <AuthProvider>
                     <NetInfoProvider>
                       <NotificationProvider>
+                        <AiChatNotificationBridge />
                         <Stack>
                           <Stack.Screen
                             name="(tabs)"

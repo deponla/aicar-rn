@@ -21,6 +21,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { DATE_FORMAT, DATE_TIME_FORMAT, ISO_DATE_FORMAT } from "@/utils/dateFormats";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -125,7 +126,7 @@ const AnalysisCard = React.memo(function AnalysisCard({ item }: { item: AnalyzeM
       ) : null}
       <View style={styles.metaRow}>
         <Text style={styles.metaText}>
-          {dayjs(item.createdAt).format("DD.MM.YYYY HH:mm")}
+          {dayjs(item.createdAt).format(DATE_TIME_FORMAT)}
         </Text>
         <View style={styles.metaRight}>
           <View
@@ -195,7 +196,7 @@ const EditCarModal = React.memo(function EditCarModal({
   }, [purchaseDate]);
 
   const formattedPurchaseDate = purchaseDate
-    ? dayjs(purchaseDate).format("DD.MM.YYYY")
+    ? dayjs(purchaseDate).format(DATE_FORMAT)
     : t("carDetail.purchaseDatePlaceholder");
 
   const normalizedLicensePlate = useMemo(
@@ -213,7 +214,7 @@ const EditCarModal = React.memo(function EditCarModal({
         return;
       }
 
-      setPurchaseDate(dayjs(selectedDate).format("YYYY-MM-DD"));
+      setPurchaseDate(dayjs(selectedDate).format(ISO_DATE_FORMAT));
     },
     [],
   );
@@ -677,14 +678,14 @@ export default function CarDetailScreen() {
                   color={tokens.textSecondary}
                 />
                 <Text style={styles.detailText}>
-                  {dayjs(car.purchaseDate).format("DD.MM.YYYY")}
+                  {dayjs(car.purchaseDate).format(DATE_FORMAT)}
                 </Text>
               </View>
             ) : null}
           </View>
           <Text style={styles.dateText}>
             {t("carDetail.addedOn", {
-              date: dayjs(car.createdAt).format("DD.MM.YYYY"),
+              date: dayjs(car.createdAt).format(DATE_FORMAT),
             })}
           </Text>
           {car.notes?.trim() ? (

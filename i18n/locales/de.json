@@ -799,6 +799,9 @@
         "loginTitle": "Anmelden für AI Chat",
         "loginDescription": "Melden Sie sich an, um mit KI über Ihr Auto zu chatten.",
         "uploadFailed": "Bild konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
+        "responseReadyTitle": "KI-Antwort ist bereit",
+        "responseReadyMessage": "Tippen, um die Antwort zu öffnen.",
+        "responseFailedTitle": "KI-Antwort fehlgeschlagen",
         "permissionTitle": "Berechtigung erforderlich",
         "permissionDescription": "Bitte gewähren Sie Zugriff auf die Fotobibliothek, um Bilder zu senden."
     }

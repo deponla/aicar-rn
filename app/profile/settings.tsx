@@ -228,41 +228,52 @@ export default function SettingsScreen() {
     setTextSizeModalVisible(true);
   }, []);
 
-  const handleLanguageSave = useCallback(async () => {
-    if (!userId) {
-      return;
-    }
+  const handleLanguageSelect = useCallback(
+    async (nextLanguageCode: (typeof LANGUAGES)[number]["code"]) => {
+      if (isSavingLang) {
+        return;
+      }
 
-    if (selectedLang === currentLanguage) {
-      setLanguageModalVisible(false);
-      return;
-    }
+      setSelectedLang(nextLanguageCode);
 
-    const previousLanguage = currentLanguage;
+      if (nextLanguageCode === currentLanguage) {
+        setLanguageModalVisible(false);
+        return;
+      }
 
-    try {
-      setIsSavingLang(true);
-      const nextLanguage = await changeAppLanguage(selectedLang);
-      await patchUser.mutateAsync({
-        id: userId,
-        d: { language: nextLanguage },
-      });
+      if (!userId) {
+        return;
+      }
 
-      await mergeAuthenticatedUser({ language: nextLanguage });
-      notify({ type: "success", title: translate("language.saved") });
-      setLanguageModalVisible(false);
-    } catch (error: unknown) {
-      await changeAppLanguage(previousLanguage).catch(() => undefined);
-      notifyApiError({
-        error,
-        fallbackMessage: translate("language.retryLater"),
-        notify,
-        title: translate("language.saveFailed"),
-      });
-    } finally {
-      setIsSavingLang(false);
-    }
-  }, [currentLanguage, notify, patchUser, selectedLang, translate, userId]);
+      const previousLanguage = currentLanguage;
+
+      try {
+        setIsSavingLang(true);
+        const nextLanguage = await changeAppLanguage(nextLanguageCode);
+        await patchUser.mutateAsync({
+          id: userId,
+          d: { language: nextLanguage },
+        });
+
+        await mergeAuthenticatedUser({ language: nextLanguage });
+        setSelectedLang(nextLanguage);
+        notify({ type: "success", title: translate("language.saved") });
+        setLanguageModalVisible(false);
+      } catch (error: unknown) {
+        setSelectedLang(previousLanguage);
+        await changeAppLanguage(previousLanguage).catch(() => undefined);
+        notifyApiError({
+          error,
+          fallbackMessage: translate("language.retryLater"),
+          notify,
+          title: translate("language.saveFailed"),
+        });
+      } finally {
+        setIsSavingLang(false);
+      }
+    },
+    [currentLanguage, isSavingLang, notify, patchUser, translate, userId],
+  );
 
   const handleTextSizeSelect = useCallback(
     (preset: TextSizePreset) => {
@@ -411,7 +422,8 @@ export default function SettingsScreen() {
                     borderWidth: isSelected ? 2 : 1,
                   },
                 ]}
-                onPress={() => setSelectedLang(lang.code)}
+                onPress={() => void handleLanguageSelect(lang.code)}
+                disabled={isSavingLang}
                 activeOpacity={0.7}
               >
                 <Text style={styles.modalOptionFlag}>{lang.flag}</Text>
@@ -428,34 +440,18 @@ export default function SettingsScreen() {
                 >
                   {translate(`common.languages.${lang.code}`)}
                 </Text>
-                <MaterialIcons
-                  name={isSelected ? "check-circle" : "radio-button-unchecked"}
-                  size={22}
-                  color={isSelected ? Colors.primary : t.textPlaceholder}
-                />
+                {isSavingLang && isSelected ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <MaterialIcons
+                    name={isSelected ? "check-circle" : "radio-button-unchecked"}
+                    size={22}
+                    color={isSelected ? Colors.primary : t.textPlaceholder}
+                  />
+                )}
               </TouchableOpacity>
             );
           })}
-          <TouchableOpacity
-            style={[
-              styles.modalSaveButton,
-              (selectedLang === currentLanguage || isSavingLang) &&
-              styles.modalSaveButtonDisabled,
-            ]}
-            onPress={handleLanguageSave}
-            disabled={
-              selectedLang === currentLanguage || isSavingLang
-            }
-            activeOpacity={0.8}
-          >
-            {isSavingLang ? (
-              <ActivityIndicator color={tokens.textInverse} />
-            ) : (
-              <Text style={styles.modalSaveButtonText}>
-                {translate("language.save")}
-              </Text>
-            )}
-          </TouchableOpacity>
         </View>
       </BottomSheetModal>
 
@@ -642,21 +638,5 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
     fontSize: 12,
     lineHeight: 17,
-  },
-  modalSaveButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 9999,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 48,
-    marginTop: 8,
-  },
-  modalSaveButtonDisabled: {
-    opacity: 0.45,
-  },
-  modalSaveButtonText: {
-    fontFamily: FontFamily.semiBold,
-    color: tokens.textInverse,
-    fontSize: 16,
   },
 });

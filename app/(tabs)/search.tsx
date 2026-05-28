@@ -25,6 +25,7 @@ import { LegendList } from "@legendapp/list";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import dayjs from "dayjs";
+import { DATE_FORMAT, DATE_TIME_FULL_FORMAT, ISO_DATE_FORMAT } from "@/utils/dateFormats";
 import { Href, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -125,7 +126,7 @@ const ScanHistoryItem = React.memo(function ScanHistoryItem({
           {item.aiResponse?.title ?? item.analysisType}
         </Text>
         <Text style={styles.scanItemDate}>
-          {dayjs(item.createdAt).format("DD MMM YYYY • HH:mm")}
+          {dayjs(item.createdAt).format(DATE_TIME_FULL_FORMAT)}
         </Text>
       </View>
       <View style={[styles.scanItemBadge, { backgroundColor: badgeInfo.bg }]}>
@@ -241,7 +242,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
   }, [purchaseDate]);
 
   const formattedPurchaseDate = purchaseDate
-    ? dayjs(purchaseDate).format("DD.MM.YYYY")
+    ? dayjs(purchaseDate).format(DATE_FORMAT)
     : t("carDetail.purchaseDatePlaceholder");
 
   const handlePurchaseDateChange = useCallback(
@@ -254,7 +255,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
         return;
       }
 
-      setPurchaseDate(dayjs(selectedDate).format("YYYY-MM-DD"));
+      setPurchaseDate(dayjs(selectedDate).format(ISO_DATE_FORMAT));
     },
     [],
   );

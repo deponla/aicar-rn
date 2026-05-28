@@ -71,6 +71,10 @@ export const GOOGLE_PLACES_API_URL = normalizeBaseUrl(
   readPublicEnv("EXPO_PUBLIC_GOOGLE_PLACES_API_URL") ?? "",
 );
 
+export const AI_CHAT_TIMEOUT_MS = Number(
+  readPublicEnv("EXPO_PUBLIC_AI_CHAT_TIMEOUT_MS") ?? 240_000,
+);
+
 export const TERMS_URL = buildAbsoluteUrl(SITE_URL, "/terms");
 export const PRIVACY_URL = buildAbsoluteUrl(SITE_URL, "/privacy");
 export const OPEN_SOURCE_LICENSES_URL = buildAbsoluteUrl(

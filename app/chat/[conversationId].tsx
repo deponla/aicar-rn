@@ -20,6 +20,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LegendList, type LegendListRef } from "@legendapp/list";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { TIME_FORMAT } from "@/utils/dateFormats";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -263,7 +264,7 @@ export default function ChatDetailScreen() {
                   isMine ? styles.messageTimeMine : styles.messageTimeOther,
                 ]}
               >
-                {dayjs(item.createdAt).format("HH:mm")}
+                {dayjs(item.createdAt).format(TIME_FORMAT)}
               </Text>
               {isMine && item.isRead && (
                 <Text style={styles.readIndicator}>• {translate("chatScreen.readIndicator")}</Text>

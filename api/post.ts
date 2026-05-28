@@ -55,6 +55,7 @@ import {
   CompleteCarReminderRequest,
   CreateCarReminderRequest,
 } from "@/types/car-reminder";
+import { AI_CHAT_TIMEOUT_MS } from "@/utils/env";
 import { instance } from "./config";
 
 export async function postRefreshToken(
@@ -258,5 +259,7 @@ export async function postCreateAiConversation(
 export async function postSendAiMessage(
   payload: SendAiMessageRequest,
 ): Promise<AiChatMessageResponse> {
-  return instance.post("v1/ai-chat/messages", payload).then((r) => r.data);
+  return instance
+    .post("v1/ai-chat/messages", payload, { timeout: AI_CHAT_TIMEOUT_MS })
+    .then((r) => r.data);
 }

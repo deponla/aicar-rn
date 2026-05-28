@@ -799,6 +799,9 @@
         "loginTitle": "AI Sohbet için giriş yapın",
         "loginDescription": "Aracınız hakkında AI ile sohbet etmek için giriş yapın.",
         "uploadFailed": "Resim yüklenemedi. Lütfen tekrar deneyin.",
+        "responseReadyTitle": "AI cevabı hazır",
+        "responseReadyMessage": "Cevabı görmek için dokunun.",
+        "responseFailedTitle": "AI cevabı alınamadı",
         "permissionTitle": "İzin Gerekli",
         "permissionDescription": "Resim göndermek için fotoğraf kitaplığı erişimine izin verin."
     }

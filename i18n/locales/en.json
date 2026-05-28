@@ -799,6 +799,9 @@
         "loginTitle": "Sign in to use AI Chat",
         "loginDescription": "Sign in to chat with AI about your car.",
         "uploadFailed": "Failed to upload image. Please try again.",
+        "responseReadyTitle": "AI response is ready",
+        "responseReadyMessage": "Tap to view the answer.",
+        "responseFailedTitle": "AI response failed",
         "permissionTitle": "Permission Required",
         "permissionDescription": "Please grant photo library access to send images."
     }

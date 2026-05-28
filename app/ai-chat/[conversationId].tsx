@@ -8,14 +8,20 @@ import { AuthStatusEnum } from "@/types/auth";
 import LoginRequired from "@/components/LoginRequired";
 import type { AiMessage } from "@/types/ai-chat";
 import { AiMessageRole } from "@/types/ai-chat";
-import { sendAiMessageStreaming } from "@/services/AiChatService";
+import {
+    getAiChatTask,
+    setActiveAiChatConversationId,
+    startAiChatResponseTask,
+    subscribeAiChatTasks,
+} from "@/services/AiChatTaskService";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LegendList, type LegendListRef } from "@legendapp/list";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { TIME_FORMAT } from "@/utils/dateFormats";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
@@ -79,16 +85,28 @@ export default function AiChatDetailScreen() {
     const insets = useSafeAreaInsets();
     const queryClient = useQueryClient();
     const listRef = useRef<LegendListRef>(null);
-    const abortControllerRef = useRef<AbortController | null>(null);
+    const lastShownTaskErrorRef = useRef<Error | null>(null);
     const { t: translate } = useTranslation();
     const isLoggedIn = auth.status === AuthStatusEnum.LOGGED_IN && !!auth.user;
 
     const [messageText, setMessageText] = useState("");
-    const [isSending, setIsSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
-    const [streamingMessage, setStreamingMessage] =
-        useState<StreamingMessage | null>(null);
+    const activeTask = useSyncExternalStore(
+        subscribeAiChatTasks,
+        () => getAiChatTask(conversationId),
+        () => getAiChatTask(conversationId),
+    );
+    const isSending = activeTask?.status === "running";
+    const streamingMessage =
+        activeTask?.status === "running" || activeTask?.status === "completed"
+            ? {
+                id: `streaming-${conversationId}`,
+                role: AiMessageRole.ASSISTANT,
+                content: activeTask.content,
+                isStreaming: activeTask.status === "running",
+            }
+            : null;
     const hasStreamingMessage = streamingMessage != null;
     const streamingMessageContent = streamingMessage?.content;
 
@@ -111,12 +129,27 @@ export default function AiChatDetailScreen() {
         streamingMessageContent,
     ]);
 
-    // Cleanup abort controller on unmount
     useEffect(() => {
+        setActiveAiChatConversationId(conversationId);
+
         return () => {
-            abortControllerRef.current?.abort();
+            setActiveAiChatConversationId(null);
         };
-    }, []);
+    }, [conversationId]);
+
+    useEffect(() => {
+        if (activeTask?.status !== "error" || !activeTask.error) {
+            lastShownTaskErrorRef.current = null;
+            return;
+        }
+
+        if (lastShownTaskErrorRef.current === activeTask.error) {
+            return;
+        }
+
+        lastShownTaskErrorRef.current = activeTask.error;
+        Alert.alert(translate("common.error"), activeTask.error.message);
+    }, [activeTask, translate]);
 
     const handlePickImage = useCallback(async () => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -166,7 +199,6 @@ export default function AiChatDetailScreen() {
         const images = pendingImages.map((image) => image.base64);
         setMessageText("");
         setPendingImages([]);
-        setIsSending(true);
         Keyboard.dismiss();
 
         // Add user message to local list optimistically
@@ -200,55 +232,12 @@ export default function AiChatDetailScreen() {
             },
         );
 
-        // Start streaming
-        setStreamingMessage({
-            id: `streaming-${Date.now()}`,
-            role: AiMessageRole.ASSISTANT,
-            content: "",
-            isStreaming: true,
+        startAiChatResponseTask({
+            conversationId,
+            content: text,
+            imageUrls: images.length > 0 ? images : undefined,
         });
-
-        const abortController = new AbortController();
-        abortControllerRef.current = abortController;
-
-        sendAiMessageStreaming(
-            {
-                conversationId,
-                content: text,
-                imageUrls: images.length > 0 ? images : undefined,
-            },
-            // onChunk
-            (chunk) => {
-                setStreamingMessage((prev) =>
-                    prev ? { ...prev, content: prev.content + chunk } : null,
-                );
-            },
-            // onDone
-            (_messageId) => {
-                setStreamingMessage(null);
-                setIsSending(false);
-                abortControllerRef.current = null;
-                // Refresh messages from server to get proper IDs
-                queryClient.invalidateQueries({
-                    queryKey: [AiChatQueryKeys.MESSAGES, conversationId],
-                });
-                queryClient.invalidateQueries({
-                    queryKey: [AiChatQueryKeys.CONVERSATIONS],
-                });
-            },
-            // onError
-            (error) => {
-                setStreamingMessage(null);
-                setIsSending(false);
-                abortControllerRef.current = null;
-                Alert.alert(translate("common.error"), error.message);
-                queryClient.invalidateQueries({
-                    queryKey: [AiChatQueryKeys.MESSAGES, conversationId],
-                });
-            },
-            abortController.signal,
-        );
-    }, [conversationId, messageText, pendingImages, queryClient, translate]);
+    }, [conversationId, messageText, pendingImages, queryClient]);
 
     // Build display data: messages + streaming message
     const displayMessages: (AiMessage | StreamingMessage)[] = [
@@ -315,7 +304,7 @@ export default function AiChatDetailScreen() {
                                     isUser ? styles.messageTimeMine : styles.messageTimeOther,
                                 ]}
                             >
-                                {dayjs(item.createdAt).format("HH:mm")}
+                                {dayjs(item.createdAt).format(TIME_FORMAT)}
                             </Text>
                         )}
                     </View>

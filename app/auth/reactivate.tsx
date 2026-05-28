@@ -1,4 +1,5 @@
 import { useNotification } from "@/components/Notification";
+import PasswordField from "@/components/PasswordField";
 import ScreenContainer from "@/components/ScreenContainer";
 import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useReactivateAccount } from "@/query-hooks/useUser";
@@ -29,7 +30,6 @@ export default function ReactivateAccountScreen() {
         typeof params.email === "string" ? params.email : "",
     );
     const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const isFrozenLoginRecovery = params.reason === "ACCOUNT_FROZEN";
 
     const isValid = useMemo(() => {
@@ -97,29 +97,11 @@ export default function ReactivateAccountScreen() {
                     />
 
                     <Text style={styles.label}>{t("reactivateAccount.passwordLabel")}</Text>
-                    <View style={styles.passwordRow}>
-                        <TextInput
-                            style={styles.passwordInput}
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry={!showPassword}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            placeholder={t("reactivateAccount.passwordPlaceholder")}
-                            placeholderTextColor={tokens.textPlaceholder}
-                        />
-                        <TouchableOpacity
-                            onPress={() => setShowPassword((current) => !current)}
-                            style={styles.eyeButton}
-                            activeOpacity={0.6}
-                        >
-                            <MaterialIcons
-                                name={showPassword ? "visibility-off" : "visibility"}
-                                size={22}
-                                color={tokens.textTertiary}
-                            />
-                        </TouchableOpacity>
-                    </View>
+                    <PasswordField
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder={t("reactivateAccount.passwordPlaceholder")}
+                    />
 
                     <TouchableOpacity
                         style={[
@@ -193,25 +175,6 @@ const styles = StyleSheet.create({
         fontFamily: FontFamily.regular,
         fontSize: 15,
         color: tokens.textPrimary,
-    },
-    passwordRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: tokens.borderSubtle,
-        backgroundColor: tokens.surfaceContainerLow,
-    },
-    passwordInput: {
-        flex: 1,
-        minHeight: 50,
-        paddingHorizontal: 14,
-        fontFamily: FontFamily.regular,
-        fontSize: 15,
-        color: tokens.textPrimary,
-    },
-    eyeButton: {
-        paddingHorizontal: 12,
     },
     primaryButton: {
         minHeight: 52,

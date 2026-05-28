@@ -1,4 +1,5 @@
 import { useNotification } from "@/components/Notification";
+import PasswordField from "@/components/PasswordField";
 import ScreenContainer from "@/components/ScreenContainer";
 import { ambientShadow, Colors, FontFamily, tokens } from "@/constants/theme";
 import { useChangePassword } from "@/query-hooks/useUser";
@@ -12,7 +13,6 @@ import {
     ActivityIndicator,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -80,9 +80,6 @@ export default function ChangePasswordScreen() {
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [showOld, setShowOld] = useState(false);
-    const [showNew, setShowNew] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
 
     const providerDisplayName = user?.authProvider === "google"
         ? "Google"
@@ -186,57 +183,21 @@ export default function ChangePasswordScreen() {
                     {/* Current Password */}
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>{t("changePasswordScreen.fields.current.label")}</Text>
-                        <View style={styles.passwordRow}>
-                            <TextInput
-                                style={styles.passwordInput}
-                                value={oldPassword}
-                                onChangeText={setOldPassword}
-                                secureTextEntry={!showOld}
-                                placeholder={t("changePasswordScreen.fields.current.placeholder")}
-                                placeholderTextColor={tokens.textPlaceholder}
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                            <TouchableOpacity
-                                onPress={() => setShowOld(!showOld)}
-                                style={styles.eyeButton}
-                                activeOpacity={0.6}
-                            >
-                                <MaterialIcons
-                                    name={showOld ? "visibility-off" : "visibility"}
-                                    size={22}
-                                    color={tokens.textTertiary}
-                                />
-                            </TouchableOpacity>
-                        </View>
+                        <PasswordField
+                            value={oldPassword}
+                            onChangeText={setOldPassword}
+                            placeholder={t("changePasswordScreen.fields.current.placeholder")}
+                        />
                     </View>
 
                     {/* New Password */}
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>{t("changePasswordScreen.fields.next.label")}</Text>
-                        <View style={styles.passwordRow}>
-                            <TextInput
-                                style={styles.passwordInput}
-                                value={newPassword}
-                                onChangeText={setNewPassword}
-                                secureTextEntry={!showNew}
-                                placeholder={t("changePasswordScreen.fields.next.placeholder")}
-                                placeholderTextColor={tokens.textPlaceholder}
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                            <TouchableOpacity
-                                onPress={() => setShowNew(!showNew)}
-                                style={styles.eyeButton}
-                                activeOpacity={0.6}
-                            >
-                                <MaterialIcons
-                                    name={showNew ? "visibility-off" : "visibility"}
-                                    size={22}
-                                    color={tokens.textTertiary}
-                                />
-                            </TouchableOpacity>
-                        </View>
+                        <PasswordField
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                            placeholder={t("changePasswordScreen.fields.next.placeholder")}
+                        />
                         <PasswordStrengthBar password={newPassword} />
                     </View>
 
@@ -266,29 +227,11 @@ export default function ChangePasswordScreen() {
                     {/* Confirm Password */}
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>{t("changePasswordScreen.fields.confirm.label")}</Text>
-                        <View style={styles.passwordRow}>
-                            <TextInput
-                                style={styles.passwordInput}
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry={!showConfirm}
-                                placeholder={t("changePasswordScreen.fields.confirm.placeholder")}
-                                placeholderTextColor={tokens.textPlaceholder}
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                            <TouchableOpacity
-                                onPress={() => setShowConfirm(!showConfirm)}
-                                style={styles.eyeButton}
-                                activeOpacity={0.6}
-                            >
-                                <MaterialIcons
-                                    name={showConfirm ? "visibility-off" : "visibility"}
-                                    size={22}
-                                    color={tokens.textTertiary}
-                                />
-                            </TouchableOpacity>
-                        </View>
+                        <PasswordField
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            placeholder={t("changePasswordScreen.fields.confirm.placeholder")}
+                        />
                         {confirmPassword.length > 0 && !passwordsMatch && (
                             <Text style={styles.errorText}>{t("changePasswordScreen.passwordMismatch")}</Text>
                         )}
@@ -377,26 +320,6 @@ const styles = StyleSheet.create({
         fontFamily: FontFamily.semiBold,
         fontSize: 14,
         color: tokens.textPrimary,
-    },
-    passwordRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: tokens.borderSubtle,
-        borderRadius: 12,
-        backgroundColor: tokens.surfaceContainerLow,
-    },
-    passwordInput: {
-        flex: 1,
-        paddingHorizontal: 14,
-        paddingVertical: 14,
-        fontFamily: FontFamily.regular,
-        fontSize: 16,
-        color: tokens.textPrimary,
-    },
-    eyeButton: {
-        paddingHorizontal: 14,
-        paddingVertical: 14,
     },
     errorText: {
         fontFamily: FontFamily.regular,
