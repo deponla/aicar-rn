@@ -8,6 +8,8 @@ export default function ProfileLayout() {
       }}
     >
       <Stack.Screen name="settings" />
+      <Stack.Screen name="security-settings" />
+      <Stack.Screen name="app-settings" />
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="phone-number" />
       <Stack.Screen name="email-address" />

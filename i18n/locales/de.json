@@ -46,6 +46,10 @@
     "settings": {
         "title": "Kontoeinstellungen",
         "noUser": "Benutzerinformationen konnten nicht gefunden werden.",
+        "items": {
+            "security": "Sicherheit",
+            "appSettings": "App-Einstellungen"
+        },
         "sections": {
             "personal": "PERSÖNLICHE DATEN",
             "security": "SICHERHEIT",

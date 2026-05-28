@@ -46,6 +46,10 @@
     "settings": {
         "title": "Account Settings",
         "noUser": "User information could not be found.",
+        "items": {
+            "security": "Security",
+            "appSettings": "App Settings"
+        },
         "sections": {
             "personal": "PERSONAL INFORMATION",
             "security": "SECURITY",

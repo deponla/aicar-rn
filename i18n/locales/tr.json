@@ -46,6 +46,10 @@
     "settings": {
         "title": "Hesap Ayarları",
         "noUser": "Kullanıcı bilgisi bulunamadı.",
+        "items": {
+            "security": "Güvenlik",
+            "appSettings": "Uygulama Ayarları"
+        },
         "sections": {
             "personal": "KİŞİSEL BİLGİLER",
             "security": "GÜVENLİK",

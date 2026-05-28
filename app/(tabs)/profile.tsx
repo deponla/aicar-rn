@@ -7,6 +7,7 @@ import {
   AUTH_CALLBACK_ACTIONS,
 } from "@/utils/parseSessionFromUrl";
 import { startAuthSession } from "@/utils/authSession";
+import { getSettingsItemLabel } from "@/utils/settingsLabels";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LegendList } from "@legendapp/list";
 import { useRouter } from "expo-router";
@@ -135,7 +136,7 @@ const SectionLabel = memo(function SectionLabel({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
-  const { t: translate } = useTranslation();
+  const { t: translate, i18n } = useTranslation();
   const authStore = useAuthStore();
   const router = useRouter();
   const t = tokens;
@@ -238,6 +239,14 @@ export default function ProfileScreen() {
     router.push("/profile/settings");
   }, [router]);
 
+  const goToSecuritySettings = useCallback(() => {
+    router.push("/profile/security-settings");
+  }, [router]);
+
+  const goToAppSettings = useCallback(() => {
+    router.push("/profile/app-settings");
+  }, [router]);
+
   const goToPermissions = useCallback(() => {
     router.push("/profile/permissions");
   }, [router]);
@@ -276,87 +285,96 @@ export default function ProfileScreen() {
   const displayName = user?.name && user?.surname
     ? `${user.name} ${user.surname}`
     : (user?.email ?? "");
-
-  const nativeMenuSections: NativeMenuSectionData[] = useMemo(
-    () => [
-      {
-        title: translate("profileScreen.sections.account"),
-        items: [
-          {
-            title: translate("settings.title"),
-            systemImage: "gearshape.circle.fill",
-            tintColor: "#6B7280",
-            onPress: goToSettings,
-          },
-          {
-            title: translate("profileScreen.permissions"),
-            systemImage: "checkmark.shield.fill",
-            tintColor: "#059669",
-            onPress: goToPermissions,
-          },
-          {
-            title: translate("credits.title"),
-            systemImage: "creditcard.fill",
-            tintColor: "#2563EB",
-            onPress: goToCredits,
-          },
-        ],
-      },
-      {
-        title: translate("profileScreen.sections.support"),
-        items: [
-          {
-            title: translate("profileScreen.support"),
-            systemImage: "questionmark.circle.fill",
-            tintColor: "#3B82F6",
-            onPress: goToSupport,
-          },
-          {
-            title: translate("profileScreen.feedback"),
-            systemImage: "megaphone.fill",
-            tintColor: "#C2410C",
-            onPress: goToFeedback,
-          },
-          {
-            title: translate("profileScreen.feedbackHistory"),
-            systemImage: "clock.arrow.circlepath",
-            tintColor: "#4338CA",
-            onPress: goToFeedbackHistory,
-          },
-          {
-            title: translate("about.title"),
-            systemImage: "info.circle.fill",
-            tintColor: "#3B82F6",
-            onPress: goToAbout,
-          },
-          {
-            title: translate("about.links.terms"),
-            systemImage: "doc.text.fill",
-            tintColor: "#7C3AED",
-            onPress: openTerms,
-          },
-          {
-            title: translate("about.links.privacy"),
-            systemImage: "hand.raised.fill",
-            tintColor: "#7C3AED",
-            onPress: openPrivacy,
-          },
-        ],
-      },
-    ],
-    [
-      translate,
-      goToSettings,
-      goToPermissions,
-      goToCredits,
-      goToSupport,
-      goToFeedback,
-      goToFeedbackHistory,
-      goToAbout,
-      openTerms,
-      openPrivacy,
-    ],
+  const language = i18n.resolvedLanguage || i18n.language;
+  const securitySettingsLabel = getSettingsItemLabel(
+    translate,
+    "security",
+    language,
   );
+  const appSettingsLabel = getSettingsItemLabel(
+    translate,
+    "appSettings",
+    language,
+  );
+
+  const nativeMenuSections: NativeMenuSectionData[] = [
+    {
+      title: translate("profileScreen.sections.account"),
+      items: [
+        {
+          title: translate("settings.title"),
+          systemImage: "gearshape.circle.fill",
+          tintColor: "#6B7280",
+          onPress: goToSettings,
+        },
+        {
+          title: securitySettingsLabel,
+          systemImage: "lock.shield.fill",
+          tintColor: "#059669",
+          onPress: goToSecuritySettings,
+        },
+        {
+          title: appSettingsLabel,
+          systemImage: "slider.horizontal.3",
+          tintColor: "#7C3AED",
+          onPress: goToAppSettings,
+        },
+        {
+          title: translate("profileScreen.permissions"),
+          systemImage: "checkmark.shield.fill",
+          tintColor: "#059669",
+          onPress: goToPermissions,
+        },
+        {
+          title: translate("credits.title"),
+          systemImage: "creditcard.fill",
+          tintColor: "#2563EB",
+          onPress: goToCredits,
+        },
+      ],
+    },
+    {
+      title: translate("profileScreen.sections.support"),
+      items: [
+        {
+          title: translate("profileScreen.support"),
+          systemImage: "questionmark.circle.fill",
+          tintColor: "#3B82F6",
+          onPress: goToSupport,
+        },
+        {
+          title: translate("profileScreen.feedback"),
+          systemImage: "megaphone.fill",
+          tintColor: "#C2410C",
+          onPress: goToFeedback,
+        },
+        {
+          title: translate("profileScreen.feedbackHistory"),
+          systemImage: "clock.arrow.circlepath",
+          tintColor: "#4338CA",
+          onPress: goToFeedbackHistory,
+        },
+        {
+          title: translate("about.title"),
+          systemImage: "info.circle.fill",
+          tintColor: "#3B82F6",
+          onPress: goToAbout,
+        },
+        {
+          title: translate("about.links.terms"),
+          systemImage: "doc.text.fill",
+          tintColor: "#7C3AED",
+          onPress: openTerms,
+        },
+        {
+          title: translate("about.links.privacy"),
+          systemImage: "hand.raised.fill",
+          tintColor: "#7C3AED",
+          onPress: openPrivacy,
+        },
+      ],
+    },
+  ];
 
   // ── WebView modal ──
   const webViewModal = (
@@ -606,6 +624,20 @@ export default function ProfileScreen() {
                 icon="manage-accounts"
                 label={translate("settings.title")}
                 onPress={goToSettings}
+              />
+              <MenuItem
+                icon="lock"
+                iconBg="#ECFDF3"
+                iconColor="#059669"
+                label={securitySettingsLabel}
+                onPress={goToSecuritySettings}
+              />
+              <MenuItem
+                icon="tune"
+                iconBg="#F5F3FF"
+                iconColor="#7C3AED"
+                label={appSettingsLabel}
+                onPress={goToAppSettings}
               />
               <MenuItem
                 icon="security"
