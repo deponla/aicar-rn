@@ -39,6 +39,7 @@ type DrawerRoute =
     | "/profile"
     | "/ai-chat"
     | "/credits"
+    | "/fuel-prices"
     | "/profile/settings"
     | "/profile/support";
 
@@ -288,6 +289,12 @@ export default function HamburgerDrawer() {
                 icon: "smart-toy" as const,
                 label: translate("drawer.aiChat"),
                 onPress: () => handleNavigate("/ai-chat"),
+            },
+            {
+                key: "fuel-prices" as const,
+                icon: "local-gas-station" as const,
+                label: translate("fuelPrices.title"),
+                onPress: () => handleNavigate("/fuel-prices"),
             },
             {
                 key: "subscription" as const,

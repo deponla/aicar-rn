@@ -1,10 +1,11 @@
-import { getCarBrands, getCarModels } from "@/api/get";
+import { getCarBrands, getCarEngines, getCarModels } from "@/api/get";
 import { CarBrandQuery, CarModelQuery } from "@/types/car-brand";
 import { useQuery } from "@tanstack/react-query";
 
 export enum CarBrandQueryKeys {
   BRANDS = "car-brands",
   MODELS = "car-models",
+  ENGINES = "car-engines",
 }
 
 export function useGetCarBrands(
@@ -31,5 +32,19 @@ export function useGetCarModels({
     queryKey: [CarBrandQueryKeys.MODELS, brandId, filters],
     queryFn: () => getCarModels({ brandId: brandId!, filters }),
     enabled: Boolean(brandId) && enabled,
+  });
+}
+
+export function useGetCarEngines({
+  catalogModelId,
+  enabled = true,
+}: {
+  catalogModelId?: string;
+  enabled?: boolean;
+}) {
+  return useQuery({
+    queryKey: [CarBrandQueryKeys.ENGINES, catalogModelId],
+    queryFn: () => getCarEngines(catalogModelId!),
+    enabled: Boolean(catalogModelId) && enabled,
   });
 }

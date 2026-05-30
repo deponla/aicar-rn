@@ -9,6 +9,7 @@ import {
 import { useChatSocket } from "@/query-hooks/useChatSocket";
 import { useAuthStore } from "@/store/useAuth";
 import { AuthStatusEnum } from "@/types/auth";
+import ChatComposerInput from "@/components/ChatComposerInput";
 import LoginRequired from "@/components/LoginRequired";
 import type {
   ChatReadEventPayload,
@@ -29,7 +30,6 @@ import {
   Keyboard,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -39,7 +39,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 function getConversationName(
   conversation: Conversation | undefined,
   fallbackTitle: string,
-  unknownUserTitle: string,
+  unknownUserTitle: string
 ): string {
   if (!conversation) return fallbackTitle;
   const participant = conversation.participant;
@@ -73,7 +73,7 @@ export default function ChatDetailScreen() {
   });
 
   const conversation = conversationsQuery.data?.results?.find(
-    (c) => c.id === conversationId,
+    (c) => c.id === conversationId
   );
 
   const messagesQuery = useGetChatMessages({
@@ -110,14 +110,14 @@ export default function ChatDetailScreen() {
           }
           const nextResults = [...previous.results, incoming].sort(
             (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
           return {
             ...previous,
             results: nextResults,
             count: Math.max(previous.count, nextResults.length),
           };
-        },
+        }
       );
 
       queryClient.setQueriesData(
@@ -131,7 +131,7 @@ export default function ChatDetailScreen() {
           if (!previous) return previous;
 
           const hasConversation = previous.results.some(
-            (c) => c.id === incoming.conversationId,
+            (c) => c.id === incoming.conversationId
           );
 
           if (!hasConversation) {
@@ -145,11 +145,11 @@ export default function ChatDetailScreen() {
             .map((c) =>
               c.id === incoming.conversationId
                 ? {
-                  ...c,
-                  lastMessage: incoming.content,
-                  lastMessageAt: incoming.createdAt,
-                }
-                : c,
+                    ...c,
+                    lastMessage: incoming.content,
+                    lastMessageAt: incoming.createdAt,
+                  }
+                : c
             )
             .sort((a, b) => {
               const first = a.lastMessageAt ?? a.createdAt;
@@ -158,10 +158,10 @@ export default function ChatDetailScreen() {
             });
 
           return { ...previous, results: nextResults };
-        },
+        }
       );
     },
-    [queryClient, auth.user?.user.id],
+    [queryClient, auth.user?.user.id]
   );
 
   const handleReadEvent = useCallback(
@@ -178,13 +178,13 @@ export default function ChatDetailScreen() {
           const updated = previous.results.map((message) =>
             message.senderId === payload.readerId
               ? message
-              : { ...message, isRead: true },
+              : { ...message, isRead: true }
           );
           return { ...previous, results: updated };
-        },
+        }
       );
     },
-    [queryClient],
+    [queryClient]
   );
 
   const { isConnected, emitJoin, emitRead } = useChatSocket({
@@ -228,7 +228,7 @@ export default function ChatDetailScreen() {
             listRef.current?.scrollToEnd({ animated: true });
           }, 150);
         },
-      },
+      }
     );
   }, [conversationId, messageText, sendMessage]);
 
@@ -267,20 +267,22 @@ export default function ChatDetailScreen() {
                 {dayjs(item.createdAt).format(TIME_FORMAT)}
               </Text>
               {isMine && item.isRead && (
-                <Text style={styles.readIndicator}>• {translate("chatScreen.readIndicator")}</Text>
+                <Text style={styles.readIndicator}>
+                  • {translate("chatScreen.readIndicator")}
+                </Text>
               )}
             </View>
           </View>
         </View>
       );
     },
-    [auth.user?.user.id, translate],
+    [auth.user?.user.id, translate]
   );
 
   const conversationName = getConversationName(
     conversation,
     translate("chatScreen.defaultTitle"),
-    translate("chatScreen.unknownUser"),
+    translate("chatScreen.unknownUser")
   );
 
   if (!isLoggedIn) {
@@ -328,7 +330,9 @@ export default function ChatDetailScreen() {
             {isConnected && (
               <View style={styles.onlineIndicator}>
                 <View style={styles.onlineDot} />
-                <Text style={styles.onlineText}>{translate("chatScreen.online")}</Text>
+                <Text style={styles.onlineText}>
+                  {translate("chatScreen.online")}
+                </Text>
               </View>
             )}
           </View>
@@ -342,7 +346,8 @@ export default function ChatDetailScreen() {
             ]}
           >
             <Text style={{ color: t.textSecondary, fontSize: 13 }}>
-              {translate("chatScreen.warehouseLabel")}: {conversation.relatedWarehouseId}
+              {translate("chatScreen.warehouseLabel")}:{" "}
+              {conversation.relatedWarehouseId}
             </Text>
           </View>
         )}
@@ -397,35 +402,14 @@ export default function ChatDetailScreen() {
           },
         ]}
       >
-        <TextInput
-          style={[
-            styles.textInput,
-            { backgroundColor: t.bgSubtle, color: t.textPrimary },
-          ]}
+        <ChatComposerInput
           placeholder={translate("chatScreen.messagePlaceholder")}
-          placeholderTextColor={t.textPlaceholder}
           value={messageText}
           onChangeText={setMessageText}
-          multiline
-          maxLength={2000}
-          returnKeyType="default"
-          blurOnSubmit={false}
-        />
-        <TouchableOpacity
-          style={[
-            styles.sendButton,
-            !messageText.trim() && styles.sendButtonDisabled,
-          ]}
-          onPress={handleSend}
           disabled={!messageText.trim() || sendMessage.isPending}
-          activeOpacity={0.7}
-        >
-          {sendMessage.isPending ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <MaterialIcons name="send" size={20} color="#FFFFFF" />
-          )}
-        </TouchableOpacity>
+          isSending={sendMessage.isPending}
+          onSend={handleSend}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -572,27 +556,5 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
     gap: 8,
-  },
-  textInput: {
-    flex: 1,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 10,
-    fontFamily: FontFamily.regular,
-    fontSize: 16,
-    maxHeight: 100,
-    minHeight: 40,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
   },
 });

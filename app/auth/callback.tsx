@@ -3,7 +3,7 @@ import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -72,14 +72,20 @@ export default function AuthCallback() {
     email?: string;
   }>();
   const router = useRouter();
-  const authStore = useAuthStore();
+  const login = useAuthStore((state) => state.login);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const hasHandledCallback = useRef(false);
   const sessionParam = getSingleParamValue(params.session);
   const actionParam = getSingleParamValue(params.action);
   const reasonParam = getSingleParamValue(params.reason);
   const emailParam = getSingleParamValue(params.email);
 
   useEffect(() => {
+    if (hasHandledCallback.current) {
+      return;
+    }
+
+    hasHandledCallback.current = true;
     void WebBrowser.dismissBrowser().catch(() => undefined);
 
     const saveSessionAndRedirect = async (sessionData: UserResponseData) => {
@@ -91,7 +97,7 @@ export default function AuthCallback() {
       } catch (error) {
         console.error("Failed to save session to SecureStore:", error);
       }
-      authStore.login(sessionData);
+      login(sessionData);
       router.replace("/(tabs)/profile");
     };
 
@@ -163,9 +169,9 @@ export default function AuthCallback() {
 
     handleDeepLink();
   }, [
-    authStore,
     actionParam,
     emailParam,
+    login,
     reasonParam,
     router,
     sessionParam,

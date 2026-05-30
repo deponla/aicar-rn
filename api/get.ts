@@ -18,6 +18,7 @@ import { CarListResponse, CarQuery, CarResponse } from "@/types/car";
 import {
   CarBrandListResponse,
   CarBrandQuery,
+  CarEngineListResponse,
   CarModelListResponse,
   CarModelQuery,
 } from "@/types/car-brand";
@@ -27,6 +28,11 @@ import {
 } from "@/types/notification";
 import { LegalDocument } from "@/types/legal";
 import { AnalyzeMediaLog } from "@/types/ai";
+import {
+  CitySummaryResponse,
+  FuelPriceListResponse,
+  FuelPriceQuery,
+} from "@/types/fuel-price";
 import {
   AiConversationListResponse,
   AiConversationQuery,
@@ -115,6 +121,14 @@ export async function getCarModels({
 }): Promise<CarModelListResponse> {
   return instance
     .get(`v1/car-brands/${brandId}/models`, { params: filters })
+    .then((r) => r.data);
+}
+
+export async function getCarEngines(
+  catalogModelId: string,
+): Promise<CarEngineListResponse> {
+  return instance
+    .get(`v1/car-brands/models/${catalogModelId}/engines`)
     .then((r) => r.data);
 }
 
@@ -212,4 +226,16 @@ export async function getAiMessages({
       params: filters,
     })
     .then((r) => r.data);
+}
+
+export async function getFuelPrices(
+  filters?: FuelPriceQuery,
+): Promise<FuelPriceListResponse> {
+  return instance
+    .get("v1/fuel-prices", { params: filters })
+    .then((r) => r.data);
+}
+
+export async function getFuelPriceSummary(): Promise<CitySummaryResponse> {
+  return instance.get("v1/fuel-prices/summary").then((r) => r.data);
 }

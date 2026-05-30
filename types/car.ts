@@ -43,6 +43,7 @@ export interface CreateCarRequest {
   fuelType?: FuelTypeEnum;
   transmission?: TransmissionEnum;
   engineCC?: number;
+  engineName?: string;
   currentMileage?: number;
   nickname?: string;
   licensePlate?: string;

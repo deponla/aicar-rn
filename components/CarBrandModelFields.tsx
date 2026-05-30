@@ -1,6 +1,6 @@
 import { useNotification } from "@/components/Notification";
 import { FontFamily, tokens } from "@/constants/theme";
-import { useGetCarBrands, useGetCarModels } from "@/query-hooks/useCarBrands";
+import { useGetCarBrands, useGetCarEngines, useGetCarModels } from "@/query-hooks/useCarBrands";
 import { useDebounce } from "@/utils/useDebounce";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LegendList } from "@legendapp/list";
@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
+    Image,
     Modal,
     StyleSheet,
     Text,
@@ -36,7 +37,7 @@ function PickerModal({
     title: string;
     searchValue: string;
     onSearchChange: (value: string) => void;
-    options: { key: string; label: string }[];
+    options: { key: string; label: string; logo?: string }[];
     onSelect: (key: string) => void;
     onClose: () => void;
     placeholder: string;
@@ -82,6 +83,9 @@ function PickerModal({
                                     onPress={() => onSelect(item.key)}
                                     activeOpacity={0.85}
                                 >
+                                    {item.logo ? (
+                                        <Image source={{ uri: item.logo }} style={styles.optionLogo} />
+                                    ) : null}
                                     <Text style={styles.optionText}>{item.label}</Text>
                                     <MaterialIcons
                                         name="keyboard-arrow-right"
@@ -101,21 +105,29 @@ function PickerModal({
 export default function CarBrandModelFields({
     brand,
     model,
+    engine,
     onBrandChange,
     onModelChange,
+    onEngineChange,
 }: {
     brand: string;
     model: string;
+    engine?: string;
     onBrandChange: (value: string) => void;
     onModelChange: (value: string) => void;
+    onEngineChange?: (value: string) => void;
 }) {
     const { t } = useTranslation();
     const { notify } = useNotification();
     const [brandPickerVisible, setBrandPickerVisible] = useState(false);
     const [modelPickerVisible, setModelPickerVisible] = useState(false);
+    const [enginePickerVisible, setEnginePickerVisible] = useState(false);
     const [brandSearch, setBrandSearch] = useState("");
     const [modelSearch, setModelSearch] = useState("");
+    const [engineSearch, setEngineSearch] = useState("");
     const [selectedBrandId, setSelectedBrandId] = useState<string>();
+    const [selectedCatalogModelId, setSelectedCatalogModelId] = useState<string>();
+    const [selectedModelHasEngines, setSelectedModelHasEngines] = useState(false);
     const [brandMode, setBrandMode] = useState<"catalog" | "manual">("catalog");
     const isInitializedRef = useRef(false);
     const lastModelErrorRef = useRef<string | undefined>(undefined);
@@ -163,12 +175,23 @@ export default function CarBrandModelFields({
         error: modelsError,
         isError: hasModelsError,
         isFetching: modelsFetching,
+        isLoading: modelsLoading,
     } = useGetCarModels({
         brandId: selectedBrandId,
         filters: { limit: 500 },
         enabled: brandMode === "catalog" && Boolean(selectedBrandId),
     });
     const models = useMemo(() => modelsData?.results ?? [], [modelsData?.results]);
+
+    // Engine data
+    const {
+        data: enginesData,
+        isFetching: enginesFetching,
+    } = useGetCarEngines({
+        catalogModelId: selectedCatalogModelId,
+        enabled: selectedModelHasEngines && Boolean(selectedCatalogModelId),
+    });
+    const engines = useMemo(() => enginesData?.results ?? [], [enginesData?.results]);
 
     useEffect(() => {
         if (!hasModelsError) {
@@ -204,6 +227,15 @@ export default function CarBrandModelFields({
         return models.filter((item) => normalize(item.name).includes(search));
     }, [modelSearch, models]);
 
+    const filteredEngines = useMemo(() => {
+        const search = normalize(engineSearch);
+        if (!search) {
+            return engines;
+        }
+
+        return engines.filter((item) => normalize(item.name).includes(search));
+    }, [engineSearch, engines]);
+
     const selectedBrandLabel = useMemo(() => {
         if (brandMode === "manual") {
             return t("carDetail.otherBrandOption");
@@ -216,8 +248,19 @@ export default function CarBrandModelFields({
         return model.trim() || t("carDetail.modelPlaceholder");
     }, [model, t]);
 
+    const selectedEngineLabel = useMemo(() => {
+        return engine?.trim() || t("carDetail.enginePlaceholder");
+    }, [engine, t]);
+
+    // Find logo for selected brand
+    const selectedBrandLogo = useMemo(() => {
+        if (!selectedBrandId) return undefined;
+        const found = brands.find((item) => item.id === selectedBrandId);
+        return found?.logo;
+    }, [selectedBrandId, brands]);
+
     const brandOptions = useMemo(
-        () => brands.map((item) => ({ key: item.id, label: item.name })),
+        () => brands.map((item) => ({ key: item.id, label: item.name, logo: item.logo })),
         [brands],
     );
 
@@ -226,8 +269,14 @@ export default function CarBrandModelFields({
         [filteredModels],
     );
 
+    const engineOptions = useMemo(
+        () => filteredEngines.map((item) => ({ key: item.id, label: item.name })),
+        [filteredEngines],
+    );
+
     const shouldUseManualModelInput = Boolean(selectedBrandId) &&
-        (hasModelsError || (models.length === 0 && !modelsFetching));
+        !modelsLoading && !modelsFetching &&
+        (hasModelsError || models.length === 0);
 
     const handleSelectBrand = (brandId: string) => {
         const selectedBrand = brands.find((item) => item.id === brandId);
@@ -239,6 +288,9 @@ export default function CarBrandModelFields({
         setBrandPickerVisible(false);
         setBrandSearch("");
         onModelChange("");
+        setSelectedCatalogModelId(undefined);
+        setSelectedModelHasEngines(false);
+        onEngineChange?.("");
 
         if (selectedBrand.isOther) {
             setBrandMode("manual");
@@ -259,6 +311,22 @@ export default function CarBrandModelFields({
         onModelChange(selectedModel.name);
         setModelPickerVisible(false);
         setModelSearch("");
+
+        // Reset engine state and set up engine picker if available
+        onEngineChange?.("");
+        setSelectedCatalogModelId(selectedModel.catalogModelId);
+        setSelectedModelHasEngines(selectedModel.hasEngines === true);
+    };
+
+    const handleSelectEngine = (engineId: string) => {
+        const selectedEngine = engines.find((item) => item.id === engineId);
+        if (!selectedEngine) {
+            return;
+        }
+
+        onEngineChange?.(selectedEngine.name);
+        setEnginePickerVisible(false);
+        setEngineSearch("");
     };
 
     return (
@@ -269,6 +337,9 @@ export default function CarBrandModelFields({
                 onPress={() => setBrandPickerVisible(true)}
                 activeOpacity={0.85}
             >
+                {selectedBrandLogo ? (
+                    <Image source={{ uri: selectedBrandLogo }} style={styles.brandLogo} />
+                ) : null}
                 <Text
                     style={[
                         styles.selectorInputText,
@@ -340,6 +411,32 @@ export default function CarBrandModelFields({
                             />
                         </TouchableOpacity>
                     )}
+
+                    {/* Engine selector — shown only when model has engine data */}
+                    {selectedModelHasEngines && selectedCatalogModelId && onEngineChange ? (
+                        <>
+                            <Text style={styles.inputLabel}>{t("carDetail.engineLabel")}</Text>
+                            <TouchableOpacity
+                                style={styles.selectorInput}
+                                onPress={() => setEnginePickerVisible(true)}
+                                activeOpacity={0.85}
+                            >
+                                <Text
+                                    style={[
+                                        styles.selectorInputText,
+                                        !engine?.trim() && styles.placeholderText,
+                                    ]}
+                                >
+                                    {selectedEngineLabel}
+                                </Text>
+                                <MaterialIcons
+                                    name="keyboard-arrow-down"
+                                    size={20}
+                                    color={tokens.textSecondary}
+                                />
+                            </TouchableOpacity>
+                        </>
+                    ) : null}
                 </>
             )}
 
@@ -374,6 +471,22 @@ export default function CarBrandModelFields({
                 emptyText={t("carDetail.modelEmptyState")}
                 loading={modelsFetching}
             />
+
+            <PickerModal
+                visible={enginePickerVisible}
+                title={t("carDetail.enginePickerTitle")}
+                searchValue={engineSearch}
+                onSearchChange={setEngineSearch}
+                options={engineOptions}
+                onSelect={handleSelectEngine}
+                onClose={() => {
+                    setEnginePickerVisible(false);
+                    setEngineSearch("");
+                }}
+                placeholder={t("carDetail.engineSearchPlaceholder")}
+                emptyText={t("carDetail.engineEmptyState")}
+                loading={enginesFetching}
+            />
         </>
     );
 }
@@ -407,6 +520,13 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+    },
+    brandLogo: {
+        width: 24,
+        height: 24,
+        borderRadius: 4,
+        marginRight: 10,
+        resizeMode: "contain",
     },
     selectorInputDisabled: {
         opacity: 0.65,
@@ -470,6 +590,13 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         borderBottomWidth: 1,
         borderBottomColor: tokens.borderSubtle,
+    },
+    optionLogo: {
+        width: 22,
+        height: 22,
+        borderRadius: 3,
+        marginRight: 10,
+        resizeMode: "contain",
     },
     optionText: {
         flex: 1,

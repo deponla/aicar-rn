@@ -28,6 +28,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
 
+const HIDDEN_HEADER_OPTIONS = { headerShown: false } as const;
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Manrope_400Regular,
@@ -65,44 +67,7 @@ export default function RootLayout() {
                     <NetInfoProvider>
                       <NotificationProvider>
                         <AiChatNotificationBridge />
-                        <Stack>
-                          <Stack.Screen
-                            name="(tabs)"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="auth"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="profile"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="chat/[conversationId]"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="notifications"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="car/[id]"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="credits"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="ai-chat/index"
-                            options={{ headerShown: false }}
-                          />
-                          <Stack.Screen
-                            name="ai-chat/[conversationId]"
-                            options={{ headerShown: false }}
-                          />
-                        </Stack>
+                        <Stack screenOptions={HIDDEN_HEADER_OPTIONS} />
                         <StatusBar style="dark" />
                       </NotificationProvider>
                     </NetInfoProvider>

@@ -1,7 +1,9 @@
+import { ApiRequestError } from "@/api/config";
 import { getMe } from "@/api/get";
 import { postRefreshToken } from "@/api/post";
 import {
   clearUnauthorizedHandler,
+  isUnauthorizedStatus,
   registerUnauthorizedHandler,
 } from "@/api/auth-session";
 import { Colors } from "@/constants/theme";
@@ -90,6 +92,14 @@ export default function AuthProvider({
             })
             .catch((error) => {
               console.error("getMe verification failed:", error);
+              if (
+                error instanceof ApiRequestError &&
+                !isUnauthorizedStatus(error.statusCode)
+              ) {
+                authStore.login(parsedResult);
+                return;
+              }
+
               clearLocalAuthState();
             });
         }

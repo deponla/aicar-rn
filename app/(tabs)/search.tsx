@@ -201,6 +201,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
   const { t } = useTranslation();
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
+  const [engineName, setEngineName] = useState("");
   const [year, setYear] = useState<number>();
   const [fuelType, setFuelType] = useState<FuelTypeEnum | undefined>();
   const [transmission, setTransmission] = useState<
@@ -367,6 +368,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
         fuelType,
         transmission,
         engineCC: engineCC ? parseInt(engineCC, 10) : undefined,
+        engineName: engineName.trim() || undefined,
         currentMileage: currentMileage ? parseInt(currentMileage, 10) : undefined,
         nickname: nickname.trim() || undefined,
         licensePlate: normalizedLicensePlate || undefined,
@@ -381,6 +383,7 @@ const AddCarComposer = React.memo(function AddCarComposer({
     color,
     currentMileage,
     engineCC,
+    engineName,
     fuelType,
     model,
     nickname,
@@ -489,8 +492,10 @@ const AddCarComposer = React.memo(function AddCarComposer({
           <CarBrandModelFields
             brand={brand}
             model={model}
+            engine={engineName}
             onBrandChange={setBrand}
             onModelChange={setModel}
+            onEngineChange={setEngineName}
           />
 
           <Text style={styles.inputLabel}>{t("carDetail.yearLabel")}</Text>
