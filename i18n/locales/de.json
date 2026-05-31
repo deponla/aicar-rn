@@ -2,6 +2,8 @@
     "common": {
         "loading": "Wird geladen...",
         "requestFailed": "Anfrage fehlgeschlagen",
+        "networkError": "Netzwerkfehler. Bitte prüfen Sie Ihre Verbindung.",
+        "requestTimedOut": "Zeitüberschreitung bei der Anfrage. Bitte versuchen Sie es erneut.",
         "retry": "Erneut versuchen",
         "close": "Schließen",
         "searchLocation": "Ort suchen...",

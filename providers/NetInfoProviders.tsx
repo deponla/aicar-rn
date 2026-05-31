@@ -1,5 +1,5 @@
 import NetInfo from "@react-native-community/netinfo";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Animated, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,27 +14,27 @@ export default function NetInfoProvider({
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [banner, setBanner] = useState<BannerState>("hidden");
-  const translateY = useRef(new Animated.Value(-100)).current;
+  const translateY = useMemo(() => new Animated.Value(-100), []);
   const wasOffline = useRef(false);
   const isInitial = useRef(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const showBanner = () => {
+  const showBanner = useCallback(() => {
     Animated.spring(translateY, {
       toValue: 0,
       useNativeDriver: true,
       speed: 14,
       bounciness: 4,
     }).start();
-  };
+  }, [translateY]);
 
-  const hideBanner = (callback?: () => void) => {
+  const hideBanner = useCallback((callback?: () => void) => {
     Animated.timing(translateY, {
       toValue: -100,
       duration: 300,
       useNativeDriver: true,
     }).start(() => callback?.());
-  };
+  }, [translateY]);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -78,7 +78,7 @@ export default function NetInfoProvider({
       unsubscribe();
       if (hideTimer.current) clearTimeout(hideTimer.current);
     };
-  }, []);
+  }, [hideBanner, showBanner]);
 
   const isOffline = banner === "offline";
   const backgroundColor = isOffline ? "#E53935" : "#43A047";

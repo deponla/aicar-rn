@@ -2,6 +2,8 @@
     "common": {
         "loading": "Yükleniyor...",
         "requestFailed": "İstek başarısız oldu",
+        "networkError": "Ağ hatası. Lütfen bağlantınızı kontrol edin.",
+        "requestTimedOut": "İstek zaman aşımına uğradı. Lütfen tekrar deneyin.",
         "retry": "Yeniden Dene",
         "close": "Kapat",
         "searchLocation": "Konum ara...",

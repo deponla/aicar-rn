@@ -1,4 +1,5 @@
-import axios, { AxiosError } from "axios";
+import { create } from "axios";
+import type { AxiosError } from "axios";
 import { ErrorResponse } from "../types/utils";
 import i18n, { getCurrentLanguage } from "@/i18n";
 import {
@@ -15,7 +16,14 @@ interface ApiErrorResponse extends Partial<ErrorResponse> {
   reactivationEmail?: string;
   path?: string;
   timestamp?: string;
+  isRetryable?: boolean;
+  requestErrorCode?: ApiRequestErrorCode;
 }
+
+export type ApiRequestErrorCode =
+  | "http_error"
+  | "network_error"
+  | "request_timeout";
 
 export class ApiRequestError extends Error {
   readonly statusCode?: number;
@@ -25,6 +33,8 @@ export class ApiRequestError extends Error {
   readonly path?: string;
   readonly timestamp?: string;
   readonly errors?: string[];
+  readonly isRetryable: boolean;
+  readonly requestErrorCode: ApiRequestErrorCode;
 
   constructor(data: ApiErrorResponse = {}, fallbackMessage = "Request failed") {
     super(data.message || fallbackMessage);
@@ -36,6 +46,8 @@ export class ApiRequestError extends Error {
     this.path = data.path;
     this.timestamp = data.timestamp;
     this.errors = data.errors;
+    this.isRetryable = data.isRetryable ?? false;
+    this.requestErrorCode = data.requestErrorCode ?? "http_error";
     Object.setPrototypeOf(this, ApiRequestError.prototype);
   }
 }
@@ -47,7 +59,46 @@ function getRequestFailedMessage() {
   });
 }
 
-export const instance = axios.create({
+function getNetworkErrorMessage() {
+  return i18n.t("common.networkError", {
+    lng: getCurrentLanguage(),
+    defaultValue: "Network error",
+  });
+}
+
+function getRequestTimedOutMessage() {
+  return i18n.t("common.requestTimedOut", {
+    lng: getCurrentLanguage(),
+    defaultValue: "Request timed out",
+  });
+}
+
+function isRetryableStatus(statusCode?: number) {
+  return (
+    statusCode === 408 ||
+    statusCode === 429 ||
+    (typeof statusCode === "number" && statusCode >= 500)
+  );
+}
+
+function isTimeoutError(error: AxiosError) {
+  return (
+    error.code === "ECONNABORTED" ||
+    error.message.toLowerCase().includes("timeout")
+  );
+}
+
+function isApiRequestError(error: unknown): error is ApiRequestError {
+  return error instanceof ApiRequestError;
+}
+
+export function isRetryableApiRequestError(
+  error: unknown,
+): error is ApiRequestError {
+  return isApiRequestError(error) && error.isRetryable;
+}
+
+export const instance = create({
   baseURL: API_URL,
   timeout: 30000,
   headers: {
@@ -69,12 +120,18 @@ instance.interceptors.response.use(
       error.response?.status ?? error.response?.data?.statusCode;
 
     if (!error.response) {
-      const isTimeout = error.code === "ECONNABORTED";
+      const isTimeout = isTimeoutError(error);
+      const message = isTimeout
+        ? getRequestTimedOutMessage()
+        : getNetworkErrorMessage();
+
       throw new ApiRequestError(
         {
-          message: isTimeout ? "Request timed out" : getRequestFailedMessage(),
+          message,
+          isRetryable: true,
+          requestErrorCode: isTimeout ? "request_timeout" : "network_error",
         },
-        isTimeout ? "Request timed out" : getRequestFailedMessage(),
+        message,
       );
     }
 
@@ -94,6 +151,8 @@ instance.interceptors.response.use(
           ...responseData,
           statusCode,
           message: responseData.errors.join(", "),
+          isRetryable: isRetryableStatus(statusCode),
+          requestErrorCode: "http_error",
         },
         error.message || getRequestFailedMessage(),
       );
@@ -108,8 +167,14 @@ instance.interceptors.response.use(
               responseData.message ||
               error.message ||
               getRequestFailedMessage(),
+            isRetryable: isRetryableStatus(statusCode),
+            requestErrorCode: "http_error",
           }
-        : { message: error.message || getRequestFailedMessage() },
+        : {
+            message: error.message || getRequestFailedMessage(),
+            isRetryable: isRetryableStatus(statusCode),
+            requestErrorCode: "http_error",
+          },
       error.message || getRequestFailedMessage(),
     );
   },

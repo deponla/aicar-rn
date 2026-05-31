@@ -2,6 +2,8 @@
     "common": {
         "loading": "Loading...",
         "requestFailed": "Request failed",
+        "networkError": "Network error. Please check your connection.",
+        "requestTimedOut": "The request timed out. Please try again.",
         "retry": "Retry",
         "close": "Close",
         "searchLocation": "Search location...",

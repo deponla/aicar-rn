@@ -1,4 +1,4 @@
-import { ApiRequestError } from "@/api/config";
+import { ApiRequestError, isRetryableApiRequestError } from "@/api/config";
 import { getMe } from "@/api/get";
 import { postRefreshToken } from "@/api/post";
 import {
@@ -15,9 +15,12 @@ import {
 import { registerDeviceAfterLogin } from "@/utils/deviceRegistration";
 import { AuthStatusEnum, UserResponseData } from "@/types/auth";
 import * as SecureStore from "expo-secure-store";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+
+const TOKEN_REFRESH_RETRY_DELAY_MS = 15_000;
+const TOKEN_REFRESH_MAX_RETRY_DELAY_MS = 60_000;
 
 export default function AuthProvider({
   children,
@@ -25,14 +28,87 @@ export default function AuthProvider({
   children: React.ReactNode;
 }>) {
   const { t } = useTranslation();
-  const authStore = useAuthStore();
+  const authStatus = useAuthStore((state) => state.status);
+  const authUser = useAuthStore((state) => state.user);
+  const login = useAuthStore((state) => state.login);
   const lastRegisteredAccessToken = useRef<string | null>(null);
+  const refreshRetryTimeout = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const logAuthRefreshFailure = useCallback(
+    (context: string, error: unknown) => {
+      if (isRetryableApiRequestError(error)) {
+        console.warn(`${context}: ${error.message}`, {
+          requestErrorCode: error.requestErrorCode,
+          statusCode: error.statusCode,
+        });
+        return;
+      }
+
+      console.error(context, error);
+    },
+    [],
+  );
+
+  const persistAndLogin = useCallback(
+    async (session: UserResponseData) => {
+      try {
+        await SecureStore.setItemAsync(SECURE_STORE_KEY, JSON.stringify(session));
+      } catch (error) {
+        console.error("Failed to persist refreshed session:", error);
+      }
+      login(session);
+    },
+    [login],
+  );
+
+  const scheduleRefreshRetry = useCallback(
+    function scheduleRefreshRetry(refreshToken: string, attempt = 1) {
+      if (refreshRetryTimeout.current) {
+        clearTimeout(refreshRetryTimeout.current);
+      }
+
+      const retryDelay = Math.min(
+        TOKEN_REFRESH_RETRY_DELAY_MS * 2 ** (attempt - 1),
+        TOKEN_REFRESH_MAX_RETRY_DELAY_MS,
+      );
+
+      refreshRetryTimeout.current = setTimeout(() => {
+        refreshRetryTimeout.current = null;
+
+        const currentRefreshToken =
+          useAuthStore.getState().user?.refreshToken.token;
+
+        if (currentRefreshToken !== refreshToken) {
+          return;
+        }
+
+        postRefreshToken({ token: refreshToken })
+          .then((data) => persistAndLogin(data))
+          .catch((error) => {
+            logAuthRefreshFailure("Token refresh retry failed", error);
+
+            if (isRetryableApiRequestError(error)) {
+              scheduleRefreshRetry(refreshToken, attempt + 1);
+              return;
+            }
+
+            void clearLocalAuthState();
+          });
+      }, retryDelay);
+    },
+    [logAuthRefreshFailure, persistAndLogin],
+  );
 
   useEffect(() => {
     registerUnauthorizedHandler(() => clearLocalAuthState());
 
     return () => {
       clearUnauthorizedHandler();
+      if (refreshRetryTimeout.current) {
+        clearTimeout(refreshRetryTimeout.current);
+      }
     };
   }, []);
 
@@ -64,42 +140,43 @@ export default function AuthProvider({
           (accessTokenExpires < nowTime || !parsedResult.sessionId);
 
         if (shouldRefreshSession) {
-          postRefreshToken({ token: parsedResult.refreshToken.token })
-            .then(async (data) => {
-              try {
-                await SecureStore.setItemAsync(
-                  SECURE_STORE_KEY,
-                  JSON.stringify(data),
-                );
-              } catch (error) {
-                console.error("Failed to persist refreshed session:", error);
-              }
-              authStore.login(data);
-            })
-            .catch((error) => {
-              console.error("Token refresh failed during init:", error);
-              clearLocalAuthState();
+          try {
+            const data = await postRefreshToken({
+              token: parsedResult.refreshToken.token,
             });
+            await persistAndLogin(data);
+          } catch (error) {
+            logAuthRefreshFailure("Token refresh failed during init", error);
+
+            if (isRetryableApiRequestError(error)) {
+              login(parsedResult);
+              scheduleRefreshRetry(parsedResult.refreshToken.token);
+              return;
+            }
+
+            void clearLocalAuthState();
+          }
         } else if (accessTokenExpires < nowTime) {
           clearLocalAuthState();
         } else {
           getMe({ token: parsedResult.accessToken.token })
             .then((response) => {
-              authStore.login({
+              login({
                 ...parsedResult,
                 user: response.user,
               });
             })
             .catch((error) => {
-              console.error("getMe verification failed:", error);
               if (
                 error instanceof ApiRequestError &&
                 !isUnauthorizedStatus(error.statusCode)
               ) {
-                authStore.login(parsedResult);
+                logAuthRefreshFailure("getMe verification skipped", error);
+                login(parsedResult);
                 return;
               }
 
+              console.error("getMe verification failed:", error);
               clearLocalAuthState();
             });
         }
@@ -107,13 +184,13 @@ export default function AuthProvider({
         clearLocalAuthState();
       }
     }
-    loadAuthStore();
-  }, []);
+    void loadAuthStore();
+  }, [logAuthRefreshFailure, login, persistAndLogin, scheduleRefreshRetry]);
 
   useEffect(() => {
-    const accessToken = authStore.user?.accessToken.token;
+    const accessToken = authUser?.accessToken.token;
 
-    if (authStore.status !== AuthStatusEnum.LOGGED_IN || !accessToken) {
+    if (authStatus !== AuthStatusEnum.LOGGED_IN || !accessToken) {
       lastRegisteredAccessToken.current = null;
       return;
     }
@@ -126,25 +203,25 @@ export default function AuthProvider({
     registerDeviceAfterLogin().catch((error) => {
       console.error("Device registration failed:", error);
     });
-  }, [authStore.status, authStore.user?.accessToken.token]);
+  }, [authStatus, authUser?.accessToken.token]);
 
   useEffect(() => {
-    if (authStore.status !== AuthStatusEnum.LOGGED_IN) return;
+    if (authStatus !== AuthStatusEnum.LOGGED_IN) return;
 
     const FIVE_MINUTES = 5 * 60 * 1000;
     const CHECK_INTERVAL = 60 * 1000; // Her dakika kontrol et
 
     const interval = setInterval(async () => {
-      if (authStore.user) {
+      if (authUser) {
         const nowTime = Date.now();
         const accessTokenExpires = new Date(
-          authStore.user.accessToken.expires,
+          authUser.accessToken.expires,
         ).getTime();
         const timeUntilExpiry = accessTokenExpires - nowTime;
 
         // Token'ın bitmesine 5 dakika veya daha az kaldıysa yenile
         if (timeUntilExpiry > 0 && timeUntilExpiry <= FIVE_MINUTES) {
-          postRefreshToken({ token: authStore.user.refreshToken.token })
+          postRefreshToken({ token: authUser.refreshToken.token })
             .then(async (data) => {
               try {
                 await SecureStore.setItemAsync(
@@ -154,20 +231,32 @@ export default function AuthProvider({
               } catch (error) {
                 console.error("Failed to persist refreshed session:", error);
               }
-              authStore.login(data);
+              login(data);
             })
             .catch((error) => {
+              if (isRetryableApiRequestError(error)) {
+                logAuthRefreshFailure("Proactive token refresh failed", error);
+                scheduleRefreshRetry(authUser.refreshToken.token);
+                return;
+              }
+
               console.error("Proactive token refresh failed:", error);
-              clearLocalAuthState();
+              void clearLocalAuthState();
             });
         }
       }
     }, CHECK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [authStore.status, authStore.user]);
+  }, [
+    authStatus,
+    authUser,
+    login,
+    logAuthRefreshFailure,
+    scheduleRefreshRetry,
+  ]);
 
-  if (authStore.status === AuthStatusEnum.LOADING) {
+  if (authStatus === AuthStatusEnum.LOADING) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
