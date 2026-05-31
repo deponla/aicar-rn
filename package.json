@@ -29,7 +29,7 @@
     "@tanstack/react-query": "^5.90.21",
     "axios": "^1.13.6",
     "dayjs": "^1.11.19",
-    "expo": "^56.0.0-0",
+    "expo": "^56.0.8",
     "expo-application": "~56.0.3",
     "expo-blur": "~56.0.3",
     "expo-build-properties": "~56.0.10",
