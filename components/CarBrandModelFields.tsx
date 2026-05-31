@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Image,
+    Keyboard,
     Modal,
     StyleSheet,
     Text,
@@ -44,13 +45,23 @@ function PickerModal({
     emptyText: string;
     loading?: boolean;
 }) {
+    const closeModal = () => {
+        Keyboard.dismiss();
+        onClose();
+    };
+
+    const selectOption = (key: string) => {
+        Keyboard.dismiss();
+        onSelect(key);
+    };
+
     return (
-        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={closeModal}>
             <View style={styles.modalBackdrop}>
                 <View style={styles.modalCard}>
                     <View style={styles.modalHeader}>
                         <Text style={styles.modalTitle}>{title}</Text>
-                        <TouchableOpacity onPress={onClose}>
+                        <TouchableOpacity onPress={closeModal}>
                             <MaterialIcons name="close" size={22} color={tokens.textPrimary} />
                         </TouchableOpacity>
                     </View>
@@ -61,6 +72,14 @@ function PickerModal({
                         onChangeText={onSearchChange}
                         placeholder={placeholder}
                         placeholderTextColor={tokens.textPlaceholder}
+                        autoCapitalize="none"
+                        autoComplete="off"
+                        autoCorrect={false}
+                        blurOnSubmit
+                        onSubmitEditing={Keyboard.dismiss}
+                        returnKeyType="done"
+                        spellCheck={false}
+                        textContentType="none"
                     />
 
                     {loading ? (
@@ -80,7 +99,7 @@ function PickerModal({
                             renderItem={({ item }) => (
                                 <TouchableOpacity
                                     style={styles.optionButton}
-                                    onPress={() => onSelect(item.key)}
+                                    onPress={() => selectOption(item.key)}
                                     activeOpacity={0.85}
                                 >
                                     {item.logo ? (
