@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "app/**/*.{ts,tsx}",
+    "components/NativeMenuSections.ios.tsx",
+    "plugins/with-ios-build-settings.js",
+    "shims/react-native.js"
+  ],
+  "project": ["**/*.{ts,tsx,js}"]
+}

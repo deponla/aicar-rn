@@ -1,4 +1,4 @@
-export type SessionDeviceType = "MOBILE" | "DESKTOP" | "TABLET" | "UNKNOWN";
+type SessionDeviceType = "MOBILE" | "DESKTOP" | "TABLET" | "UNKNOWN";
 
 export type SessionPlatform =
   | "IOS"
@@ -9,7 +9,7 @@ export type SessionPlatform =
   | "LINUX"
   | "UNKNOWN";
 
-export type SessionStatus = "ACTIVE" | "EXPIRED" | "REVOKED";
+type SessionStatus = "ACTIVE" | "EXPIRED" | "REVOKED";
 
 export interface Session {
   id: string;
@@ -28,13 +28,6 @@ export interface Session {
   isCurrent: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface SessionListResponse {
-  results: Session[];
-  page: number;
-  limit: number;
-  count: number;
 }
 
 export interface SessionResponse {

@@ -20,7 +20,7 @@ import {
 } from "@/types/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export enum UserQueryKeys {
+enum UserQueryKeys {
   USERS = "users",
 }
 

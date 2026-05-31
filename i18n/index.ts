@@ -5,10 +5,10 @@ import de from "@/i18n/locales/de.json";
 import en from "@/i18n/locales/en.json";
 import tr from "@/i18n/locales/tr.json";
 
-export const SUPPORTED_LANGUAGES = ["de", "en", "tr"] as const;
+const SUPPORTED_LANGUAGES = ["de", "en", "tr"] as const;
 export type AppLanguage = (typeof SUPPORTED_LANGUAGES)[number];
-export const DEFAULT_LANGUAGE: AppLanguage = "en";
-export const DEFAULT_NAMESPACE = "translation" as const;
+const DEFAULT_LANGUAGE: AppLanguage = "en";
+const DEFAULT_NAMESPACE = "translation" as const;
 
 export function normalizeLanguage(language?: string | null): AppLanguage {
   const baseLanguage = language?.toLowerCase().split("-")[0];

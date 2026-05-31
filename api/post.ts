@@ -35,14 +35,10 @@ import {
   ConfirmCarPhotoRequest,
   ConfirmCarPhotoResponse,
   CreateCarRequest,
-  DeleteCarPhotoRequest,
-  DeleteCarPhotoResponse,
 } from "@/types/car";
 import {
-  AccountResponse,
   PurchaseCreditsRequest,
   TransactionResponse,
-  VerifyReceiptRequest,
 } from "@/types/credit";
 import {
   AiConversationResponse,
@@ -52,7 +48,6 @@ import {
 } from "@/types/ai-chat";
 import {
   CarReminderResponse,
-  CompleteCarReminderRequest,
   CreateCarReminderRequest,
 } from "@/types/car-reminder";
 import { AI_CHAT_TIMEOUT_MS } from "@/utils/env";
@@ -210,12 +205,6 @@ export async function postConfirmCarPhoto(
   return instance.post("v1/cars/confirm-upload", payload).then((r) => r.data);
 }
 
-export async function postDeleteCarPhoto(
-  payload: DeleteCarPhotoRequest,
-): Promise<DeleteCarPhotoResponse> {
-  return instance.post("v1/cars/delete-photo", payload).then((r) => r.data);
-}
-
 // Car Reminders
 export async function postCreateCarReminder(
   payload: CreateCarReminderRequest,
@@ -223,28 +212,11 @@ export async function postCreateCarReminder(
   return instance.post("v1/car-reminders", payload).then((r) => r.data);
 }
 
-export async function postCompleteCarReminder(
-  id: string,
-  payload: CompleteCarReminderRequest,
-): Promise<CarReminderResponse> {
-  return instance
-    .post(`v1/car-reminders/${id}/complete`, payload)
-    .then((r) => r.data);
-}
-
 // Account / Credits
 export async function postPurchaseCredits(
   payload: PurchaseCreditsRequest,
 ): Promise<TransactionResponse> {
   return instance.post("v1/account/purchase", payload).then((r) => r.data);
-}
-
-export async function postVerifyReceipt(
-  payload: VerifyReceiptRequest,
-): Promise<AccountResponse> {
-  return instance
-    .post("v1/account/verify-receipt", payload)
-    .then((r) => r.data);
 }
 
 // AI Chat

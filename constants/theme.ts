@@ -1,5 +1,3 @@
-import { Platform, TextStyle } from "react-native";
-
 // ─── Brand Colors ─────────────────────────────────────────────────────────────
 export const Colors = {
   primary: "#000000",
@@ -17,64 +15,6 @@ export const FontFamily = {
   semiBold: "Manrope_600SemiBold",
   bold: "Manrope_700Bold",
   extraBold: "Manrope_800ExtraBold",
-};
-
-export const Fonts = Platform.select({
-  ios: {
-    sans: FontFamily.regular,
-    serif: "ui-serif",
-    rounded: "ui-rounded",
-    mono: "ui-monospace",
-  },
-  default: {
-    sans: FontFamily.regular,
-    serif: "serif",
-    rounded: FontFamily.regular,
-    mono: "monospace",
-  },
-  web: {
-    sans: "'Manrope', system-ui, -apple-system, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'Manrope', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  },
-});
-
-// ─── Typography Scale ─────────────────────────────────────────────────────────
-export const Typography: Record<string, TextStyle> = {
-  headlineLg: {
-    fontFamily: FontFamily.bold,
-    fontSize: 28,
-    lineHeight: 36,
-    letterSpacing: -0.56,
-  },
-  headlineMd: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 22,
-    lineHeight: 28,
-    letterSpacing: -0.22,
-  },
-  bodyLg: {
-    fontFamily: FontFamily.regular,
-    fontSize: 18,
-    lineHeight: 26,
-  },
-  bodyMd: {
-    fontFamily: FontFamily.regular,
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  labelLg: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 14,
-    lineHeight: 20,
-    letterSpacing: 0.7,
-  },
-  labelSm: {
-    fontFamily: FontFamily.medium,
-    fontSize: 12,
-    lineHeight: 16,
-  },
 };
 
 // ─── Spacing ──────────────────────────────────────────────────────────────────

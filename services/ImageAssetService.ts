@@ -3,7 +3,7 @@ import type { ImagePickerAsset } from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { Platform } from "react-native";
 
-export interface PreparedImageAsset {
+interface PreparedImageAsset {
   height?: number;
   mimeType: string;
   uri: string;
@@ -22,18 +22,18 @@ interface PrepareImageAssetOptions {
   maxDimension: number;
 }
 
-export function normalizeAssetUri(uri: string): string {
+function normalizeAssetUri(uri: string): string {
   return Platform.OS === "ios" && !uri.startsWith("file://")
     ? `file://${uri}`
     : uri;
 }
 
-export async function readAssetAsBase64(uri: string): Promise<string> {
+async function readAssetAsBase64(uri: string): Promise<string> {
   const file = new File(normalizeAssetUri(uri));
   return file.base64();
 }
 
-export async function prepareImageAsset(
+async function prepareImageAsset(
   asset: ImagePickerAsset,
   options: PrepareImageAssetOptions,
 ): Promise<PreparedImageAsset> {

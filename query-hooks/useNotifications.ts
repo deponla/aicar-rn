@@ -4,7 +4,7 @@ import { NotificationQuery } from "@/types/notification";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-export enum NotificationQueryKeys {
+enum NotificationQueryKeys {
   NOTIFICATIONS = "notifications",
 }
 

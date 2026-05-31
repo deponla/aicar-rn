@@ -20,7 +20,3 @@ export interface LegalDocument {
   createdAt: string;
   updatedAt: string;
 }
-
-export interface LegalDocumentResponse {
-  result: LegalDocument;
-}

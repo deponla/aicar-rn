@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { SFSymbols7_0 } from "sf-symbols-typescript";
 
-export interface NativeMenuItem {
+interface NativeMenuItem {
     title: string;
     systemImage: SFSymbols7_0;
     tintColor?: string;

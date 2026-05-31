@@ -1,7 +1,7 @@
 import Constants, { AppOwnership } from "expo-constants";
 import { Platform } from "react-native";
 
-export function canUseExpoNotifications(): boolean {
+function canUseExpoNotifications(): boolean {
   return Platform.OS !== "web" && Constants.appOwnership !== AppOwnership.Expo;
 }
 

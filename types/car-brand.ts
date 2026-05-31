@@ -1,6 +1,6 @@
 import { IPagination, IPaginationQuery } from "./utils";
 
-export interface CarBrand {
+interface CarBrand {
   id: string;
   name: string;
   isOther: boolean;
@@ -9,7 +9,7 @@ export interface CarBrand {
   catalogBrandId?: string;
 }
 
-export interface CarModel {
+interface CarModel {
   id: string;
   name: string;
   makeId: string;
@@ -17,7 +17,7 @@ export interface CarModel {
   hasEngines?: boolean;
 }
 
-export interface CarEngine {
+interface CarEngine {
   id: string;
   name: string;
   modelId: string;

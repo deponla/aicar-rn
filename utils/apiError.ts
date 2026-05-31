@@ -10,7 +10,7 @@ type ErrorWithResponseMessage = {
 
 type Notify = (opts: NotificationOptions) => void;
 
-export function getApiErrorMessage(
+function getApiErrorMessage(
   error: unknown,
   fallbackMessage: string,
 ): string {

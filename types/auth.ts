@@ -1,4 +1,4 @@
-export enum UserStatus {
+enum UserStatus {
   ORGANIZER = "organizer",
   PENDING = "pending",
   ACTIVE = "active",
@@ -8,7 +8,7 @@ export enum UserStatus {
   BANNED = "banned",
 }
 
-export enum UserAccountType {
+enum UserAccountType {
   INDIVIDUAL = "individual",
   COMPANY = "company",
 }

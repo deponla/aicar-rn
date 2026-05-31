@@ -8,16 +8,14 @@ export interface UserUpdateRequest {
 
 export enum SmsOtpType {
   PHONE_VERIFICATION = "phone_verification",
-  LOGIN = "login",
-  PASSWORD_RESET = "password_reset",
 }
 
-export enum UserAccountType {
+enum UserAccountType {
   INDIVIDUAL = "individual",
   COMPANY = "company",
 }
 
-export enum UserStatus {
+enum UserStatus {
   ORGANIZER = "organizer",
   PENDING = "pending",
   ACTIVE = "active",
@@ -37,7 +35,7 @@ export interface ReactivateAccountRequest {
   password: string;
 }
 
-export interface User {
+interface User {
   id: string;
   createdAt: string;
   updatedAt: string;

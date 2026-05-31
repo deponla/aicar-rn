@@ -10,7 +10,7 @@ export enum AiAnalysisType {
   GENERAL = "general",
 }
 
-export type AiWarningSeverity = "low" | "medium" | "high" | "critical";
+type AiWarningSeverity = "low" | "medium" | "high" | "critical";
 export type AiUrgency = "critical" | "warning" | "info";
 export type AiOverallStatus = "ok" | "warning" | "critical";
 
@@ -44,7 +44,7 @@ export interface AnalyzeMediaRequest {
   analysisType?: AiAnalysisType;
 }
 
-export interface AiWarning {
+interface AiWarning {
   name: string;
   severity: AiWarningSeverity;
   description: string;
@@ -79,7 +79,7 @@ export interface AnalyzeMediaLog {
   aiResponse?: AiAnalysisPayload;
 }
 
-export interface AnalyzeMediaBalance {
+interface AnalyzeMediaBalance {
   remainingCredits: number;
   isPremium: boolean;
   premiumExpiresAt?: string | null;

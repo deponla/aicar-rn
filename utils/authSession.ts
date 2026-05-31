@@ -30,7 +30,7 @@ export type StartAuthSessionResult =
       type: "invalid-callback";
     };
 
-export function buildAuthSessionConfig(
+function buildAuthSessionConfig(
   type: AuthFlowType,
   frontendUrlMissingMessage: string,
 ): AuthSessionConfig {

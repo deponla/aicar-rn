@@ -3,7 +3,7 @@ import { postCreateFeedback } from "@/api/post";
 import { CreateFeedbackRequest, FeedbackQuery } from "@/types/feedback";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export enum FeedbackQueryKeys {
+enum FeedbackQueryKeys {
   FEEDBACKS = "feedbacks",
 }
 

@@ -8,7 +8,6 @@ export enum CarReminderTypeEnum {
 
 export enum CarReminderStatusEnum {
   ACTIVE = "active",
-  COMPLETED = "completed",
 }
 
 export interface CarReminder {
@@ -51,13 +50,6 @@ export interface CreateCarReminderRequest {
 }
 
 export type UpdateCarReminderRequest = Partial<CreateCarReminderRequest>;
-
-export interface CompleteCarReminderRequest {
-  completedAt?: string;
-  completedMileage?: number;
-  nextDueAt?: string;
-  nextDueMileage?: number;
-}
 
 export interface CarReminderResponse {
   result: CarReminder;

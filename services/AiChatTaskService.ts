@@ -5,9 +5,9 @@ import { queryClient } from "@/utils/queryClient";
 const AI_CHAT_CONVERSATIONS_QUERY_KEY = "ai-chat-conversations";
 const AI_CHAT_MESSAGES_QUERY_KEY = "ai-chat-messages";
 
-export type AiChatTaskStatus = "running" | "completed" | "error";
+type AiChatTaskStatus = "running" | "completed" | "error";
 
-export interface AiChatTaskSnapshot {
+interface AiChatTaskSnapshot {
   conversationId: string;
   content: string;
   status: AiChatTaskStatus;

@@ -54,17 +54,6 @@ function parseSession(searchParams: URLSearchParams): UserResponseData | null {
   return null;
 }
 
-// Deep link URL'inden session verisini parse eden fonksiyon
-export function parseSessionFromUrl(url: string): UserResponseData | null {
-  const authCallback = parseAuthCallbackFromUrl(url);
-
-  if (!authCallback || authCallback.type !== "session") {
-    return null;
-  }
-
-  return authCallback.session;
-}
-
 export function parseAuthCallbackFromUrl(
   url: string,
 ): AuthCallbackResult | null {

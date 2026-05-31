@@ -63,17 +63,17 @@ export interface CreateAiConversationRequest {
   title?: string;
 }
 
-export interface AiChatStreamChunk {
+interface AiChatStreamChunk {
   type: "chunk";
   content: string;
 }
 
-export interface AiChatStreamDone {
+interface AiChatStreamDone {
   type: "done";
   messageId: string;
 }
 
-export interface AiChatStreamError {
+interface AiChatStreamError {
   type: "error";
   message: string;
 }

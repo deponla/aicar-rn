@@ -1,6 +1,6 @@
 import { IPaginationQuery } from "./utils";
 
-export enum CreditPackageStatusEnum {
+enum CreditPackageStatusEnum {
   ACTIVE = "active",
   INACTIVE = "inactive",
 }
@@ -8,7 +8,6 @@ export enum CreditPackageStatusEnum {
 export enum TransactionPlatformEnum {
   IOS = "ios",
   ANDROID = "android",
-  WEB = "web",
 }
 
 export enum TransactionStatusEnum {
@@ -55,7 +54,7 @@ export interface CreditBalanceResponse {
   premiumExpiresAt: string | null;
 }
 
-export interface Account {
+interface Account {
   id: string;
   userId: string;
   remainingCredits: number;
@@ -75,11 +74,6 @@ export interface PurchaseCreditsRequest {
   packageId: string;
   platform: TransactionPlatformEnum;
   receiptId?: string;
-}
-
-export interface VerifyReceiptRequest {
-  transactionId: string;
-  receiptData: string;
 }
 
 export interface Transaction {

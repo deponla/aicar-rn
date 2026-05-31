@@ -4,7 +4,7 @@ import { AnalyzeMediaLog } from "@/types/ai";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-export enum AnalysisLogQueryKeys {
+enum AnalysisLogQueryKeys {
   LOGS = "analysis-logs",
 }
 
@@ -15,12 +15,6 @@ export interface AnalysisLogQuery {
   sort?: string;
 }
 
-export interface AnalysisLogListResponse {
-  results: AnalyzeMediaLog[];
-  count: number;
-  page: number;
-  limit: number;
-}
 export const useGetAnalysisLogs = (
   filters?: AnalysisLogQuery,
   { enabled = true }: { enabled?: boolean } = {},

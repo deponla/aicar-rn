@@ -2,7 +2,7 @@ import { getFuelPriceSummary, getFuelPrices } from "@/api/get";
 import { FuelPriceQuery } from "@/types/fuel-price";
 import { useQuery } from "@tanstack/react-query";
 
-export enum FuelPriceQueryKeys {
+enum FuelPriceQueryKeys {
   FUEL_PRICES = "fuel-prices",
   FUEL_PRICE_SUMMARY = "fuel-price-summary",
 }

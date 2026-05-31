@@ -2,7 +2,7 @@ import { getCarBrands, getCarEngines, getCarModels } from "@/api/get";
 import { CarBrandQuery, CarModelQuery } from "@/types/car-brand";
 import { useQuery } from "@tanstack/react-query";
 
-export enum CarBrandQueryKeys {
+enum CarBrandQueryKeys {
   BRANDS = "car-brands",
   MODELS = "car-models",
   ENGINES = "car-engines",

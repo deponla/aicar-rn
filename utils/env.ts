@@ -42,7 +42,7 @@ export const API_URL = normalizeBaseUrl(
 
 export const FRONTEND_URL = readPublicEnv("EXPO_PUBLIC_FRONTEND_URL");
 
-export const SITE_URL = normalizeBaseUrl(
+const SITE_URL = normalizeBaseUrl(
   readPublicEnv("EXPO_PUBLIC_SITE_URL") || FRONTEND_URL || "",
 );
 
@@ -62,13 +62,6 @@ export const SOCKET_PATH = normalizeRouteSegment(
 
 export const SOCKET_NAMESPACE = normalizeRouteSegment(
   readPublicEnv("EXPO_PUBLIC_SOCKET_NAMESPACE") || "/chat",
-);
-
-export const GOOGLE_PLACES_API_KEY =
-  readPublicEnv("EXPO_PUBLIC_GOOGLE_PLACES_API_KEY") ?? "";
-
-export const GOOGLE_PLACES_API_URL = normalizeBaseUrl(
-  readPublicEnv("EXPO_PUBLIC_GOOGLE_PLACES_API_URL") ?? "",
 );
 
 export const AI_CHAT_TIMEOUT_MS = Number(

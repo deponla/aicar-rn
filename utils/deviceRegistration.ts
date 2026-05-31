@@ -8,8 +8,8 @@ import { patchDevicePermissions } from "@/api/patch";
 import type { DevicePermissions, PermissionStatus } from "@/types/device";
 import { getNotificationPermissionStatus } from "@/utils/notificationPermissions";
 
-export const DEVICE_ID_KEY = "device_id";
-export const DEVICE_INSTALLATION_ID_KEY = "device_installation_id";
+const DEVICE_ID_KEY = "device_id";
+const DEVICE_INSTALLATION_ID_KEY = "device_installation_id";
 
 function toPermissionStatus(status: string): PermissionStatus {
   if (status === "granted") return "granted";
@@ -121,7 +121,7 @@ export async function registerDeviceAfterLogin(
 /**
  * Mevcut deviceId'yi SecureStore'dan okur.
  */
-export async function getStoredDeviceId(): Promise<string | null> {
+async function getStoredDeviceId(): Promise<string | null> {
   try {
     return await SecureStore.getItemAsync(DEVICE_ID_KEY);
   } catch {

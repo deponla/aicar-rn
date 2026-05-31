@@ -3,7 +3,7 @@ import { normalizeLanguage } from "@/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-export enum LegalQueryKeys {
+enum LegalQueryKeys {
   LEGAL_DOCUMENTS = "legal-documents",
 }
 

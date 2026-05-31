@@ -173,12 +173,6 @@ export async function getTransactions(
     .then((r) => r.data);
 }
 
-export async function getTransaction(
-  id: string,
-): Promise<{ result: import("@/types/credit").Transaction }> {
-  return instance.get(`v1/transactions/${id}`).then((r) => r.data);
-}
-
 // Legal
 export async function getLegalDocuments({
   language,

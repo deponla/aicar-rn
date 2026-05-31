@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-export type NotificationType = "success" | "error" | "info" | "warning";
+type NotificationType = "success" | "error" | "info" | "warning";
 
 export interface NotificationOptions {
   type?: NotificationType;

@@ -79,19 +79,6 @@ export interface ConfirmCarPhotoResponse {
   };
 }
 
-export interface DeleteCarPhotoRequest {
-  id: string;
-  carId: string;
-}
-
-export interface DeleteCarPhotoResponse {
-  result: {
-    success: boolean;
-    message: string;
-    carId: string;
-  };
-}
-
 export interface CarListResponse {
   results: Car[];
   page: number;
@@ -105,21 +92,4 @@ export interface CarQuery extends IPaginationQuery {
   year?: number;
   fuelType?: FuelTypeEnum;
   transmission?: TransmissionEnum;
-}
-
-export interface AnalysisResult {
-  id: string;
-  imageUrl?: string;
-  description: string;
-  urgency: "critical" | "warning" | "info";
-  title: string;
-  recommendation: string;
-  createdAt: string;
-  car?: Car;
-}
-
-export enum UrgencyLevel {
-  CRITICAL = "critical",
-  WARNING = "warning",
-  INFO = "info",
 }

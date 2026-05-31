@@ -1,6 +1,6 @@
-export const MIN_CAR_YEAR = 1970;
+const MIN_CAR_YEAR = 1970;
 
-export function getMaxCarYear() {
+function getMaxCarYear() {
   return new Date().getFullYear();
 }
 

@@ -1,6 +1,6 @@
 import { IPaginationQuery } from "./utils";
 
-export enum NotificationStatus {
+enum NotificationStatus {
   SENT = "sent",
   FAILED = "failed",
 }

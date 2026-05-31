@@ -37,10 +37,6 @@ export interface MessageListResponse extends IPagination {
   count: number;
 }
 
-export interface ConversationResponse {
-  result: Conversation;
-}
-
 export interface MessageResponse {
   result: Message;
 }
@@ -51,11 +47,6 @@ export interface ConversationQuery extends IPaginationQuery {
 
 export interface MessageQuery extends IPaginationQuery {
   conversationId: string;
-}
-
-export interface StartConversationRequest {
-  participantId: string;
-  relatedWarehouseId?: string;
 }
 
 export interface SendMessageRequest {
@@ -70,8 +61,4 @@ export interface ChatSocketMessagePayload {
 export interface ChatReadEventPayload {
   conversationId: string;
   readerId: string;
-}
-
-export interface ChatJoinPayload {
-  conversationId: string;
 }
