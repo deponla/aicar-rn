@@ -815,7 +815,16 @@
   resolved "https://registry.yarnpkg.com/@expo/dom-webview/-/dom-webview-56.0.5.tgz#2a09924714d7419f24c7f573c00bba0b55e1eb38"
   integrity sha512-UIEJxkLg6cHqofKrpWpkn9E6ApxVRtCgZhZkARPr9VV7rBVloJgeroTHs31YgU/JpbI5lLQOnfOlGo54W6C2Ew==
 
-"@expo/env@^2.2.0", "@expo/env@~2.2.0":
+"@expo/env@^2.2.0", "@expo/env@~2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@expo/env/-/env-2.3.0.tgz#dbdecd1b64b07840f9d5922a48a06c66bea5fe7c"
+  integrity sha512-9HnnIbzwTTdbwSjNLXTk0fPm9ZwMJ7c1/31tsni8HZ8Q62KzYCyspahH+V365vg5J6lr001DzNwBxVWSaYCQLg==
+  dependencies:
+    chalk "^4.0.0"
+    debug "^4.3.4"
+    getenv "^2.0.0"
+
+"@expo/env@~2.2.0":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@expo/env/-/env-2.2.1.tgz#c19c5d4b6dba38367c363847d6ee56b907197f6e"
   integrity sha512-WzO6VeJQc6c3STSRAsktIEzkiW2FOPnZItv8e2KOXcK/5YLbwqRJsPHNyDpysbah9mPN5fFz7AgMmCdhKsvzRg==
@@ -3236,12 +3245,12 @@ expo-clipboard@~56.0.3:
   resolved "https://registry.yarnpkg.com/expo-clipboard/-/expo-clipboard-56.0.3.tgz#8adb541e17b8a2ed4edbe611cf165492c395c883"
   integrity sha512-8mCdhmAomm0yBIonJFjAhKUXvSkc2avdNh4+rBwoe7DSWF2AC4w3uy+pa419rvVFbTyVxOBmh83UHAbUwD6qAg==
 
-expo-constants@~56.0.12:
-  version "56.0.12"
-  resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-56.0.12.tgz#1456eda36ddcab3641eff44a97d8f66c1ff39c84"
-  integrity sha512-QMK7FBvluFTtP+aGyKUDUSRfhq8sTmhLMZUkrQMSmwk9FZh28SiHe6qc2phyZnYZcYAY0EeBbxwJjn6mQZ92Pg==
+expo-constants@~56.0.12, expo-constants@~56.0.15:
+  version "56.0.15"
+  resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-56.0.15.tgz#5181236d939747efe1fd38794b8921107ba96dec"
+  integrity sha512-7187sd55swLX+CM0noAV5LreEgkUaDG/zEXy9quonfzKpJxy8zJAszp9S++xOx/FcqBVEEEcQhE8tKTujwL8fg==
   dependencies:
-    "@expo/env" "~2.2.0"
+    "@expo/env" "~2.3.0"
 
 expo-dev-client@~56.0.15:
   version "56.0.15"
